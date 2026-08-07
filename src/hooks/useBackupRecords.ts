@@ -3,15 +3,25 @@ import type { BackupRecord, BackupStatusFilter } from '../types/backup.types'
 import { applyBackupFilters, countBackupStatuses } from '../utils/backupFilters.utils'
 import type { BackupSource } from '../types/backupSource.types'
 import {
-  getRetryDelayMs,
-  markBackupInProgress,
-  resolveRetryOutcome,
-  resolveUserStoppedOutcome,
-} from '../utils/backupRetry.utils'
+  BACKUP_SIMULATION_DURATION_MS,
+  BACKUP_SIZE_INCREMENT_GB,
+  BACKUP_TICK_INTERVAL_MS,
+  getBackupProgressPercent,
+  getLaunchFailureDetails,
+  getLaunchFailureNotification,
+  getLaunchSuccessNotification,
+  shouldSimulateBackupFailure,
+} from '../utils/backupSimulation.utils'
+import { markBackupInProgress, resolveUserStoppedOutcome } from '../utils/backupRetry.utils'
 
 interface LaunchBackupInput {
   name: string
   source: BackupSource
+}
+
+interface BackupNotification {
+  message: string
+  type: 'success' | 'error'
 }
 
 interface UseBackupRecordsOptions {
@@ -24,7 +34,9 @@ export function useBackupRecords({ initialRecords, username }: UseBackupRecordsO
   const [statusFilter, setStatusFilter] = useState<BackupStatusFilter>('all')
   const [sourceQuery, setSourceQuery] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const retryTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  const [notification, setNotification] = useState<BackupNotification | null>(null)
+  const progressIntervalsRef = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map())
+  const finalizeTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
   const filteredRecords = useMemo(
     () => applyBackupFilters(records, statusFilter, sourceQuery),
@@ -38,6 +50,86 @@ export function useBackupRecords({ initialRecords, username }: UseBackupRecordsO
     [records, selectedId],
   )
 
+  const clearBackupTimers = useCallback((id: string) => {
+    const interval = progressIntervalsRef.current.get(id)
+    if (interval) {
+      clearInterval(interval)
+      progressIntervalsRef.current.delete(id)
+    }
+
+    const timer = finalizeTimersRef.current.get(id)
+    if (timer) {
+      clearTimeout(timer)
+      finalizeTimersRef.current.delete(id)
+    }
+  }, [])
+
+  const startBackupSimulation = useCallback(
+    (id: string, sourceName: string) => {
+      let elapsedSeconds = 0
+      const willFail = shouldSimulateBackupFailure()
+
+      const interval = setInterval(() => {
+        elapsedSeconds += 1
+        setRecords((current) =>
+          current.map((item) =>
+            item.id === id && item.status === 'in_progress'
+              ? {
+                  ...item,
+                  sizeGb: item.sizeGb + BACKUP_SIZE_INCREMENT_GB,
+                  durationMinutes: elapsedSeconds,
+                }
+              : item,
+          ),
+        )
+      }, BACKUP_TICK_INTERVAL_MS)
+
+      progressIntervalsRef.current.set(id, interval)
+
+      const timer = setTimeout(() => {
+        clearInterval(interval)
+        progressIntervalsRef.current.delete(id)
+
+        setRecords((current) =>
+          current.map((item) => {
+            if (item.id !== id) return item
+
+            if (willFail) {
+              return {
+                ...item,
+                status: 'failure' as const,
+                date: new Date().toISOString(),
+                ...getLaunchFailureDetails(),
+              }
+            }
+
+            return {
+              ...item,
+              status: 'success' as const,
+              sizeGb: Math.max(item.sizeGb, BACKUP_SIZE_INCREMENT_GB),
+              durationMinutes: Math.max(elapsedSeconds, 1),
+              date: new Date().toISOString(),
+              errorReason: undefined,
+              errorMessage: undefined,
+            }
+          }),
+        )
+
+        setNotification({
+          message: willFail
+            ? getLaunchFailureNotification()
+            : getLaunchSuccessNotification(sourceName),
+          type: willFail ? 'error' : 'success',
+        })
+
+        finalizeTimersRef.current.delete(id)
+      }, BACKUP_SIMULATION_DURATION_MS)
+
+      finalizeTimersRef.current.set(id, timer)
+    },
+    [],
+  )
+
   const selectBackup = useCallback((id: string) => {
     setSelectedId(id)
   }, [])
@@ -46,37 +138,24 @@ export function useBackupRecords({ initialRecords, username }: UseBackupRecordsO
     setSelectedId(null)
   }, [])
 
-  const retryBackup = useCallback((id: string) => {
-    setRecords((prev) => {
-      const record = prev.find((item) => item.id === id)
-      if (!record || record.status === 'in_progress') return prev
+  const retryBackup = useCallback(
+    (id: string) => {
+      setRecords((prev) => {
+        const record = prev.find((item) => item.id === id)
+        if (!record || record.status === 'in_progress') return prev
 
-      const wasFailure = record.status === 'failure'
-      const existingTimer = retryTimersRef.current.get(id)
-      if (existingTimer) clearTimeout(existingTimer)
+        clearBackupTimers(id)
+        startBackupSimulation(id, record.source)
 
-      const timer = setTimeout(() => {
-        setRecords((current) =>
-          current.map((item) =>
-            item.id === id ? { ...item, ...resolveRetryOutcome(wasFailure) } : item,
-          ),
-        )
-        retryTimersRef.current.delete(id)
-      }, getRetryDelayMs())
-
-      retryTimersRef.current.set(id, timer)
-
-      return prev.map((item) => (item.id === id ? markBackupInProgress(item) : item))
-    })
-  }, [])
+        return prev.map((item) => (item.id === id ? markBackupInProgress(item) : item))
+      })
+    },
+    [clearBackupTimers, startBackupSimulation],
+  )
 
   const stopBackup = useCallback(
     (id: string) => {
-      const existingTimer = retryTimersRef.current.get(id)
-      if (existingTimer) {
-        clearTimeout(existingTimer)
-        retryTimersRef.current.delete(id)
-      }
+      clearBackupTimers(id)
 
       setRecords((prev) =>
         prev.map((item) =>
@@ -86,47 +165,40 @@ export function useBackupRecords({ initialRecords, username }: UseBackupRecordsO
         ),
       )
     },
-    [username],
+    [username, clearBackupTimers],
   )
 
-  const launchBackup = useCallback(({ name, source }: LaunchBackupInput) => {
-    const id = `BAK-${Date.now().toString(36)}`
-    const newRecord: BackupRecord = {
-      id,
-      name,
-      source: source.name,
-      date: new Date().toISOString(),
-      sizeGb: 0,
-      status: 'in_progress',
-      durationMinutes: 0,
-      description: `Sauvegarde depuis ${source.apiEndpoint} (${source.environment})`,
-    }
+  const launchBackup = useCallback(
+    ({ name, source }: LaunchBackupInput) => {
+      const id = `BAK-${Date.now().toString(36)}`
+      const newRecord: BackupRecord = {
+        id,
+        name,
+        source: source.name,
+        date: new Date().toISOString(),
+        sizeGb: 0,
+        status: 'in_progress',
+        durationMinutes: 0,
+        description: `Sauvegarde depuis ${source.apiEndpoint} (${source.environment})`,
+      }
 
-    setRecords((prev) => [newRecord, ...prev])
-
-    const timer = setTimeout(() => {
-      setRecords((current) =>
-        current.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                status: 'success',
-                sizeGb: Math.round((Math.random() * 80 + 10) * 10) / 10,
-                durationMinutes: Math.floor(Math.random() * 20 + 5),
-                date: new Date().toISOString(),
-              }
-            : item,
-        ),
-      )
-      retryTimersRef.current.delete(id)
-    }, getRetryDelayMs())
-
-    retryTimersRef.current.set(id, timer)
-  }, [])
+      setRecords((prev) => [newRecord, ...prev])
+      startBackupSimulation(id, source.name)
+    },
+    [startBackupSimulation],
+  )
 
   useEffect(() => {
-    const timers = retryTimersRef.current
+    if (!notification) return
+    const timer = setTimeout(() => setNotification(null), 4000)
+    return () => clearTimeout(timer)
+  }, [notification])
+
+  useEffect(() => {
+    const intervals = progressIntervalsRef.current
+    const timers = finalizeTimersRef.current
     return () => {
+      intervals.forEach(clearInterval)
       timers.forEach(clearTimeout)
     }
   }, [])
@@ -141,6 +213,8 @@ export function useBackupRecords({ initialRecords, username }: UseBackupRecordsO
     statusCounts,
     selectedBackup,
     selectedId,
+    notification,
+    getBackupProgressPercent,
     selectBackup,
     clearSelection,
     retryBackup,

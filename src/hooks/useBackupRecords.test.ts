@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import type { BackupRecord } from '../types/backup.types'
+import * as backupSimulation from '../utils/backupSimulation.utils'
 import { useBackupRecords } from './useBackupRecords'
 
 const username = 'Admin Demo'
@@ -34,6 +35,7 @@ describe('useBackupRecords', () => {
   })
 
   afterEach(() => {
+    jest.restoreAllMocks()
     jest.useRealTimers()
   })
 
@@ -64,7 +66,44 @@ describe('useBackupRecords', () => {
     expect(result.current.selectedBackup).toBeNull()
   })
 
-  it('sets failed backup to in_progress on retry then failure with error', () => {
+  it('launches backup with in_progress state and progresses size over time', () => {
+    jest.spyOn(backupSimulation, 'shouldSimulateBackupFailure').mockReturnValue(false)
+
+    const { result } = renderHook(() => useBackupRecords(hookOptions))
+
+    act(() => {
+      result.current.launchBackup({
+        name: 'New Backup',
+        source: {
+          id: 'src-1',
+          name: 'Salesforce Production Core',
+          environment: 'Production',
+          apiEndpoint: 'https://example.com',
+          status: 'CONNECTED',
+        },
+      })
+    })
+
+    expect(result.current.records[0].status).toBe('in_progress')
+    expect(result.current.records[0].sizeGb).toBe(0)
+
+    act(() => {
+      jest.advanceTimersByTime(3000)
+    })
+
+    expect(result.current.records[0].sizeGb).toBe(30)
+
+    act(() => {
+      jest.advanceTimersByTime(5000)
+    })
+
+    expect(result.current.records[0].status).toBe('success')
+    expect(result.current.notification?.type).toBe('success')
+  })
+
+  it('finalizes retry as failure when simulation fails', () => {
+    jest.spyOn(backupSimulation, 'shouldSimulateBackupFailure').mockReturnValue(true)
+
     const { result } = renderHook(() => useBackupRecords(hookOptions))
 
     act(() => {
@@ -72,15 +111,15 @@ describe('useBackupRecords', () => {
     })
 
     expect(result.current.records.find((r) => r.id === '1')?.status).toBe('in_progress')
-    expect(result.current.records.find((r) => r.id === '1')?.errorMessage).toBeUndefined()
 
     act(() => {
-      jest.advanceTimersByTime(3000)
+      jest.advanceTimersByTime(8000)
     })
 
     const retried = result.current.records.find((r) => r.id === '1')
     expect(retried?.status).toBe('failure')
     expect(retried?.errorMessage).toBeDefined()
+    expect(result.current.notification?.type).toBe('error')
   })
 
   it('does not retry a backup already in progress', () => {
@@ -115,7 +154,9 @@ describe('useBackupRecords', () => {
     expect(stopped?.errorMessage).toBe("Arrêtée par l'utilisateur : Admin Demo")
   })
 
-  it('cancels pending retry timer when stopped', () => {
+  it('cancels pending simulation when stopped', () => {
+    jest.spyOn(backupSimulation, 'shouldSimulateBackupFailure').mockReturnValue(false)
+
     const { result } = renderHook(() => useBackupRecords(hookOptions))
 
     act(() => {
@@ -126,13 +167,12 @@ describe('useBackupRecords', () => {
       result.current.stopBackup('1')
     })
 
-    expect(result.current.records.find((r) => r.id === '1')?.status).toBe('failure')
     expect(result.current.records.find((r) => r.id === '1')?.errorMessage).toBe(
       "Arrêtée par l'utilisateur : Admin Demo",
     )
 
     act(() => {
-      jest.advanceTimersByTime(3000)
+      jest.advanceTimersByTime(8000)
     })
 
     expect(result.current.records.find((r) => r.id === '1')?.errorMessage).toBe(
