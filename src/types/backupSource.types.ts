@@ -6,12 +6,14 @@ export interface BackupSource {
   environment: string
   apiEndpoint: string
   status: BackupSourceStatus
+  scopes: string[]
 }
 
 export interface BackupSourceInput {
   name: string
   environment: string
   apiEndpoint: string
+  scopes: string[]
 }
 
 export const backupSourceStatusLabels: Record<BackupSourceStatus, string> = {
@@ -21,3 +23,5 @@ export const backupSourceStatusLabels: Record<BackupSourceStatus, string> = {
 }
 
 export const DEFAULT_SOURCE_STATUS: BackupSourceStatus = 'CONNECTED'
+
+export const DEFAULT_SOURCE_SCOPES = ['Données complètes']

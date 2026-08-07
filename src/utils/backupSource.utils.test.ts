@@ -3,6 +3,7 @@ import {
   generateSourceId,
   isValidHttpsApiEndpoint,
   normalizeBackupSource,
+  normalizeScopes,
   parseStoredBackupSources,
   updateBackupSource,
   validateBackupSourceInput,
@@ -22,6 +23,19 @@ describe('isValidHttpsApiEndpoint', () => {
   })
 })
 
+describe('normalizeScopes', () => {
+  it('trims, deduplicates and rejects empty values', () => {
+    expect(normalizeScopes([' Contacts ', 'contacts', '', 'Leads'])).toEqual([
+      'Contacts',
+      'Leads',
+    ])
+  })
+
+  it('falls back to default scopes when empty', () => {
+    expect(normalizeScopes([])).toEqual(['Données complètes'])
+  })
+})
+
 describe('validateBackupSourceInput', () => {
   it('returns null for valid input', () => {
     expect(
@@ -29,6 +43,7 @@ describe('validateBackupSourceInput', () => {
         name: 'Salesforce Production Core',
         environment: 'Production',
         apiEndpoint: 'https://org-prod.my.salesforce.com/services/data/v58.0',
+        scopes: ['Contacts'],
       }),
     ).toBeNull()
   })
@@ -39,6 +54,7 @@ describe('validateBackupSourceInput', () => {
         name: '',
         environment: 'Production',
         apiEndpoint: 'https://example.com',
+        scopes: ['Contacts'],
       }),
     ).toBe('Le nom est requis.')
   })
@@ -49,6 +65,7 @@ describe('validateBackupSourceInput', () => {
         name: 'Prod',
         environment: '',
         apiEndpoint: 'https://example.com',
+        scopes: ['Contacts'],
       }),
     ).toBe("L'environnement est requis.")
   })
@@ -59,8 +76,20 @@ describe('validateBackupSourceInput', () => {
         name: 'Prod',
         environment: 'Production',
         apiEndpoint: 'http://example.com',
+        scopes: ['Contacts'],
       }),
     ).toContain('HTTPS')
+  })
+
+  it('returns error when no scopes are provided', () => {
+    expect(
+      validateBackupSourceInput({
+        name: 'Prod',
+        environment: 'Production',
+        apiEndpoint: 'https://example.com',
+        scopes: [],
+      }),
+    ).toBe('Au moins un périmètre est requis.')
   })
 })
 
@@ -79,10 +108,12 @@ describe('createBackupSource', () => {
       name: '  Salesforce Production Core  ',
       environment: '  Production  ',
       apiEndpoint: '  https://org-prod.my.salesforce.com/services/data/v58.0  ',
+      scopes: [' Contacts ', 'Leads'],
     })
     expect(source.name).toBe('Salesforce Production Core')
     expect(source.environment).toBe('Production')
     expect(source.apiEndpoint).toBe('https://org-prod.my.salesforce.com/services/data/v58.0')
+    expect(source.scopes).toEqual(['Contacts', 'Leads'])
     expect(source.status).toBe('CONNECTED')
     expect(source.id).toMatch(/^[0-9a-f-]{36}$/i)
   })
@@ -97,15 +128,18 @@ describe('updateBackupSource', () => {
         environment: 'Staging',
         apiEndpoint: 'https://old.com',
         status: 'CONNECTED',
+        scopes: ['Contacts'],
       },
       {
         name: 'New',
         environment: 'Production',
         apiEndpoint: 'https://new.com',
+        scopes: ['Leads'],
       },
     )
     expect(updated.status).toBe('CONNECTED')
     expect(updated.name).toBe('New')
+    expect(updated.scopes).toEqual(['Leads'])
   })
 })
 
@@ -122,6 +156,7 @@ describe('normalizeBackupSource', () => {
       environment: 'Production',
       apiEndpoint: 'https://prod.salesforce.com',
       status: 'CONNECTED',
+      scopes: ['Données complètes'],
     })
   })
 
@@ -138,6 +173,7 @@ describe('parseStoredBackupSources', () => {
       environment: 'Production',
       apiEndpoint: 'https://default.example.com',
       status: 'CONNECTED' as const,
+      scopes: ['Contacts'],
     },
   ]
 
@@ -153,11 +189,13 @@ describe('parseStoredBackupSources', () => {
         environment: 'Staging',
         apiEndpoint: 'https://stored.example.com',
         status: 'CONNECTED',
+        scopes: ['Leads'],
       },
     ])
     expect(parseStoredBackupSources(stored, fallback)[0].apiEndpoint).toBe(
       'https://stored.example.com',
     )
+    expect(parseStoredBackupSources(stored, fallback)[0].scopes).toEqual(['Leads'])
   })
 
   it('returns fallback when stored data is invalid', () => {

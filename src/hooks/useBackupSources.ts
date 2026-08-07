@@ -5,6 +5,7 @@ import type { BackupSource, BackupSourceInput } from '../types/backupSource.type
 import {
   createBackupSource,
   parseStoredBackupSources,
+  updateBackupSource,
   validateBackupSourceInput,
 } from '../utils/backupSource.utils'
 
@@ -32,6 +33,18 @@ export function useBackupSources() {
     if (error) return error
 
     setSources((prev) => [...prev, createBackupSource(input)])
+    return null
+  }, [])
+
+  const updateSource = useCallback((id: string, input: BackupSourceInput): string | null => {
+    const error = validateBackupSourceInput(input)
+    if (error) return error
+
+    setSources((prev) =>
+      prev.map((source) =>
+        source.id === id ? updateBackupSource(source, input) : source,
+      ),
+    )
     return null
   }, [])
 
@@ -82,6 +95,7 @@ export function useBackupSources() {
     testingSourceId,
     notification,
     addSource,
+    updateSource,
     deleteSource,
     getSourceById,
     testConnection,

@@ -80,6 +80,7 @@ describe('useBackupRecords', () => {
           environment: 'Production',
           apiEndpoint: 'https://example.com',
           status: 'CONNECTED',
+          scopes: ['Contacts'],
         },
       })
     })

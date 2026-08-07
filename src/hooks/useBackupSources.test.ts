@@ -6,6 +6,7 @@ const sampleInput = {
   name: 'Test Source',
   environment: 'Production',
   apiEndpoint: 'https://test.example.com/services/data/v58.0',
+  scopes: ['Contacts', 'Comptes'],
 }
 
 describe('useBackupSources', () => {
@@ -30,7 +31,26 @@ describe('useBackupSources', () => {
     const added = result.current.sources[result.current.sources.length - 1]
     expect(added?.name).toBe('Test Source')
     expect(added?.status).toBe('CONNECTED')
+    expect(added?.scopes).toEqual(['Contacts', 'Comptes'])
     expect(added?.id).toMatch(/^[0-9a-f-]{36}$/i)
+  })
+
+  it('updates a source and its scopes', () => {
+    const { result } = renderHook(() => useBackupSources())
+    const source = result.current.sources[0]
+
+    act(() => {
+      const error = result.current.updateSource(source.id, {
+        ...sampleInput,
+        name: 'Updated Source',
+        scopes: ['Leads', 'Opportunités'],
+      })
+      expect(error).toBeNull()
+    })
+
+    const updated = result.current.sources.find((item) => item.id === source.id)
+    expect(updated?.name).toBe('Updated Source')
+    expect(updated?.scopes).toEqual(['Leads', 'Opportunités'])
   })
 
   it('tests connection and updates status with notification', async () => {

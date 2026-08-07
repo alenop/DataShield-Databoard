@@ -1,5 +1,5 @@
 import type { BackupSource, BackupSourceInput, BackupSourceStatus } from '../types/backupSource.types'
-import { DEFAULT_SOURCE_STATUS } from '../types/backupSource.types'
+import { DEFAULT_SOURCE_SCOPES, DEFAULT_SOURCE_STATUS } from '../types/backupSource.types'
 
 interface LegacyBackupSourceRecord {
   id?: string
@@ -8,12 +8,34 @@ interface LegacyBackupSourceRecord {
   environment?: string
   apiEndpoint?: string
   status?: string
+  scopes?: unknown
 }
 
 const VALID_STATUSES: BackupSourceStatus[] = ['CONNECTED', 'DISCONNECTED', 'ERROR']
 
 function isBackupSourceStatus(value: string): value is BackupSourceStatus {
   return VALID_STATUSES.includes(value as BackupSourceStatus)
+}
+
+export function normalizeScopes(scopes: unknown): string[] {
+  if (!Array.isArray(scopes)) return [...DEFAULT_SOURCE_SCOPES]
+
+  const seen = new Set<string>()
+  const normalized: string[] = []
+
+  for (const scope of scopes) {
+    if (typeof scope !== 'string') continue
+    const trimmed = scope.trim()
+    if (!trimmed) continue
+
+    const key = trimmed.toLowerCase()
+    if (seen.has(key)) continue
+
+    seen.add(key)
+    normalized.push(trimmed)
+  }
+
+  return normalized.length > 0 ? normalized : [...DEFAULT_SOURCE_SCOPES]
 }
 
 export function normalizeBackupSource(raw: unknown): BackupSource | null {
@@ -33,6 +55,7 @@ export function normalizeBackupSource(raw: unknown): BackupSource | null {
     status: record.status && isBackupSourceStatus(record.status)
       ? record.status
       : DEFAULT_SOURCE_STATUS,
+    scopes: normalizeScopes(record.scopes),
   }
 }
 
@@ -65,12 +88,20 @@ export function isValidHttpsApiEndpoint(apiEndpoint: string): boolean {
   }
 }
 
+export function hasValidScopes(scopes: unknown): boolean {
+  if (!Array.isArray(scopes)) return false
+  return scopes.some((scope) => typeof scope === 'string' && scope.trim().length > 0)
+}
+
 export function validateBackupSourceInput(input: BackupSourceInput): string | null {
   if (!input.name.trim()) return 'Le nom est requis.'
-  if (!input.environment.trim()) return 'L\'environnement est requis.'
-  if (!input.apiEndpoint.trim()) return 'L\'endpoint API est requis.'
+  if (!input.environment.trim()) return "L'environnement est requis."
+  if (!input.apiEndpoint.trim()) return "L'endpoint API est requis."
   if (!isValidHttpsApiEndpoint(input.apiEndpoint)) {
-    return 'L\'endpoint API doit être une URL HTTPS valide (https://…).'
+    return "L'endpoint API doit être une URL HTTPS valide (https://…)."
+  }
+  if (!hasValidScopes(input.scopes)) {
+    return 'Au moins un périmètre est requis.'
   }
   return null
 }
@@ -104,6 +135,7 @@ export function createBackupSource(input: BackupSourceInput): BackupSource {
     environment: input.environment.trim(),
     apiEndpoint: input.apiEndpoint.trim(),
     status: DEFAULT_SOURCE_STATUS,
+    scopes: normalizeScopes(input.scopes),
   }
 }
 
@@ -116,5 +148,6 @@ export function updateBackupSource(
     name: input.name.trim(),
     environment: input.environment.trim(),
     apiEndpoint: input.apiEndpoint.trim(),
+    scopes: normalizeScopes(input.scopes),
   }
 }
