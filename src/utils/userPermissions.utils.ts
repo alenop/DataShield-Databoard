@@ -96,3 +96,11 @@ export function getAssignableRoles(
 
   return roles.filter((role) => role.rank < actorRole.rank)
 }
+
+export function canViewPolicies(actorRoleId: string, roles: RoleDefinition[]): boolean {
+  return actorHasPermission(actorRoleId, 'policies.view', roles)
+}
+
+export function canManagePolicies(actorRoleId: string, roles: RoleDefinition[]): boolean {
+  return actorHasPermission(actorRoleId, 'policies.manage', roles)
+}

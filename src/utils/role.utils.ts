@@ -86,9 +86,16 @@ export function mergeRolesWithDefaults(storedRoles: RoleDefinition[]): RoleDefin
     storedRoles.filter((role) => role.isSystem).map((role) => [role.id, role]),
   )
 
-  const mergedSystemRoles = defaultRoles.map(
-    (defaultRole) => storedSystemRoles.get(defaultRole.id) ?? defaultRole,
-  )
+  const mergedSystemRoles = defaultRoles.map((defaultRole) => {
+    const stored = storedSystemRoles.get(defaultRole.id)
+    if (!stored) return defaultRole
+
+    return {
+      ...defaultRole,
+      ...stored,
+      permissions: [...new Set([...defaultRole.permissions, ...stored.permissions])],
+    }
+  })
 
   return [...mergedSystemRoles, ...customRoles]
 }
