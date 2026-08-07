@@ -1,0 +1,41 @@
+import type { RestoreJob } from '../types/restoreJob.types'
+
+export const mockRestoreJobs: RestoreJob[] = [
+  {
+    id: 'r1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
+    name: 'Restauration Pistes & Contacts',
+    backupId: 'BAK-1001',
+    backupName: 'Sauvegarde Pistes & Contacts',
+    backupDate: '2026-08-01T08:00:00Z',
+    targetSourceId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    status: 'success',
+    restoredCount: 1450,
+    totalCount: 1450,
+    createdAt: '2026-08-07T09:30:00',
+  },
+  {
+    id: 'r1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02',
+    name: 'Restauration Comptes supprimés',
+    backupId: 'BAK-1004',
+    backupName: 'Sauvegarde Rôles & Permissions',
+    backupDate: '2026-08-06T23:00:00Z',
+    targetSourceId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    status: 'in_progress',
+    restoredCount: 820,
+    totalCount: 1450,
+    createdAt: '2026-08-07T14:20:00',
+  },
+  {
+    id: 'r1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03',
+    name: 'Restauration Tickets Service Cloud',
+    backupId: 'BAK-1002',
+    backupName: 'Archivage Tickets Service Cloud',
+    backupDate: '2026-07-28T11:30:00Z',
+    targetSourceId: 'b14eebc9-9c0b-41f8-bb6d-6bb9bd380b22',
+    status: 'failure',
+    restoredCount: 0,
+    totalCount: 980,
+    createdAt: '2026-08-06T16:10:00',
+    errorMessage: 'Connexion refusée par la cible Salesforce Staging.',
+  },
+]
