@@ -1,3 +1,4 @@
+import { AuditPage } from './components/audit/AuditPage'
 import { DashboardPage } from './components/dashboard/DashboardPage'
 import { NavigationBar } from './components/navigation/NavigationBar'
 import { SettingsPage } from './components/settings/SettingsPage'
@@ -7,6 +8,7 @@ import { ThemeToggle } from './components/ui/ThemeToggle'
 import { defaultNavigationItems } from './data/defaultNavigation'
 import { useAppSettings } from './hooks/useAppSettings'
 import { useBackupSources } from './hooks/useBackupSources'
+import { useAuditEvents } from './hooks/useAuditEvents'
 import { useNavigation } from './hooks/useNavigation'
 import { useTheme } from './hooks/useTheme'
 import { useUsers } from './hooks/useUsers'
@@ -21,6 +23,7 @@ function App() {
   const appSettings = useAppSettings()
   const backupSources = useBackupSources()
   const usersState = useUsers()
+  const auditEvents = useAuditEvents()
 
   const { activeId, activeItem, isCollapsed } = navigation
 
@@ -31,6 +34,7 @@ function App() {
   const showSettings = activeId === 'settings'
   const showSources = activeId === 'sources'
   const showUsers = activeId === 'users'
+  const showAudit = activeId === 'audit'
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
@@ -55,6 +59,8 @@ function App() {
             <SourcesPage backupSources={backupSources} />
           ) : showUsers ? (
             <UsersPage usersState={usersState} />
+          ) : showAudit ? (
+            <AuditPage auditEvents={auditEvents} />
           ) : (
             <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
