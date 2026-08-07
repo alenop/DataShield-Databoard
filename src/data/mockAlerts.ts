@@ -1,0 +1,78 @@
+import type { Alert } from '../types/alert.types'
+
+export const mockAlerts: Alert[] = [
+  {
+    id: 'al1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
+    severity: 'critical',
+    message: 'Espace de stockage bientôt saturé (89 %)',
+    triggeredAt: '2026-08-07T14:32:00',
+    status: 'active',
+  },
+  {
+    id: 'al1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02',
+    severity: 'warning',
+    message: 'Échec d\'authentification OAuth sur la source Salesforce Staging',
+    triggeredAt: '2026-08-07T13:15:00',
+    status: 'active',
+  },
+  {
+    id: 'al1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03',
+    severity: 'critical',
+    message: 'Sauvegarde Salesforce Production en échec depuis 2 tentatives consécutives',
+    triggeredAt: '2026-08-07T11:48:00',
+    status: 'active',
+  },
+  {
+    id: 'al1eebc99-9c0b-4ef8-bb6d-6bb9bd380a04',
+    severity: 'warning',
+    message: 'Quota API Salesforce atteint à 85 % — risque de blocage des prochaines sauvegardes',
+    triggeredAt: '2026-08-07T10:20:00',
+    status: 'active',
+  },
+  {
+    id: 'al1eebc99-9c0b-4ef8-bb6d-6bb9bd380a05',
+    severity: 'info',
+    message: 'Maintenance planifiée du cluster de stockage ce samedi de 02h00 à 04h00 UTC',
+    triggeredAt: '2026-08-07T09:00:00',
+    status: 'active',
+  },
+  {
+    id: 'al1eebc99-9c0b-4ef8-bb6d-6bb9bd380a06',
+    severity: 'info',
+    message: 'Nouvelle version du connecteur Salesforce disponible (v58.1)',
+    triggeredAt: '2026-08-06T16:30:00',
+    status: 'active',
+  },
+  {
+    id: 'al1eebc99-9c0b-4ef8-bb6d-6bb9bd380a07',
+    severity: 'critical',
+    message: 'Certificat TLS du endpoint External Metrics API expire dans 3 jours',
+    triggeredAt: '2026-08-06T08:00:00',
+    status: 'resolved',
+    resolvedAt: '2026-08-06T14:22:00',
+  },
+  {
+    id: 'al1eebc99-9c0b-4ef8-bb6d-6bb9bd380a08',
+    severity: 'warning',
+    message: 'Latence élevée détectée sur le bucket S3 de sauvegarde (> 2 s)',
+    triggeredAt: '2026-08-05T22:10:00',
+    status: 'resolved',
+    resolvedAt: '2026-08-06T09:45:00',
+  },
+  {
+    id: 'al1eebc99-9c0b-4ef8-bb6d-6bb9bd380a09',
+    severity: 'warning',
+    message: 'Politique de rétention « Archivage long terme » non appliquée depuis 48 h',
+    triggeredAt: '2026-08-05T18:00:00',
+    status: 'resolved',
+    resolvedAt: '2026-08-05T20:30:00',
+  },
+  {
+    id: 'al1eebc99-9c0b-4ef8-bb6d-6bb9bd380a10',
+    severity: 'info',
+    message: 'Rapport hebdomadaire de conformité généré et envoyé aux administrateurs',
+    triggeredAt: '2026-08-04T07:00:00',
+    status: 'resolved',
+    resolvedAt: '2026-08-04T07:05:00',
+  },
+]
