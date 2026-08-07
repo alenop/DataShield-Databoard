@@ -2,12 +2,14 @@ import { DashboardPage } from './components/dashboard/DashboardPage'
 import { NavigationBar } from './components/navigation/NavigationBar'
 import { SettingsPage } from './components/settings/SettingsPage'
 import { SourcesPage } from './components/sources/SourcesPage'
+import { UsersPage } from './components/users/UsersPage'
 import { ThemeToggle } from './components/ui/ThemeToggle'
 import { defaultNavigationItems } from './data/defaultNavigation'
 import { useAppSettings } from './hooks/useAppSettings'
 import { useBackupSources } from './hooks/useBackupSources'
 import { useNavigation } from './hooks/useNavigation'
 import { useTheme } from './hooks/useTheme'
+import { useUsers } from './hooks/useUsers'
 import { isNavGroup } from './types/navigation.types'
 
 function App() {
@@ -18,6 +20,7 @@ function App() {
   const theme = useTheme()
   const appSettings = useAppSettings()
   const backupSources = useBackupSources()
+  const usersState = useUsers()
 
   const { activeId, activeItem, isCollapsed } = navigation
 
@@ -27,6 +30,7 @@ function App() {
   const showDashboard = activeId === 'dashboard' || activeId === 'backups'
   const showSettings = activeId === 'settings'
   const showSources = activeId === 'sources'
+  const showUsers = activeId === 'users'
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
@@ -49,6 +53,8 @@ function App() {
             <SettingsPage appSettings={appSettings} />
           ) : showSources ? (
             <SourcesPage backupSources={backupSources} />
+          ) : showUsers ? (
+            <UsersPage usersState={usersState} />
           ) : (
             <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
