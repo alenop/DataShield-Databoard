@@ -1,0 +1,68 @@
+import type { AuditEvent } from '../types/audit.types'
+
+export const mockAuditEvents: AuditEvent[] = [
+  {
+    id: 'a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
+    timestamp: '2026-08-07T14:32:00',
+    actor: 'Admin Demo',
+    action: 'Lancement de sauvegarde',
+    ipAddress: '192.168.1.45',
+    status: 'success',
+  },
+  {
+    id: 'a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02',
+    timestamp: '2026-08-07T13:18:00',
+    actor: 'Lucas Dupont',
+    action: 'Test de connexion source',
+    ipAddress: '192.168.1.52',
+    status: 'success',
+  },
+  {
+    id: 'a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a03',
+    timestamp: '2026-08-07T11:50:00',
+    actor: 'Camille Renard',
+    action: "Modification d'une politique",
+    ipAddress: '172.16.0.8',
+    status: 'denied',
+  },
+  {
+    id: 'a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a04',
+    timestamp: '2026-08-07T10:22:00',
+    actor: 'Système',
+    action: 'Sauvegarde planifiée',
+    ipAddress: '10.0.0.1',
+    status: 'success',
+  },
+  {
+    id: 'a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a05',
+    timestamp: '2026-08-07T09:05:00',
+    actor: 'Lucas Dupont',
+    action: 'Suppression de source',
+    ipAddress: '192.168.1.52',
+    status: 'success',
+  },
+  {
+    id: 'a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a06',
+    timestamp: '2026-08-06T16:30:00',
+    actor: 'Camille Renard',
+    action: "Consultation du journal d'audit",
+    ipAddress: '172.16.0.8',
+    status: 'success',
+  },
+  {
+    id: 'a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a07',
+    timestamp: '2026-08-06T14:12:00',
+    actor: 'Sophie Martin',
+    action: 'Invitation utilisateur',
+    ipAddress: '192.168.1.45',
+    status: 'success',
+  },
+  {
+    id: 'a1eebc99-9c0b-4ef8-bb6d-6bb9bd380a08',
+    timestamp: '2026-08-06T09:40:00',
+    actor: 'Système',
+    action: 'Rotation des clés API',
+    ipAddress: '10.0.0.1',
+    status: 'success',
+  },
+]
