@@ -15,6 +15,26 @@ export function filterBackupRecords(
   return records.filter((record) => record.status === filter)
 }
 
+export function filterBackupsBySource(
+  records: BackupRecord[],
+  query: string,
+): BackupRecord[] {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return records
+  return records.filter((record) =>
+    record.source.toLowerCase().includes(normalized),
+  )
+}
+
+export function applyBackupFilters(
+  records: BackupRecord[],
+  statusFilter: BackupStatusFilter,
+  sourceQuery: string,
+): BackupRecord[] {
+  const byStatus = filterBackupRecords(records, statusFilter)
+  return filterBackupsBySource(byStatus, sourceQuery)
+}
+
 export function countBackupStatuses(records: BackupRecord[]): BackupStatusCounts {
   return records.reduce(
     (acc, record) => {

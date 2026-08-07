@@ -5,6 +5,7 @@ import {
   FileInput,
   FileOutput,
   FileText,
+  Globe,
   HardDrive,
   LayoutDashboard,
   ScrollText,
@@ -26,6 +27,7 @@ export const navIconMap: Record<NavIconName, LucideIcon> = {
   'file-text': FileText,
   users: Users,
   'scroll-text': ScrollText,
+  globe: Globe,
 }
 
 interface NavIconProps {

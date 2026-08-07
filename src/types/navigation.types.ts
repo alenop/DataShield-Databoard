@@ -10,6 +10,7 @@ export type NavIconName =
   | 'file-text'
   | 'users'
   | 'scroll-text'
+  | 'globe'
 
 export type NavBadgeVariant = 'default' | 'danger' | 'warning'
 

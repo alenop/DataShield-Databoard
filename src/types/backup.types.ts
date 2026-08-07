@@ -10,6 +10,9 @@ export interface BackupRecord {
   sizeGb: number
   status: BackupStatus
   durationMinutes: number
+  description?: string
+  errorReason?: string
+  errorMessage?: string
 }
 
 export interface BackupVolumePoint {
