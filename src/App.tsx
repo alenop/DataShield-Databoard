@@ -1,3 +1,4 @@
+import { AuditPage } from './components/audit/AuditPage'
 import { DashboardPage } from './components/dashboard/DashboardPage'
 import { NavigationBar } from './components/navigation/NavigationBar'
 import { PoliciesPage } from './components/policies/PoliciesPage'
@@ -8,6 +9,7 @@ import { ThemeToggle } from './components/ui/ThemeToggle'
 import { currentUser } from './data/currentUser'
 import { defaultNavigationItems } from './data/defaultNavigation'
 import { useAppSettings } from './hooks/useAppSettings'
+import { useAuditEvents } from './hooks/useAuditEvents'
 import { useBackupPolicies } from './hooks/useBackupPolicies'
 import { useBackupSources } from './hooks/useBackupSources'
 import { useNavigation } from './hooks/useNavigation'
@@ -31,6 +33,7 @@ function App() {
     roles: rolesState.roles,
     availableSourceIds: backupSources.sources.map((source) => source.id),
   })
+  const auditEvents = useAuditEvents()
 
   const { activeId, activeItem, isCollapsed } = navigation
 
@@ -42,6 +45,7 @@ function App() {
   const showSources = activeId === 'sources'
   const showUsers = activeId === 'users'
   const showPolicies = activeId === 'policies'
+  const showAudit = activeId === 'audit'
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
@@ -72,6 +76,8 @@ function App() {
               backupSources={backupSources}
               rolesState={rolesState}
             />
+          ) : showAudit ? (
+            <AuditPage auditEvents={auditEvents} />
           ) : (
             <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
