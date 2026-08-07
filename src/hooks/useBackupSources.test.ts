@@ -1,4 +1,5 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import * as sourceApi from '../api/sourceApi'
 import { BACKUP_SOURCES_STORAGE_KEY, useBackupSources } from './useBackupSources'
 
 const sampleInput = {
@@ -10,6 +11,12 @@ const sampleInput = {
 describe('useBackupSources', () => {
   beforeEach(() => {
     localStorage.clear()
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+    jest.useRealTimers()
   })
 
   it('adds a source with CONNECTED status', () => {
@@ -26,21 +33,25 @@ describe('useBackupSources', () => {
     expect(added?.id).toMatch(/^[0-9a-f-]{36}$/i)
   })
 
-  it('edits a source', () => {
+  it('tests connection and updates status with notification', async () => {
+    jest.spyOn(sourceApi, 'postSourceConnectionTest').mockResolvedValue({
+      status: 'CONNECTED',
+      message: 'Connexion établie avec succès avec l\'API Salesforce Production Core',
+    })
+
     const { result } = renderHook(() => useBackupSources())
     const id = result.current.sources[0].id
 
-    act(() => {
-      result.current.editSource(id, {
-        name: 'Updated',
-        environment: 'Staging',
-        apiEndpoint: 'https://updated.example.com/services/data/v58.0',
-      })
+    await act(async () => {
+      const promise = result.current.testConnection(id)
+      jest.runAllTimersAsync()
+      await promise
     })
 
-    expect(result.current.sources[0].name).toBe('Updated')
-    expect(result.current.sources[0].environment).toBe('Staging')
-    expect(result.current.sources[0].status).toBe('CONNECTED')
+    await waitFor(() => {
+      expect(result.current.sources[0].status).toBe('CONNECTED')
+      expect(result.current.notification?.message).toContain('Connexion établie')
+    })
   })
 
   it('deletes a source', () => {

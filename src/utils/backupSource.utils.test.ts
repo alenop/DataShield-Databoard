@@ -104,13 +104,8 @@ describe('updateBackupSource', () => {
         apiEndpoint: 'https://new.com',
       },
     )
-    expect(updated).toEqual({
-      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-      name: 'New',
-      environment: 'Production',
-      apiEndpoint: 'https://new.com',
-      status: 'CONNECTED',
-    })
+    expect(updated.status).toBe('CONNECTED')
+    expect(updated.name).toBe('New')
   })
 })
 

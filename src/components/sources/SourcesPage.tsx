@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Loader2, Plug, Plus, Trash2 } from 'lucide-react'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
-import type { BackupSource, BackupSourceStatus } from '../../types/backupSource.types'
+import type { BackupSourceStatus } from '../../types/backupSource.types'
 import { backupSourceStatusLabels } from '../../types/backupSource.types'
 
 interface SourcesPageProps {
@@ -21,47 +21,26 @@ const emptyForm: SourceFormState = {
 }
 
 export function SourcesPage({ backupSources }: SourcesPageProps) {
-  const { sources, addSource, editSource, deleteSource } = backupSources
+  const { sources, testingSourceId, notification, addSource, deleteSource, testConnection } =
+    backupSources
   const [form, setForm] = useState<SourceFormState>(emptyForm)
-  const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-
-  const isEditing = editingId !== null
-
-  const resetForm = () => {
-    setForm(emptyForm)
-    setEditingId(null)
-    setError(null)
-  }
-
-  const startEdit = (source: BackupSource) => {
-    setEditingId(source.id)
-    setForm({
-      name: source.name,
-      environment: source.environment,
-      apiEndpoint: source.apiEndpoint,
-    })
-    setError(null)
-  }
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
 
-    const validationError = isEditing
-      ? editSource(editingId, form)
-      : addSource(form)
-
+    const validationError = addSource(form)
     if (validationError) {
       setError(validationError)
       return
     }
 
-    resetForm()
+    setForm(emptyForm)
+    setError(null)
   }
 
   const handleDelete = (id: string) => {
     deleteSource(id)
-    if (editingId === id) resetForm()
   }
 
   return (
@@ -69,13 +48,27 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Sources</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Gérez les sources de sauvegarde disponibles dans la liste déroulante.
+          Gérez les sources de sauvegarde et testez leur connexion API.
         </p>
       </div>
 
+      {notification && (
+        <div
+          role="status"
+          className={[
+            'rounded-lg border px-4 py-3 text-sm',
+            notification.type === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+              : 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-300',
+          ].join(' ')}
+        >
+          {notification.message}
+        </div>
+      )}
+
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-          {isEditing ? 'Modifier la source' : 'Ajouter une source'}
+          Ajouter une source
         </h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -142,33 +135,13 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
             </p>
           )}
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              {isEditing ? (
-                <>
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                  Enregistrer
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                  Ajouter
-                </>
-              )}
-            </button>
-            {isEditing && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                Annuler
-              </button>
-            )}
-          </div>
+          <button
+            type="submit"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Ajouter
+          </button>
         </form>
       </section>
 
@@ -204,42 +177,57 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
-                {sources.map((source) => (
-                  <tr key={source.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
-                      {source.name}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                      {source.environment}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
-                      {source.apiEndpoint}
-                    </td>
-                    <td className="px-4 py-3">
-                      <SourceStatusBadge status={source.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => startEdit(source)}
-                          aria-label={`Modifier ${source.name}`}
-                          className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800 dark:hover:text-blue-400"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(source.id)}
-                          aria-label={`Supprimer ${source.name}`}
-                          className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {sources.map((source) => {
+                  const isTesting = testingSourceId === source.id
+
+                  return (
+                    <tr key={source.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
+                        {source.name}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                        {source.environment}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
+                        {source.apiEndpoint}
+                      </td>
+                      <td className="px-4 py-3">
+                        <SourceStatusBadge status={source.status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            disabled={testingSourceId !== null}
+                            onClick={() => testConnection(source.id)}
+                            aria-label={`Tester la connexion ${source.name}`}
+                            className={[
+                              'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+                              isTesting
+                                ? 'cursor-wait bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                                : 'bg-slate-100 text-slate-700 hover:bg-blue-600 hover:text-white dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-blue-600 dark:hover:text-white disabled:cursor-not-allowed disabled:opacity-50',
+                            ].join(' ')}
+                          >
+                            {isTesting ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                            ) : (
+                              <Plug className="h-3.5 w-3.5" aria-hidden="true" />
+                            )}
+                            {isTesting ? 'Test…' : 'Tester la connexion'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(source.id)}
+                            aria-label={`Supprimer ${source.name}`}
+                            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

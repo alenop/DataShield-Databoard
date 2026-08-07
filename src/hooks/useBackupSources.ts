@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
+import { postSourceConnectionTest } from '../api/sourceApi'
 import { defaultBackupSources } from '../data/defaultBackupSources'
 import type { BackupSource, BackupSourceInput } from '../types/backupSource.types'
 import {
   createBackupSource,
   parseStoredBackupSources,
-  updateBackupSource,
   validateBackupSourceInput,
 } from '../utils/backupSource.utils'
 
@@ -17,6 +17,11 @@ export function loadBackupSources(): BackupSource[] {
 
 export function useBackupSources() {
   const [sources, setSources] = useState<BackupSource[]>(loadBackupSources)
+  const [testingSourceId, setTestingSourceId] = useState<string | null>(null)
+  const [notification, setNotification] = useState<{
+    message: string
+    type: 'success' | 'error'
+  } | null>(null)
 
   useEffect(() => {
     localStorage.setItem(BACKUP_SOURCES_STORAGE_KEY, JSON.stringify(sources))
@@ -30,19 +35,6 @@ export function useBackupSources() {
     return null
   }, [])
 
-  const editSource = useCallback(
-    (id: string, input: BackupSourceInput): string | null => {
-      const error = validateBackupSourceInput(input)
-      if (error) return error
-
-      setSources((prev) =>
-        prev.map((source) => (source.id === id ? updateBackupSource(source, input) : source)),
-      )
-      return null
-    },
-    [],
-  )
-
   const deleteSource = useCallback((id: string) => {
     setSources((prev) => prev.filter((source) => source.id !== id))
   }, [])
@@ -52,12 +44,47 @@ export function useBackupSources() {
     [sources],
   )
 
+  const testConnection = useCallback(
+    async (id: string) => {
+      const source = sources.find((item) => item.id === id)
+      if (!source || testingSourceId) return
+
+      setTestingSourceId(id)
+
+      try {
+        const result = await postSourceConnectionTest(source)
+
+        setSources((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, status: result.status } : item,
+          ),
+        )
+
+        setNotification({
+          message: result.message,
+          type: result.status === 'CONNECTED' ? 'success' : 'error',
+        })
+      } finally {
+        setTestingSourceId(null)
+      }
+    },
+    [sources, testingSourceId],
+  )
+
+  useEffect(() => {
+    if (!notification) return
+    const timer = setTimeout(() => setNotification(null), 4000)
+    return () => clearTimeout(timer)
+  }, [notification])
+
   return {
     sources,
+    testingSourceId,
+    notification,
     addSource,
-    editSource,
     deleteSource,
     getSourceById,
+    testConnection,
   }
 }
 

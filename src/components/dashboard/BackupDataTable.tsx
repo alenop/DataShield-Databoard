@@ -10,6 +10,7 @@ import { BackupStatusBadge } from './BackupStatusBadge'
 interface BackupDataTableProps {
   records: BackupRecord[]
   selectedId: string | null
+  getProgressPercent: (sizeGb: number) => number
   onSelect: (id: string) => void
   onRetry: (id: string) => void
   onStop: (id: string) => void
@@ -18,6 +19,7 @@ interface BackupDataTableProps {
 export function BackupDataTable({
   records,
   selectedId,
+  getProgressPercent,
   onSelect,
   onRetry,
   onStop,
@@ -97,7 +99,23 @@ export function BackupDataTable({
                   {formatBackupDuration(record.durationMinutes)}
                 </td>
                 <td className="px-4 py-3">
-                  <BackupStatusBadge status={record.status} />
+                  <div className="space-y-1.5">
+                    <BackupStatusBadge status={record.status} />
+                    {record.status === 'in_progress' && (
+                      <div
+                        className="h-1.5 w-full max-w-28 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
+                        role="progressbar"
+                        aria-valuenow={getProgressPercent(record.sizeGb)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <div
+                          className="h-full rounded-full bg-blue-600 transition-all duration-500"
+                          style={{ width: `${getProgressPercent(record.sizeGb)}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex items-center justify-end gap-2">
