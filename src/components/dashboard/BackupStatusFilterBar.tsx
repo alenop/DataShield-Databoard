@@ -1,9 +1,9 @@
-import type { BackupFiltersState } from '../../hooks/useBackupFilters'
+import type { BackupRecordsState } from '../../hooks/useBackupRecords'
 import type { BackupStatusFilter } from '../../types/backup.types'
 import { backupStatusLabels } from '../../types/backup.types'
 
 interface BackupStatusFilterProps {
-  filters: BackupFiltersState
+  filters: BackupRecordsState
 }
 
 const filterOptions: { value: BackupStatusFilter; label: string }[] = [

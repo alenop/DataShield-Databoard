@@ -1,5 +1,10 @@
 import type { BackupRecord } from '../types/backup.types'
-import { countBackupStatuses, filterBackupRecords } from './backupFilters.utils'
+import {
+  applyBackupFilters,
+  countBackupStatuses,
+  filterBackupRecords,
+  filterBackupsBySource,
+} from './backupFilters.utils'
 
 const mockRecords: BackupRecord[] = [
   {
@@ -81,5 +86,30 @@ describe('countBackupStatuses', () => {
       in_progress: 0,
       failure: 0,
     })
+  })
+})
+
+describe('filterBackupsBySource', () => {
+  it('filters records by source query (case insensitive)', () => {
+    const result = filterBackupsBySource(mockRecords, 'sql')
+    expect(result).toHaveLength(2)
+    expect(result.every((r) => r.source.toLowerCase().includes('sql'))).toBe(true)
+  })
+
+  it('returns all records when query is empty', () => {
+    expect(filterBackupsBySource(mockRecords, '')).toHaveLength(4)
+    expect(filterBackupsBySource(mockRecords, '   ')).toHaveLength(4)
+  })
+
+  it('returns empty array when no source matches', () => {
+    expect(filterBackupsBySource(mockRecords, 'unknown')).toEqual([])
+  })
+})
+
+describe('applyBackupFilters', () => {
+  it('combines status filter and source search', () => {
+    const result = applyBackupFilters(mockRecords, 'success', 'sql')
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe('1')
   })
 })

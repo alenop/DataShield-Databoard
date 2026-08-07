@@ -28,6 +28,12 @@ export const defaultNavigationItems: NavItem[] = [
         badge: { count: 3 },
       },
       {
+        id: 'sources',
+        label: 'Sources',
+        icon: 'globe',
+        href: '/data/sources',
+      },
+      {
         id: 'exports',
         label: 'Exports',
         icon: 'file-output',
