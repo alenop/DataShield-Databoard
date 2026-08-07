@@ -4,6 +4,8 @@ export type Permission =
   | 'users.toggle_status'
   | 'roles.create'
   | 'roles.edit'
+  | 'policies.view'
+  | 'policies.manage'
   | 'backups.manage'
   | 'sources.manage'
   | 'audit.view'
@@ -24,6 +26,8 @@ export const ALL_PERMISSIONS: Permission[] = [
   'users.toggle_status',
   'roles.create',
   'roles.edit',
+  'policies.view',
+  'policies.manage',
   'backups.manage',
   'sources.manage',
   'audit.view',
@@ -36,9 +40,11 @@ export const permissionLabels: Record<Permission, string> = {
   'users.toggle_status': 'Activer / désactiver des utilisateurs',
   'roles.create': 'Créer des rôles',
   'roles.edit': 'Modifier les droits des rôles',
+  'policies.view': 'Consulter les politiques de sauvegarde',
+  'policies.manage': 'Gérer les politiques de sauvegarde',
   'backups.manage': 'Gérer les sauvegardes',
   'sources.manage': 'Gérer les sources',
-  'audit.view': 'Consulter le journal d\'audit',
+  'audit.view': "Consulter le journal d'audit",
   'settings.manage': 'Gérer les paramètres',
 }
 

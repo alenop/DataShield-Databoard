@@ -4,8 +4,10 @@ import {
   canAssignRoleToUser,
   canCreateRole,
   canEditRole,
+  canManagePolicies,
   canManageTargetUser,
   canToggleUserStatus,
+  canViewPolicies,
   getAssignableRoles,
 } from './userPermissions.utils'
 
@@ -111,5 +113,14 @@ describe('userPermissions.utils', () => {
   it('prevents admin from creating or editing roles', () => {
     expect(canCreateRole('admin', defaultRoles)).toBe(false)
     expect(canEditRole('admin', defaultRoles[2], defaultRoles)).toBe(false)
+  })
+
+  it('grants policy management to super admin and admin only', () => {
+    expect(canManagePolicies('super_admin', defaultRoles)).toBe(true)
+    expect(canManagePolicies('admin', defaultRoles)).toBe(true)
+    expect(canViewPolicies('backup_operator', defaultRoles)).toBe(true)
+    expect(canManagePolicies('backup_operator', defaultRoles)).toBe(false)
+    expect(canViewPolicies('read_only', defaultRoles)).toBe(true)
+    expect(canManagePolicies('read_only', defaultRoles)).toBe(false)
   })
 })

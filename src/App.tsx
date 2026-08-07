@@ -1,5 +1,6 @@
 import { DashboardPage } from './components/dashboard/DashboardPage'
 import { NavigationBar } from './components/navigation/NavigationBar'
+import { PoliciesPage } from './components/policies/PoliciesPage'
 import { SettingsPage } from './components/settings/SettingsPage'
 import { SourcesPage } from './components/sources/SourcesPage'
 import { UsersPage } from './components/users/UsersPage'
@@ -7,6 +8,7 @@ import { ThemeToggle } from './components/ui/ThemeToggle'
 import { currentUser } from './data/currentUser'
 import { defaultNavigationItems } from './data/defaultNavigation'
 import { useAppSettings } from './hooks/useAppSettings'
+import { useBackupPolicies } from './hooks/useBackupPolicies'
 import { useBackupSources } from './hooks/useBackupSources'
 import { useNavigation } from './hooks/useNavigation'
 import { useRoles } from './hooks/useRoles'
@@ -24,6 +26,11 @@ function App() {
   const backupSources = useBackupSources()
   const rolesState = useRoles(currentUser.roleId)
   const usersState = useUsers({ currentUser, roles: rolesState.roles })
+  const policiesState = useBackupPolicies({
+    actorRoleId: currentUser.roleId,
+    roles: rolesState.roles,
+    availableSourceIds: backupSources.sources.map((source) => source.id),
+  })
 
   const { activeId, activeItem, isCollapsed } = navigation
 
@@ -34,6 +41,7 @@ function App() {
   const showSettings = activeId === 'settings'
   const showSources = activeId === 'sources'
   const showUsers = activeId === 'users'
+  const showPolicies = activeId === 'policies'
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
@@ -58,6 +66,12 @@ function App() {
             <SourcesPage backupSources={backupSources} />
           ) : showUsers ? (
             <UsersPage usersState={usersState} rolesState={rolesState} />
+          ) : showPolicies ? (
+            <PoliciesPage
+              policiesState={policiesState}
+              backupSources={backupSources}
+              rolesState={rolesState}
+            />
           ) : (
             <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
