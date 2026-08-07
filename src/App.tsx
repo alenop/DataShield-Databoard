@@ -4,10 +4,12 @@ import { SettingsPage } from './components/settings/SettingsPage'
 import { SourcesPage } from './components/sources/SourcesPage'
 import { UsersPage } from './components/users/UsersPage'
 import { ThemeToggle } from './components/ui/ThemeToggle'
+import { currentUser } from './data/currentUser'
 import { defaultNavigationItems } from './data/defaultNavigation'
 import { useAppSettings } from './hooks/useAppSettings'
 import { useBackupSources } from './hooks/useBackupSources'
 import { useNavigation } from './hooks/useNavigation'
+import { useRoles } from './hooks/useRoles'
 import { useTheme } from './hooks/useTheme'
 import { useUsers } from './hooks/useUsers'
 import { isNavGroup } from './types/navigation.types'
@@ -20,7 +22,8 @@ function App() {
   const theme = useTheme()
   const appSettings = useAppSettings()
   const backupSources = useBackupSources()
-  const usersState = useUsers()
+  const rolesState = useRoles(currentUser.roleId)
+  const usersState = useUsers({ currentUser, roles: rolesState.roles })
 
   const { activeId, activeItem, isCollapsed } = navigation
 
@@ -54,7 +57,7 @@ function App() {
           ) : showSources ? (
             <SourcesPage backupSources={backupSources} />
           ) : showUsers ? (
-            <UsersPage usersState={usersState} />
+            <UsersPage usersState={usersState} rolesState={rolesState} />
           ) : (
             <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">

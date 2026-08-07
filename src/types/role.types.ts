@@ -1,0 +1,45 @@
+export type Permission =
+  | 'users.invite'
+  | 'users.assign_role'
+  | 'users.toggle_status'
+  | 'roles.create'
+  | 'roles.edit'
+  | 'backups.manage'
+  | 'sources.manage'
+  | 'audit.view'
+  | 'settings.manage'
+
+export interface RoleDefinition {
+  id: string
+  name: string
+  description: string
+  permissions: Permission[]
+  isSystem: boolean
+  rank: number
+}
+
+export const ALL_PERMISSIONS: Permission[] = [
+  'users.invite',
+  'users.assign_role',
+  'users.toggle_status',
+  'roles.create',
+  'roles.edit',
+  'backups.manage',
+  'sources.manage',
+  'audit.view',
+  'settings.manage',
+]
+
+export const permissionLabels: Record<Permission, string> = {
+  'users.invite': 'Inviter des utilisateurs',
+  'users.assign_role': 'Attribuer des rôles',
+  'users.toggle_status': 'Activer / désactiver des utilisateurs',
+  'roles.create': 'Créer des rôles',
+  'roles.edit': 'Modifier les droits des rôles',
+  'backups.manage': 'Gérer les sauvegardes',
+  'sources.manage': 'Gérer les sources',
+  'audit.view': 'Consulter le journal d\'audit',
+  'settings.manage': 'Gérer les paramètres',
+}
+
+export const CUSTOM_ROLE_RANK = 35

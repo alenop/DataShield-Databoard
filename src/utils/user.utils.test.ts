@@ -13,7 +13,7 @@ describe('user.utils', () => {
 
   it('rejects duplicate emails on invite', () => {
     const error = validateInviteUserInput(
-      { email: 'admin@entreprise.com', role: 'read_only' },
+      { email: 'admin@entreprise.com', roleId: 'read_only' },
       ['admin@entreprise.com'],
     )
     expect(error).toContain('existe déjà')
@@ -26,7 +26,7 @@ describe('user.utils', () => {
   it('creates an invited user as inactive without MFA', () => {
     const user = createInvitedUser({
       email: 'invite@entreprise.com',
-      role: 'backup_operator',
+      roleId: 'backup_operator',
     })
 
     expect(user.email).toBe('invite@entreprise.com')

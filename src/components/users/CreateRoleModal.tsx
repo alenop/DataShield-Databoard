@@ -1,32 +1,33 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
-import type { RoleDefinition } from '../../types/role.types'
+import type { Permission } from '../../types/role.types'
+import { ALL_PERMISSIONS, permissionLabels } from '../../types/role.types'
 
-interface InviteUserModalProps {
+interface CreateRoleModalProps {
   isOpen: boolean
-  assignableRoles: RoleDefinition[]
   onClose: () => void
-  onInvite: (email: string, roleId: string) => string | null
+  onCreate: (input: {
+    name: string
+    description: string
+    permissions: Permission[]
+  }) => string | null
 }
 
-export function InviteUserModal({
-  isOpen,
-  assignableRoles,
-  onClose,
-  onInvite,
-}: InviteUserModalProps) {
-  const [email, setEmail] = useState('')
-  const [roleId, setRoleId] = useState('')
+export function CreateRoleModal({ isOpen, onClose, onCreate }: CreateRoleModalProps) {
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [permissions, setPermissions] = useState<Permission[]>([])
   const [error, setError] = useState<string | null>(null)
-  const emailInputRef = useRef<HTMLInputElement>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!isOpen) return
 
-    setEmail('')
-    setRoleId(assignableRoles[0]?.id ?? '')
+    setName('')
+    setDescription('')
+    setPermissions([])
     setError(null)
-    emailInputRef.current?.focus()
+    nameInputRef.current?.focus()
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -34,14 +35,22 @@ export function InviteUserModal({
 
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen, assignableRoles, onClose])
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
+
+  const togglePermission = (permission: Permission) => {
+    setPermissions((prev) =>
+      prev.includes(permission)
+        ? prev.filter((item) => item !== permission)
+        : [...prev, permission],
+    )
+  }
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
 
-    const validationError = onInvite(email, roleId)
+    const validationError = onCreate({ name, description, permissions })
     if (validationError) {
       setError(validationError)
       return
@@ -55,7 +64,7 @@ export function InviteUserModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="invite-user-modal-title"
+      aria-labelledby="create-role-modal-title"
     >
       <button
         type="button"
@@ -66,7 +75,7 @@ export function InviteUserModal({
 
       <form
         onSubmit={handleSubmit}
-        className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900"
       >
         <button
           type="button"
@@ -78,55 +87,75 @@ export function InviteUserModal({
         </button>
 
         <h2
-          id="invite-user-modal-title"
+          id="create-role-modal-title"
           className="pr-8 text-lg font-semibold text-slate-900 dark:text-white"
         >
-          Inviter un utilisateur
+          Créer un rôle
         </h2>
 
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Saisissez l&apos;adresse e-mail et choisissez le rôle attribué.
+          Définissez un nouveau rôle et sélectionnez les droits associés.
         </p>
 
         <div className="mt-4 space-y-4">
           <div>
             <label
-              htmlFor="invite-email"
+              htmlFor="role-name"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              E-mail
+              Nom du rôle
             </label>
             <input
-              ref={emailInputRef}
-              id="invite-email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="ex. nouvel.utilisateur@entreprise.com"
+              ref={nameInputRef}
+              id="role-name"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Ex. Responsable conformité"
               className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
             />
           </div>
 
           <div>
             <label
-              htmlFor="invite-role"
+              htmlFor="role-description"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              Rôle
+              Description
             </label>
-            <select
-              id="invite-role"
-              value={roleId}
-              onChange={(event) => setRoleId(event.target.value)}
+            <textarea
+              id="role-description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={2}
+              placeholder="Décrivez le périmètre de ce rôle…"
               className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-            >
-              {assignableRoles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
+
+          <fieldset>
+            <legend className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Droits
+            </legend>
+            <div className="mt-2 space-y-2">
+              {ALL_PERMISSIONS.map((permission) => (
+                <label
+                  key={permission}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={permissions.includes(permission)}
+                    onChange={() => togglePermission(permission)}
+                    className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-slate-700 dark:text-slate-300">
+                    {permissionLabels[permission]}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
         </div>
 
         {error && (
@@ -145,10 +174,9 @@ export function InviteUserModal({
           </button>
           <button
             type="submit"
-            disabled={assignableRoles.length === 0}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
-            Envoyer l&apos;invitation
+            Créer le rôle
           </button>
         </div>
       </form>
