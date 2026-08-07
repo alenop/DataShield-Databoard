@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react'
-import { Loader2, Plug, Plus, Trash2 } from 'lucide-react'
+import { Loader2, Pencil, Plug, Plus, Trash2 } from 'lucide-react'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
-import type { BackupSourceStatus } from '../../types/backupSource.types'
+import type { BackupSource, BackupSourceStatus } from '../../types/backupSource.types'
 import { backupSourceStatusLabels } from '../../types/backupSource.types'
+import { EditSourceModal } from './EditSourceModal'
+import { ScopeListEditor } from './ScopeListEditor'
 
 interface SourcesPageProps {
   backupSources: BackupSourcesState
@@ -12,19 +14,22 @@ interface SourceFormState {
   name: string
   environment: string
   apiEndpoint: string
+  scopes: string[]
 }
 
 const emptyForm: SourceFormState = {
   name: '',
   environment: '',
   apiEndpoint: '',
+  scopes: [],
 }
 
 export function SourcesPage({ backupSources }: SourcesPageProps) {
-  const { sources, testingSourceId, notification, addSource, deleteSource, testConnection } =
+  const { sources, testingSourceId, notification, addSource, updateSource, deleteSource, testConnection } =
     backupSources
   const [form, setForm] = useState<SourceFormState>(emptyForm)
   const [error, setError] = useState<string | null>(null)
+  const [editingSource, setEditingSource] = useState<BackupSource | null>(null)
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -48,7 +53,7 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Sources</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Gérez les sources de sauvegarde et testez leur connexion API.
+          Gérez les sources de sauvegarde, leurs périmètres d&apos;export et testez leur connexion API.
         </p>
       </div>
 
@@ -127,6 +132,14 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
                 className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
               />
             </div>
+
+            <div className="sm:col-span-2">
+              <ScopeListEditor
+                id="source-scopes"
+                scopes={form.scopes}
+                onChange={(scopes) => setForm((prev) => ({ ...prev, scopes }))}
+              />
+            </div>
           </div>
 
           {error && (
@@ -166,6 +179,9 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
                     Environnement
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
+                    Périmètres
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
                     Endpoint API
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
@@ -188,6 +204,9 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                         {source.environment}
                       </td>
+                      <td className="px-4 py-3">
+                        <ScopeBadges scopes={source.scopes} />
+                      </td>
                       <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
                         {source.apiEndpoint}
                       </td>
@@ -196,6 +215,14 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setEditingSource(source)}
+                            aria-label={`Modifier ${source.name}`}
+                            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800 dark:hover:text-blue-400"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
                           <button
                             type="button"
                             disabled={testingSourceId !== null}
@@ -233,6 +260,44 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
           </div>
         )}
       </section>
+
+      <EditSourceModal
+        isOpen={editingSource !== null}
+        source={editingSource}
+        onClose={() => setEditingSource(null)}
+        onSave={updateSource}
+      />
+    </div>
+  )
+}
+
+interface ScopeBadgesProps {
+  scopes: string[]
+}
+
+function ScopeBadges({ scopes }: ScopeBadgesProps) {
+  if (scopes.length === 0) {
+    return <span className="text-slate-400">—</span>
+  }
+
+  const visible = scopes.slice(0, 2)
+  const remaining = scopes.length - visible.length
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {visible.map((scope) => (
+        <span
+          key={scope}
+          className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+        >
+          {scope}
+        </span>
+      ))}
+      {remaining > 0 && (
+        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+          +{remaining}
+        </span>
+      )}
     </div>
   )
 }

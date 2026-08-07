@@ -8,6 +8,7 @@ export const defaultBackupSources: BackupSource[] = [
     environment: 'Production',
     apiEndpoint: 'https://org-prod.my.salesforce.com/services/data/v58.0',
     status: DEFAULT_SOURCE_STATUS,
+    scopes: ['Contacts', 'Opportunités', 'Comptes', 'Leads'],
   },
   {
     id: 'b14eebc9-9c0b-41f8-bb6d-6bb9bd380b22',
@@ -15,6 +16,7 @@ export const defaultBackupSources: BackupSource[] = [
     environment: 'Staging',
     apiEndpoint: 'https://org-staging.my.salesforce.com/services/data/v58.0',
     status: DEFAULT_SOURCE_STATUS,
+    scopes: ['Contacts', 'Opportunités'],
   },
   {
     id: 'c24eebc9-9c0b-42f8-bb6d-6bb9bd380c33',
@@ -22,5 +24,6 @@ export const defaultBackupSources: BackupSource[] = [
     environment: 'Production',
     apiEndpoint: 'https://api.datashield.test/v1',
     status: DEFAULT_SOURCE_STATUS,
+    scopes: ['Métriques agrégées', 'Logs API'],
   },
 ]
