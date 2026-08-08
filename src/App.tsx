@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { AuditPage } from './components/audit/AuditPage'
 import { AlertsPage } from './components/alerts/AlertsPage'
 import { DashboardPage } from './components/dashboard/DashboardPage'
@@ -10,12 +11,12 @@ import { SourcesPage } from './components/sources/SourcesPage'
 import { UsersPage } from './components/users/UsersPage'
 import { ThemeToggle } from './components/ui/ThemeToggle'
 import { currentUser } from './data/currentUser'
-import { defaultNavigationItems } from './data/defaultNavigation'
 import { mockBackupRecords } from './data/mockBackups'
 import { useAlerts } from './hooks/useAlerts'
 import { useAppSettings } from './hooks/useAppSettings'
 import { useAuditEvents } from './hooks/useAuditEvents'
 import { useBackupPolicies } from './hooks/useBackupPolicies'
+import { useBackupRecords } from './hooks/useBackupRecords'
 import { useBackupSources } from './hooks/useBackupSources'
 import { useDataExports } from './hooks/useDataExports'
 import { useNavigation } from './hooks/useNavigation'
@@ -24,6 +25,7 @@ import { useRoles } from './hooks/useRoles'
 import { useTheme } from './hooks/useTheme'
 import { useUsers } from './hooks/useUsers'
 import { isNavGroup } from './types/navigation.types'
+import { buildNavigationItems } from './utils/navigationBadges.utils'
 
 const availableRestoreBackups = mockBackupRecords
   .filter((backup) => backup.status === 'success')
@@ -35,13 +37,13 @@ const availableRestoreBackups = mockBackupRecords
   }))
 
 function App() {
-  const navigation = useNavigation({
-    items: defaultNavigationItems,
-    defaultActiveId: 'dashboard',
-  })
   const theme = useTheme()
   const appSettings = useAppSettings()
   const backupSources = useBackupSources()
+  const backupRecords = useBackupRecords({
+    initialRecords: mockBackupRecords,
+    username: currentUser.name,
+  })
   const rolesState = useRoles(currentUser.roleId)
   const usersState = useUsers({ currentUser, roles: rolesState.roles })
   const policiesState = useBackupPolicies({
@@ -63,6 +65,25 @@ function App() {
       id: source.id,
       name: `${source.name} (${source.environment})`,
     })),
+  })
+
+  const navigationItems = useMemo(
+    () =>
+      buildNavigationItems({
+        criticalAlerts: alertsState.summary.critical,
+        warningAlerts: alertsState.summary.warning,
+        failedBackups: backupRecords.statusCounts.failure,
+        exportsPreparing: dataExports.exports.filter((exportItem) => exportItem.status === 'preparing')
+          .length,
+        importsInProgress: restoreJobs.restoreJobs.filter((job) => job.status === 'in_progress')
+          .length,
+      }),
+    [alertsState.summary, backupRecords.statusCounts.failure, dataExports.exports, restoreJobs.restoreJobs],
+  )
+
+  const navigation = useNavigation({
+    items: navigationItems,
+    defaultActiveId: 'dashboard',
   })
 
   const { activeId, activeItem, isCollapsed } = navigation
@@ -96,7 +117,11 @@ function App() {
           </div>
 
           {showDashboard ? (
-            <DashboardPage appSettings={appSettings} backupSources={backupSources} />
+            <DashboardPage
+              appSettings={appSettings}
+              backupSources={backupSources}
+              backupRecords={backupRecords}
+            />
           ) : showSettings ? (
             <SettingsPage appSettings={appSettings} />
           ) : showSources ? (

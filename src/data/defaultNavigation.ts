@@ -12,20 +12,17 @@ export const defaultNavigationItems: NavItem[] = [
     label: 'Alertes',
     icon: 'bell',
     href: '/alerts',
-    badge: { count: 12, variant: 'danger' },
   },
   {
     id: 'data',
     label: 'Données',
     icon: 'database',
-    badge: { count: 4, variant: 'warning' },
     children: [
       {
         id: 'backups',
         label: 'Sauvegardes',
         icon: 'hard-drive',
         href: '/data/backups',
-        badge: { count: 3 },
       },
       {
         id: 'sources',
@@ -44,7 +41,6 @@ export const defaultNavigationItems: NavItem[] = [
         label: 'Imports',
         icon: 'file-input',
         href: '/data/imports',
-        badge: { count: 1, variant: 'warning' },
       },
     ],
   },
@@ -64,7 +60,6 @@ export const defaultNavigationItems: NavItem[] = [
         label: 'Journal d\'audit',
         icon: 'scroll-text',
         href: '/security/audit',
-        badge: { count: 5, variant: 'danger' },
       },
       {
         id: 'users',

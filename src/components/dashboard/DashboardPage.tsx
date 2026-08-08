@@ -1,11 +1,10 @@
 import { BackupActions } from './BackupActions'
 import { BackupDetailPanel } from './BackupDetailPanel'
 import { StopBackupConfirmModal } from '../ui/StopBackupConfirmModal'
-import { currentUser } from '../../data/currentUser'
-import { mockBackupRecords, mockBackupVolume } from '../../data/mockBackups'
+import { mockBackupVolume } from '../../data/mockBackups'
 import type { AppSettingsState } from '../../hooks/useAppSettings'
+import type { BackupRecordsState } from '../../hooks/useBackupRecords'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
-import { useBackupRecords } from '../../hooks/useBackupRecords'
 import { useConfirmModal } from '../../hooks/useConfirmModal'
 import { useStopBackupConfirm } from '../../hooks/useStopBackupConfirm'
 import { BackupDataTable } from './BackupDataTable'
@@ -16,13 +15,10 @@ import { BackupVolumeChart } from './BackupVolumeChart'
 interface DashboardPageProps {
   appSettings: AppSettingsState
   backupSources: BackupSourcesState
+  backupRecords: BackupRecordsState
 }
 
-export function DashboardPage({ appSettings, backupSources }: DashboardPageProps) {
-  const backupRecords = useBackupRecords({
-    initialRecords: mockBackupRecords,
-    username: currentUser.name,
-  })
+export function DashboardPage({ appSettings, backupSources, backupRecords }: DashboardPageProps) {
   const confirmModal = useConfirmModal()
   const stopConfirm = useStopBackupConfirm({
     onConfirmStop: backupRecords.stopBackup,
@@ -74,15 +70,6 @@ export function DashboardPage({ appSettings, backupSources }: DashboardPageProps
       )}
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-          Volume de données sauvegardées
-        </h2>
-        <div className="mt-4">
-          <BackupVolumeChart data={mockBackupVolume} />
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-base font-semibold text-slate-900 dark:text-white">
@@ -104,6 +91,15 @@ export function DashboardPage({ appSettings, backupSources }: DashboardPageProps
             onRetry={backupRecords.retryBackup}
             onStop={handleStopRequest}
           />
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+          Volume de données sauvegardées
+        </h2>
+        <div className="mt-4">
+          <BackupVolumeChart data={mockBackupVolume} />
         </div>
       </section>
 
