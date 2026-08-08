@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useState, type KeyboardEvent } from 'react'
 import { Plus, X } from 'lucide-react'
 import { normalizeScopes } from '../../utils/backupSource.utils'
 
@@ -25,11 +25,6 @@ export function ScopeListEditor({ id, scopes, onChange, disabled = false }: Scop
     onChange(scopes.filter((scope) => scope !== scopeToRemove))
   }
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault()
-    addScope()
-  }
-
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       event.preventDefault()
@@ -49,7 +44,7 @@ export function ScopeListEditor({ id, scopes, onChange, disabled = false }: Scop
         Définissez les périmètres disponibles lors de la création d&apos;un export.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-2 flex gap-2">
+      <div className="mt-2 flex gap-2">
         <input
           id={id}
           type="text"
@@ -61,14 +56,15 @@ export function ScopeListEditor({ id, scopes, onChange, disabled = false }: Scop
           className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
         />
         <button
-          type="submit"
+          type="button"
+          onClick={addScope}
           disabled={disabled || !draft.trim()}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Ajouter
         </button>
-      </form>
+      </div>
 
       {scopes.length > 0 ? (
         <ul className="mt-3 flex flex-wrap gap-2">
