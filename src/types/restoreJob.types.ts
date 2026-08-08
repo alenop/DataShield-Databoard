@@ -25,6 +25,7 @@ export interface RestoreBackupOption {
   name: string
   date: string
   source: string
+  sourceId: string
 }
 
 export interface RestoreTargetOption {

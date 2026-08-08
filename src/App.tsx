@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { AuditPage } from './components/audit/AuditPage'
 import { AlertsPage } from './components/alerts/AlertsPage'
+import { BackupsPage } from './components/backups/BackupsPage'
 import { DashboardPage } from './components/dashboard/DashboardPage'
 import { ExportsPage } from './components/exports/ExportsPage'
 import { ImportsPage } from './components/imports/ImportsPage'
@@ -11,12 +12,13 @@ import { SourcesPage } from './components/sources/SourcesPage'
 import { UsersPage } from './components/users/UsersPage'
 import { ThemeToggle } from './components/ui/ThemeToggle'
 import { currentUser } from './data/currentUser'
-import { mockBackupRecords } from './data/mockBackups'
+import { buildMockBackupRecords } from './data/mockBackups'
 import { useAlerts } from './hooks/useAlerts'
 import { useAppSettings } from './hooks/useAppSettings'
 import { useAuditEvents } from './hooks/useAuditEvents'
 import { useBackupPolicies } from './hooks/useBackupPolicies'
 import { useBackupRecords } from './hooks/useBackupRecords'
+import { useBackupSchedules } from './hooks/useBackupSchedules'
 import { useBackupSources } from './hooks/useBackupSources'
 import { useDataExports } from './hooks/useDataExports'
 import { useNavigation } from './hooks/useNavigation'
@@ -26,24 +28,24 @@ import { useTheme } from './hooks/useTheme'
 import { useUsers } from './hooks/useUsers'
 import { isNavGroup } from './types/navigation.types'
 import { buildNavigationItems } from './utils/navigationBadges.utils'
-
-const availableRestoreBackups = mockBackupRecords
-  .filter((backup) => backup.status === 'success')
-  .map((backup) => ({
-    id: backup.id,
-    name: backup.name,
-    date: backup.date,
-    source: backup.source,
-  }))
+import { buildRestoreBackupOptions } from './utils/backupRecord.utils'
 
 function App() {
   const theme = useTheme()
   const appSettings = useAppSettings()
   const backupSources = useBackupSources()
+  const initialBackupRecords = useMemo(
+    () => buildMockBackupRecords(backupSources.sources),
+    [backupSources.sources],
+  )
   const backupRecords = useBackupRecords({
-    initialRecords: mockBackupRecords,
+    initialRecords: initialBackupRecords,
     username: currentUser.name,
+    sources: backupSources.sources,
   })
+  const backupSchedules = useBackupSchedules(
+    backupSources.sources.map((source) => source.id),
+  )
   const rolesState = useRoles(currentUser.roleId)
   const usersState = useUsers({ currentUser, roles: rolesState.roles })
   const policiesState = useBackupPolicies({
@@ -59,6 +61,11 @@ function App() {
       scopes: source.scopes,
     })),
   )
+  const availableRestoreBackups = useMemo(
+    () => buildRestoreBackupOptions(backupRecords.records, backupSources.sources),
+    [backupRecords.records, backupSources.sources],
+  )
+
   const restoreJobs = useRestoreJobs({
     availableBackups: availableRestoreBackups,
     availableTargets: backupSources.sources.map((source) => ({
@@ -91,7 +98,8 @@ function App() {
   const activeHref =
     activeItem && !isNavGroup(activeItem) ? activeItem.href : undefined
 
-  const showDashboard = activeId === 'dashboard' || activeId === 'backups'
+  const showDashboard = activeId === 'dashboard'
+  const showBackups = activeId === 'backups'
   const showSettings = activeId === 'settings'
   const showSources = activeId === 'sources'
   const showUsers = activeId === 'users'
@@ -121,6 +129,15 @@ function App() {
               appSettings={appSettings}
               backupSources={backupSources}
               backupRecords={backupRecords}
+              restoreJobs={restoreJobs}
+              availableRestoreBackups={availableRestoreBackups}
+            />
+          ) : showBackups ? (
+            <BackupsPage
+              appSettings={appSettings}
+              backupSources={backupSources}
+              backupRecords={backupRecords}
+              backupSchedules={backupSchedules}
             />
           ) : showSettings ? (
             <SettingsPage appSettings={appSettings} />

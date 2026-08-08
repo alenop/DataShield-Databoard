@@ -1,20 +1,27 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
 import type { BackupRecord } from '../../types/backup.types'
-import { backupStatusLabels } from '../../types/backup.types'
+import type { BackupSource } from '../../types/backupSource.types'
+import {
+  backupScheduleFrequencyTypeLabels,
+  backupStatusLabels,
+} from '../../types/backup.types'
+import { getBackupSourceLabel } from '../../utils/backupRecord.utils'
 import {
   formatBackupDate,
   formatBackupDuration,
+  formatBackupDisplayName,
   formatBackupSize,
 } from '../../utils/backupFormatters'
 import { BackupStatusBadge } from './BackupStatusBadge'
 
 interface BackupDetailPanelProps {
   backup: BackupRecord
+  sources: BackupSource[]
   onClose: () => void
 }
 
-export function BackupDetailPanel({ backup, onClose }: BackupDetailPanelProps) {
+export function BackupDetailPanel({ backup, sources, onClose }: BackupDetailPanelProps) {
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -47,7 +54,7 @@ export function BackupDetailPanel({ backup, onClose }: BackupDetailPanelProps) {
               id="backup-detail-title"
               className="mt-1 text-lg font-semibold text-slate-900 dark:text-white"
             >
-              {backup.name}
+              {formatBackupDisplayName(backup.name, backup.scheduleFrequency)}
             </h2>
           </div>
           <button
@@ -66,7 +73,15 @@ export function BackupDetailPanel({ backup, onClose }: BackupDetailPanelProps) {
           </div>
 
           <dl className="space-y-4 text-sm">
-            <DetailRow label="Source" value={backup.source} />
+            <DetailRow
+              label="Type"
+              value={
+                backup.scheduleFrequency
+                  ? `${backupScheduleFrequencyTypeLabels[backup.scheduleFrequency]} (${backup.scheduleFrequency === 'daily' ? 'j' : 's'})`
+                  : 'À la demande'
+              }
+            />
+            <DetailRow label="Source" value={getBackupSourceLabel(backup, sources)} />
             <DetailRow label="Date" value={formatBackupDate(backup.date)} />
             <DetailRow label="Volume" value={formatBackupSize(backup.sizeGb)} />
             <DetailRow label="Durée" value={formatBackupDuration(backup.durationMinutes)} />

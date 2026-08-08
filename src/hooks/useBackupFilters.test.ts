@@ -6,6 +6,7 @@ const records: BackupRecord[] = [
   {
     id: '1',
     name: 'A',
+    sourceId: 'src-1',
     source: 'S1',
     date: '2026-08-07T06:00:00',
     sizeGb: 10,
@@ -15,6 +16,7 @@ const records: BackupRecord[] = [
   {
     id: '2',
     name: 'B',
+    sourceId: 'src-2',
     source: 'S2',
     date: '2026-08-07T07:00:00',
     sizeGb: 5,

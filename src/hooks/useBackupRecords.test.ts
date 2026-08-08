@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react'
+import { defaultBackupSources } from '../data/defaultBackupSources'
 import type { BackupRecord } from '../types/backup.types'
 import * as backupSimulation from '../utils/backupSimulation.utils'
 import { useBackupRecords } from './useBackupRecords'
@@ -9,7 +10,8 @@ const records: BackupRecord[] = [
   {
     id: '1',
     name: 'Backup A',
-    source: 'Salesforce Production',
+    sourceId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    source: 'Salesforce Production Core',
     date: '2026-08-07T06:00:00',
     sizeGb: 10,
     status: 'failure',
@@ -19,7 +21,8 @@ const records: BackupRecord[] = [
   {
     id: '2',
     name: 'Backup B',
-    source: 'External API',
+    sourceId: 'c24eebc9-9c0b-42f8-bb6d-6bb9bd380c33',
+    source: 'External Metrics API',
     date: '2026-08-07T07:00:00',
     sizeGb: 5,
     status: 'success',
@@ -27,7 +30,11 @@ const records: BackupRecord[] = [
   },
 ]
 
-const hookOptions = { initialRecords: records, username }
+const hookOptions = {
+  initialRecords: records,
+  username,
+  sources: defaultBackupSources,
+}
 
 describe('useBackupRecords', () => {
   beforeEach(() => {
@@ -37,6 +44,33 @@ describe('useBackupRecords', () => {
   afterEach(() => {
     jest.restoreAllMocks()
     jest.useRealTimers()
+  })
+
+  it('excludes backups whose source is not configured', () => {
+    const mixedRecords: BackupRecord[] = [
+      ...records,
+      {
+        id: '3',
+        name: 'Orphan Backup',
+        sourceId: 'missing-source-id',
+        source: 'Salesforce Production Core',
+        date: '2026-08-07T08:00:00',
+        sizeGb: 1,
+        status: 'success',
+        durationMinutes: 1,
+      },
+    ]
+
+    const { result } = renderHook(() =>
+      useBackupRecords({
+        initialRecords: mixedRecords,
+        username,
+        sources: defaultBackupSources,
+      }),
+    )
+
+    expect(result.current.records).toHaveLength(2)
+    expect(result.current.records.some((record) => record.id === '3')).toBe(false)
   })
 
   it('filters records by source search', () => {
@@ -75,10 +109,10 @@ describe('useBackupRecords', () => {
       result.current.launchBackup({
         name: 'New Backup',
         source: {
-          id: 'src-1',
-          name: 'Salesforce Production Core',
-          environment: 'Production',
-          apiEndpoint: 'https://example.com',
+          id: defaultBackupSources[0].id,
+          name: defaultBackupSources[0].name,
+          environment: defaultBackupSources[0].environment,
+          apiEndpoint: defaultBackupSources[0].apiEndpoint,
           status: 'CONNECTED',
           scopes: ['Contacts'],
         },
@@ -128,7 +162,7 @@ describe('useBackupRecords', () => {
       { ...records[0], status: 'in_progress' },
     ]
     const { result } = renderHook(() =>
-      useBackupRecords({ initialRecords: inProgressRecords, username }),
+      useBackupRecords({ initialRecords: inProgressRecords, username, sources: defaultBackupSources }),
     )
 
     act(() => {
@@ -143,7 +177,7 @@ describe('useBackupRecords', () => {
       { ...records[0], status: 'in_progress' },
     ]
     const { result } = renderHook(() =>
-      useBackupRecords({ initialRecords: inProgressRecords, username }),
+      useBackupRecords({ initialRecords: inProgressRecords, username, sources: defaultBackupSources }),
     )
 
     act(() => {

@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
 import type { CreateRestoreJobInput, RestoreBackupOption, RestoreTargetOption } from '../../types/restoreJob.types'
-import { formatRestoreBackupSource } from '../../utils/restoreJob.utils'
+import { filterRestoreBackupsByTarget, formatRestoreBackupSource } from '../../utils/restoreJob.utils'
 
 interface LaunchRestoreModalProps {
   isOpen: boolean
@@ -24,12 +24,20 @@ export function LaunchRestoreModal({
   const [error, setError] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
+  const backupsForTarget = useMemo(
+    () => filterRestoreBackupsByTarget(backups, targetSourceId),
+    [backups, targetSourceId],
+  )
+
   useEffect(() => {
     if (!isOpen) return
 
+    const initialTargetId = targets[0]?.id ?? ''
+    const initialBackups = filterRestoreBackupsByTarget(backups, initialTargetId)
+
     setName('Restauration Pistes & Contacts')
-    setBackupId(backups[0]?.id ?? '')
-    setTargetSourceId(targets[0]?.id ?? '')
+    setTargetSourceId(initialTargetId)
+    setBackupId(initialBackups[0]?.id ?? '')
     setError(null)
     nameInputRef.current?.focus()
 
@@ -41,7 +49,21 @@ export function LaunchRestoreModal({
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, backups, targets, onClose])
 
+  useEffect(() => {
+    if (!isOpen || !targetSourceId) return
+
+    setBackupId((currentId) => {
+      const isStillValid = backupsForTarget.some((backup) => backup.id === currentId)
+      return isStillValid ? currentId : (backupsForTarget[0]?.id ?? '')
+    })
+  }, [isOpen, targetSourceId, backupsForTarget])
+
   if (!isOpen) return null
+
+  const handleTargetChange = (nextTargetId: string) => {
+    setTargetSourceId(nextTargetId)
+    setError(null)
+  }
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -118,37 +140,6 @@ export function LaunchRestoreModal({
 
           <div>
             <label
-              htmlFor="restore-backup"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-            >
-              Sauvegarde source
-            </label>
-            <select
-              id="restore-backup"
-              value={backupId}
-              onChange={(event) => setBackupId(event.target.value)}
-              disabled={backups.length === 0}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-            >
-              {backups.length === 0 ? (
-                <option value="">Aucune sauvegarde disponible</option>
-              ) : (
-                backups.map((backup) => (
-                  <option key={backup.id} value={backup.id}>
-                    {formatRestoreBackupSource(backup.date, backup.name)}
-                  </option>
-                ))
-              )}
-            </select>
-            {backups.length === 0 && (
-              <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                Seules les sauvegardes réussies peuvent être restaurées.
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
               htmlFor="restore-target"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
@@ -157,7 +148,7 @@ export function LaunchRestoreModal({
             <select
               id="restore-target"
               value={targetSourceId}
-              onChange={(event) => setTargetSourceId(event.target.value)}
+              onChange={(event) => handleTargetChange(event.target.value)}
               disabled={targets.length === 0}
               className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
             >
@@ -167,6 +158,37 @@ export function LaunchRestoreModal({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="restore-backup"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+            >
+              Sauvegarde source
+            </label>
+            <select
+              id="restore-backup"
+              value={backupId}
+              onChange={(event) => setBackupId(event.target.value)}
+              disabled={backupsForTarget.length === 0}
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            >
+              {backupsForTarget.length === 0 ? (
+                <option value="">Aucune sauvegarde pour cette cible</option>
+              ) : (
+                backupsForTarget.map((backup) => (
+                  <option key={backup.id} value={backup.id}>
+                    {formatRestoreBackupSource(backup.date, backup.name)}
+                  </option>
+                ))
+              )}
+            </select>
+            {backupsForTarget.length === 0 && (
+              <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                Aucune sauvegarde réussie n&apos;est disponible pour cette cible.
+              </p>
+            )}
           </div>
         </div>
 
@@ -186,7 +208,7 @@ export function LaunchRestoreModal({
           </button>
           <button
             type="submit"
-            disabled={backups.length === 0 || targets.length === 0}
+            disabled={backupsForTarget.length === 0 || targets.length === 0}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Lancer la restauration

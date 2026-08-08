@@ -1,14 +1,18 @@
 import { RotateCcw, Square } from 'lucide-react'
 import type { BackupRecord } from '../../types/backup.types'
+import type { BackupSource } from '../../types/backupSource.types'
+import { getBackupSourceLabel } from '../../utils/backupRecord.utils'
 import {
   formatBackupDate,
   formatBackupDuration,
+  formatBackupDisplayName,
   formatBackupSize,
 } from '../../utils/backupFormatters'
 import { BackupStatusBadge } from './BackupStatusBadge'
 
 interface BackupDataTableProps {
   records: BackupRecord[]
+  sources: BackupSource[]
   selectedId: string | null
   getProgressPercent: (sizeGb: number) => number
   onSelect: (id: string) => void
@@ -18,6 +22,7 @@ interface BackupDataTableProps {
 
 export function BackupDataTable({
   records,
+  sources,
   selectedId,
   getProgressPercent,
   onSelect,
@@ -67,6 +72,7 @@ export function BackupDataTable({
             const isSelected = selectedId === record.id
             const isRetryDisabled = record.status === 'in_progress'
             const isStopEnabled = record.status === 'in_progress'
+            const displayName = formatBackupDisplayName(record.name, record.scheduleFrequency)
 
             return (
               <tr
@@ -86,9 +92,11 @@ export function BackupDataTable({
                 ].join(' ')}
               >
                 <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
-                  {record.name}
+                  {displayName}
                 </td>
-                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{record.source}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                  {getBackupSourceLabel(record, sources)}
+                </td>
                 <td className="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400">
                   {formatBackupDate(record.date)}
                 </td>
@@ -126,7 +134,7 @@ export function BackupDataTable({
                         event.stopPropagation()
                         onStop(record.id)
                       }}
-                      aria-label={`Arrêter la sauvegarde ${record.name}`}
+                      aria-label={`Arrêter la sauvegarde ${displayName}`}
                       className={[
                         'inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors',
                         isStopEnabled
@@ -143,7 +151,7 @@ export function BackupDataTable({
                         event.stopPropagation()
                         onRetry(record.id)
                       }}
-                      aria-label={`Relancer la sauvegarde ${record.name}`}
+                      aria-label={`Relancer la sauvegarde ${displayName}`}
                       className={[
                         'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
                         isRetryDisabled

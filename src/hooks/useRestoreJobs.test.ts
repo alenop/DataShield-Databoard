@@ -16,7 +16,8 @@ describe('useRestoreJobs', () => {
       id: 'BAK-1001',
       name: 'Sauvegarde Pistes & Contacts',
       date: '2026-08-01T08:00:00Z',
-      source: 'Salesforce Production',
+      source: 'Salesforce Production Core',
+      sourceId: 'src-1',
     },
   ]
 

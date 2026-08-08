@@ -13,6 +13,7 @@ import {
   shouldSimulateBackupFailure,
 } from '../utils/backupSimulation.utils'
 import { markBackupInProgress, resolveUserStoppedOutcome } from '../utils/backupRetry.utils'
+import { filterBackupsWithKnownSources } from '../utils/backupRecord.utils'
 
 interface LaunchBackupInput {
   name: string
@@ -27,10 +28,13 @@ interface BackupNotification {
 interface UseBackupRecordsOptions {
   initialRecords: BackupRecord[]
   username: string
+  sources: BackupSource[]
 }
 
-export function useBackupRecords({ initialRecords, username }: UseBackupRecordsOptions) {
-  const [records, setRecords] = useState(initialRecords)
+export function useBackupRecords({ initialRecords, username, sources }: UseBackupRecordsOptions) {
+  const [records, setRecords] = useState(() =>
+    filterBackupsWithKnownSources(initialRecords, sources),
+  )
   const [statusFilter, setStatusFilter] = useState<BackupStatusFilter>('all')
   const [sourceQuery, setSourceQuery] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -38,16 +42,21 @@ export function useBackupRecords({ initialRecords, username }: UseBackupRecordsO
   const progressIntervalsRef = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map())
   const finalizeTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
-  const filteredRecords = useMemo(
-    () => applyBackupFilters(records, statusFilter, sourceQuery),
-    [records, statusFilter, sourceQuery],
+  const visibleRecords = useMemo(
+    () => filterBackupsWithKnownSources(records, sources),
+    [records, sources],
   )
 
-  const statusCounts = useMemo(() => countBackupStatuses(records), [records])
+  const filteredRecords = useMemo(
+    () => applyBackupFilters(visibleRecords, statusFilter, sourceQuery),
+    [visibleRecords, statusFilter, sourceQuery],
+  )
+
+  const statusCounts = useMemo(() => countBackupStatuses(visibleRecords), [visibleRecords])
 
   const selectedBackup = useMemo(
-    () => records.find((record) => record.id === selectedId) ?? null,
-    [records, selectedId],
+    () => visibleRecords.find((record) => record.id === selectedId) ?? null,
+    [visibleRecords, selectedId],
   )
 
   const clearBackupTimers = useCallback((id: string) => {
@@ -174,11 +183,13 @@ export function useBackupRecords({ initialRecords, username }: UseBackupRecordsO
       const newRecord: BackupRecord = {
         id,
         name,
+        sourceId: source.id,
         source: source.name,
         date: new Date().toISOString(),
         sizeGb: 0,
         status: 'in_progress',
         durationMinutes: 0,
+        scheduleFrequency: null,
         description: `Sauvegarde depuis ${source.apiEndpoint} (${source.environment})`,
       }
 
@@ -204,7 +215,7 @@ export function useBackupRecords({ initialRecords, username }: UseBackupRecordsO
   }, [])
 
   return {
-    records,
+    records: visibleRecords,
     filteredRecords,
     statusFilter,
     setStatusFilter,

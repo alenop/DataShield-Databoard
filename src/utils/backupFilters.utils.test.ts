@@ -10,6 +10,7 @@ const mockRecords: BackupRecord[] = [
   {
     id: '1',
     name: 'Backup A',
+    sourceId: 'src-1',
     source: 'SQL-01',
     date: '2026-08-07T06:00:00',
     sizeGb: 10,
@@ -19,6 +20,7 @@ const mockRecords: BackupRecord[] = [
   {
     id: '2',
     name: 'Backup B',
+    sourceId: 'src-2',
     source: 'SQL-02',
     date: '2026-08-07T07:00:00',
     sizeGb: 5,
@@ -28,6 +30,7 @@ const mockRecords: BackupRecord[] = [
   {
     id: '3',
     name: 'Backup C',
+    sourceId: 'src-3',
     source: 'NAS',
     date: '2026-08-07T08:00:00',
     sizeGb: 20,
@@ -37,6 +40,7 @@ const mockRecords: BackupRecord[] = [
   {
     id: '4',
     name: 'Backup D',
+    sourceId: 'src-4',
     source: 'K8s',
     date: '2026-08-07T09:00:00',
     sizeGb: 8,

@@ -1,29 +1,48 @@
+import { useMemo } from 'react'
 import { BackupActions } from './BackupActions'
 import { BackupDetailPanel } from './BackupDetailPanel'
 import { StopBackupConfirmModal } from '../ui/StopBackupConfirmModal'
-import { mockBackupVolume } from '../../data/mockBackups'
 import type { AppSettingsState } from '../../hooks/useAppSettings'
 import type { BackupRecordsState } from '../../hooks/useBackupRecords'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
-import { useConfirmModal } from '../../hooks/useConfirmModal'
+import type { RestoreJobsState } from '../../hooks/useRestoreJobs'
+import type { RestoreBackupOption } from '../../types/restoreJob.types'
 import { useStopBackupConfirm } from '../../hooks/useStopBackupConfirm'
+import { buildBackupVolumeFromRecords } from '../../utils/backupVolume.utils'
 import { BackupDataTable } from './BackupDataTable'
-import { BackupSearchBar } from './BackupSearchBar'
-import { BackupStatusFilterBar } from './BackupStatusFilterBar'
 import { BackupVolumeChart } from './BackupVolumeChart'
+
+const DASHBOARD_PREVIEW_SIZE = 3
 
 interface DashboardPageProps {
   appSettings: AppSettingsState
   backupSources: BackupSourcesState
   backupRecords: BackupRecordsState
+  restoreJobs: RestoreJobsState
+  availableRestoreBackups: RestoreBackupOption[]
 }
 
-export function DashboardPage({ appSettings, backupSources, backupRecords }: DashboardPageProps) {
-  const confirmModal = useConfirmModal()
+export function DashboardPage({
+  appSettings,
+  backupSources,
+  backupRecords,
+  restoreJobs,
+  availableRestoreBackups,
+}: DashboardPageProps) {
   const stopConfirm = useStopBackupConfirm({
     onConfirmStop: backupRecords.stopBackup,
     requireConfirmation: appSettings.settings.confirmStopBackup,
   })
+
+  const recentBackups = useMemo(
+    () => backupRecords.records.slice(0, DASHBOARD_PREVIEW_SIZE),
+    [backupRecords.records],
+  )
+
+  const backupVolume = useMemo(
+    () => buildBackupVolumeFromRecords(backupRecords.records),
+    [backupRecords.records],
+  )
 
   const handleStopRequest = (id: string) => {
     const backup = backupRecords.records.find((record) => record.id === id)
@@ -45,46 +64,42 @@ export function DashboardPage({ appSettings, backupSources, backupRecords }: Das
             Tableau de bord
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Vue d&apos;ensemble des sauvegardes — données fictives de démonstration
+            Vue d&apos;ensemble — consultez l&apos;historique complet dans Données → Sauvegardes.
           </p>
         </div>
         <BackupActions
-          confirmModal={confirmModal}
           backupSources={backupSources}
+          restoreJobs={restoreJobs}
+          availableRestoreBackups={availableRestoreBackups}
           onLaunchBackup={handleLaunchBackup}
         />
       </div>
 
-      {backupRecords.notification && (
+      {(backupRecords.notification ?? restoreJobs.notification) && (
         <div
           role="status"
           className={[
             'rounded-lg border px-4 py-3 text-sm',
-            backupRecords.notification.type === 'success'
+            (backupRecords.notification ?? restoreJobs.notification)?.type === 'success'
               ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
               : 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-300',
           ].join(' ')}
         >
-          {backupRecords.notification.message}
+          {(backupRecords.notification ?? restoreJobs.notification)?.message}
         </div>
       )}
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-              Sauvegardes récentes
-            </h2>
-            <BackupSearchBar
-              query={backupRecords.sourceQuery}
-              onQueryChange={backupRecords.setSourceQuery}
-            />
-          </div>
-          <BackupStatusFilterBar filters={backupRecords} />
-        </div>
+        <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+          Dernières sauvegardes
+        </h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          Aperçu des {DASHBOARD_PREVIEW_SIZE} opérations les plus récentes.
+        </p>
         <div className="mt-4">
           <BackupDataTable
-            records={backupRecords.filteredRecords}
+            records={recentBackups}
+            sources={backupSources.sources}
             selectedId={backupRecords.selectedId}
             getProgressPercent={backupRecords.getBackupProgressPercent}
             onSelect={backupRecords.selectBackup}
@@ -99,7 +114,7 @@ export function DashboardPage({ appSettings, backupSources, backupRecords }: Das
           Volume de données sauvegardées
         </h2>
         <div className="mt-4">
-          <BackupVolumeChart data={mockBackupVolume} />
+          <BackupVolumeChart data={backupVolume} />
         </div>
       </section>
 
@@ -113,6 +128,7 @@ export function DashboardPage({ appSettings, backupSources, backupRecords }: Das
       {backupRecords.selectedBackup && (
         <BackupDetailPanel
           backup={backupRecords.selectedBackup}
+          sources={backupSources.sources}
           onClose={backupRecords.clearSelection}
         />
       )}

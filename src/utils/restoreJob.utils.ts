@@ -21,6 +21,14 @@ export function formatRestoreBackupSource(backupDate: string, backupName?: strin
   return `Backup du ${dateLabel} — ${backupName}`
 }
 
+export function filterRestoreBackupsByTarget(
+  backups: RestoreBackupOption[],
+  targetSourceId: string,
+): RestoreBackupOption[] {
+  if (!targetSourceId) return []
+  return backups.filter((backup) => backup.sourceId === targetSourceId)
+}
+
 export function validateCreateRestoreJobInput(
   input: CreateRestoreJobInput,
   existingNames: string[],
@@ -37,6 +45,11 @@ export function validateCreateRestoreJobInput(
 
   if (!backups.some((backup) => backup.id === input.backupId)) {
     return 'Sauvegarde source invalide ou indisponible.'
+  }
+
+  const selectedBackup = backups.find((backup) => backup.id === input.backupId)
+  if (selectedBackup && selectedBackup.sourceId !== input.targetSourceId) {
+    return 'Cette sauvegarde ne correspond pas à la cible sélectionnée.'
   }
 
   if (!targets.some((target) => target.id === input.targetSourceId)) {

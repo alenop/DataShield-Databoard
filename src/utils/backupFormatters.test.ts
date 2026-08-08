@@ -1,6 +1,7 @@
 import {
   formatBackupDate,
   formatBackupDuration,
+  formatBackupDisplayName,
   formatBackupSize,
 } from './backupFormatters'
 
@@ -25,6 +26,18 @@ describe('formatBackupDuration', () => {
 
   it('formats hours and remaining minutes', () => {
     expect(formatBackupDuration(95)).toBe('1 h 35 min')
+  })
+})
+
+describe('formatBackupDisplayName', () => {
+  it('appends daily and weekly schedule markers', () => {
+    expect(formatBackupDisplayName('Sauvegarde CRM', 'daily')).toBe('Sauvegarde CRM (j)')
+    expect(formatBackupDisplayName('Sauvegarde CRM', 'weekly')).toBe('Sauvegarde CRM (s)')
+  })
+
+  it('returns the plain name for on-demand backups', () => {
+    expect(formatBackupDisplayName('Sauvegarde CRM', null)).toBe('Sauvegarde CRM')
+    expect(formatBackupDisplayName('Sauvegarde CRM')).toBe('Sauvegarde CRM')
   })
 })
 

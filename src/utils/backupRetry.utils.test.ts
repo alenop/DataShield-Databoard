@@ -9,7 +9,8 @@ import {
 const baseRecord: BackupRecord = {
   id: '1',
   name: 'Test',
-  source: 'Salesforce Production',
+  sourceId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+  source: 'Salesforce Production Core',
   date: '2026-08-07T06:00:00',
   sizeGb: 10,
   status: 'failure',
