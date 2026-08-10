@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { RoleDefinition } from '../../types/role.types'
 
 interface InviteUserModalProps {
@@ -15,6 +16,7 @@ export function InviteUserModal({
   onClose,
   onInvite,
 }: InviteUserModalProps) {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [roleId, setRoleId] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -59,7 +61,7 @@ export function InviteUserModal({
     >
       <button
         type="button"
-        aria-label="Fermer la modale"
+        aria-label={t('common.closeModal')}
         onClick={onClose}
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
       />
@@ -71,7 +73,7 @@ export function InviteUserModal({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Fermer"
+          aria-label={t('common.close')}
           className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <X className="h-5 w-5" />
@@ -81,11 +83,11 @@ export function InviteUserModal({
           id="invite-user-modal-title"
           className="pr-8 text-lg font-semibold text-slate-900 dark:text-white"
         >
-          Inviter un utilisateur
+          {t('pages.users.inviteModal.title')}
         </h2>
 
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Saisissez l&apos;adresse e-mail et choisissez le rôle attribué.
+          {t('pages.users.inviteModal.description')}
         </p>
 
         <div className="mt-4 space-y-4">
@@ -94,7 +96,7 @@ export function InviteUserModal({
               htmlFor="invite-email"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              E-mail
+              {t('common.email')}
             </label>
             <input
               ref={emailInputRef}
@@ -102,7 +104,7 @@ export function InviteUserModal({
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="ex. nouvel.utilisateur@entreprise.com"
+              placeholder={t('pages.users.inviteModal.emailPlaceholder')}
               className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
             />
           </div>
@@ -112,7 +114,7 @@ export function InviteUserModal({
               htmlFor="invite-role"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              Rôle
+              {t('common.role')}
             </label>
             <select
               id="invite-role"
@@ -141,14 +143,14 @@ export function InviteUserModal({
             onClick={onClose}
             className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
           >
-            Annuler
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             disabled={assignableRoles.length === 0}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Envoyer l&apos;invitation
+            {t('pages.users.inviteModal.send')}
           </button>
         </div>
       </form>

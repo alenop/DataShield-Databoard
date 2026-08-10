@@ -114,7 +114,7 @@ describe('useBackupRecords', () => {
           environment: defaultBackupSources[0].environment,
           apiEndpoint: defaultBackupSources[0].apiEndpoint,
           status: 'CONNECTED',
-          scopes: ['Contacts'],
+          scopes: ['contacts'],
         },
       })
     })

@@ -1,18 +1,18 @@
+import i18n from '../i18n'
 import type {
   BackupSchedule,
   BackupScheduleFrequency,
   CreateBackupScheduleInput,
 } from '../types/backupSchedule.types'
-import { BACKUP_SCHEDULE_WEEKDAYS } from '../types/backupSchedule.types'
 
 export function formatScheduleDescription(schedule: BackupSchedule): string {
-  const weekdayLabel = BACKUP_SCHEDULE_WEEKDAYS.find((day) => day.value === schedule.weekday)?.label
-
   if (schedule.frequency === 'daily') {
-    return `Tous les jours à ${schedule.time}`
+    return i18n.t('common.scheduleDaily', { time: schedule.time })
   }
 
-  return `Tous les ${weekdayLabel?.toLowerCase() ?? 'dimanche'}s à ${schedule.time}`
+  const weekdayKey = String(schedule.weekday ?? 0)
+  const weekday = i18n.t(`schedule.weekdays.${weekdayKey}`).toLowerCase()
+  return i18n.t('common.scheduleWeekly', { weekday, time: schedule.time })
 }
 
 export function computeNextRunAt(schedule: BackupSchedule, fromDate = new Date()): Date {
@@ -41,9 +41,9 @@ export function computeNextRunAt(schedule: BackupSchedule, fromDate = new Date()
 }
 
 export function formatNextRunDate(schedule: BackupSchedule): string {
-  if (!schedule.isActive) return 'Planification désactivée'
+  if (!schedule.isActive) return i18n.t('common.scheduleDisabled')
 
-  return new Intl.DateTimeFormat('fr-FR', {
+  return new Intl.DateTimeFormat(i18n.language, {
     weekday: 'long',
     day: '2-digit',
     month: '2-digit',
@@ -59,27 +59,27 @@ export function validateCreateBackupScheduleInput(
   availableSourceIds: string[],
 ): string | null {
   const name = input.name.trim()
-  if (!name) return 'Le nom de la planification est requis.'
-  if (name.length < 3) return 'Le nom doit contenir au moins 3 caractères.'
+  if (!name) return i18n.t('validation.scheduleNameRequired')
+  if (name.length < 3) return i18n.t('validation.scheduleNameMinLength')
 
   if (existingNames.some((existing) => existing.toLowerCase() === name.toLowerCase())) {
-    return 'Une planification avec ce nom existe déjà.'
+    return i18n.t('validation.scheduleNameDuplicate')
   }
 
   if (!availableSourceIds.includes(input.sourceId)) {
-    return 'Source invalide.'
+    return i18n.t('validation.invalidSource')
   }
 
   if (!/^\d{2}:\d{2}$/.test(input.time)) {
-    return "L'heure est invalide."
+    return i18n.t('validation.invalidTime')
   }
 
   if (input.frequency === 'weekly' && (input.weekday === null || input.weekday < 0 || input.weekday > 6)) {
-    return 'Sélectionnez un jour pour la planification hebdomadaire.'
+    return i18n.t('validation.weekdayRequired')
   }
 
   if (input.frequency === 'daily' && input.weekday !== null) {
-    return 'Le jour de la semaine ne s\'applique qu\'à une planification hebdomadaire.'
+    return i18n.t('validation.weekdayNotApplicable')
   }
 
   return null

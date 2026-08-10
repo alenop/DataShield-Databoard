@@ -1,15 +1,11 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FileInput, Loader2, RotateCcw } from 'lucide-react'
 import type { RestoreJobsState } from '../../hooks/useRestoreJobs'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
 import type { RestoreBackupOption } from '../../types/restoreJob.types'
 import type { RestoreJobStatus } from '../../types/restoreJob.types'
-import { restoreJobStatusLabels } from '../../types/restoreJob.types'
 import { formatBackupDate } from '../../utils/backupFormatters'
-import {
-  formatRestoreBackupSource,
-  formatRestoreProgress,
-} from '../../utils/restoreJob.utils'
 import { LaunchRestoreModal } from './LaunchRestoreModal'
 
 interface ImportsPageProps {
@@ -19,6 +15,7 @@ interface ImportsPageProps {
 }
 
 export function ImportsPage({ restoreJobs, backupSources, availableBackups }: ImportsPageProps) {
+  const { t, i18n } = useTranslation()
   const { restoreJobs: jobs, notification, launchRestore } = restoreJobs
   const { sources } = backupSources
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -29,17 +26,30 @@ export function ImportsPage({ restoreJobs, backupSources, availableBackups }: Im
   }))
 
   const getTargetName = (targetSourceId: string) =>
-    targets.find((target) => target.id === targetSourceId)?.name ?? '—'
+    targets.find((target) => target.id === targetSourceId)?.name ?? t('common.emptyDash')
+
+  const formatRestoreProgress = (restoredCount: number, totalCount: number) =>
+    t('common.restoreProgress', {
+      restored: restoredCount.toLocaleString(i18n.language),
+      total: totalCount.toLocaleString(i18n.language),
+    })
+
+  const formatRestoreBackupDate = (backupDate: string) =>
+    new Intl.DateTimeFormat(i18n.language, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(new Date(backupDate))
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Imports / Restauration
+            {t('pages.imports.title')}
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Réinjectez vos sauvegardes en cas de sinistre ou de suppression accidentelle de données.
+            {t('pages.imports.subtitle')}
           </p>
         </div>
 
@@ -49,7 +59,7 @@ export function ImportsPage({ restoreJobs, backupSources, availableBackups }: Im
           className="inline-flex items-center gap-2 self-start rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
         >
           <RotateCcw className="h-4 w-4" aria-hidden="true" />
-          Lancer une restauration
+          {t('pages.imports.launchRestore')}
         </button>
       </div>
 
@@ -70,12 +80,12 @@ export function ImportsPage({ restoreJobs, backupSources, availableBackups }: Im
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
           <FileInput className="h-4 w-4" aria-hidden="true" />
-          Opérations de restauration ({jobs.length})
+          {t('common.countWithLabel', { label: t('pages.imports.operations'), count: jobs.length })}
         </h2>
 
         {jobs.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-            Aucune restauration lancée. Démarrez une opération de restauration ci-dessus.
+            {t('pages.imports.noOperations')}
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
@@ -83,22 +93,22 @@ export function ImportsPage({ restoreJobs, backupSources, availableBackups }: Im
               <thead className="bg-slate-50 dark:bg-slate-800">
                 <tr>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                    Nom de la restauration
+                    {t('common.restoreName')}
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                    Source de la sauvegarde
+                    {t('common.backupSourceColumn')}
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                    Cible
+                    {t('common.target')}
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                    Statut
+                    {t('common.status')}
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                    Enregistrements restaurés
+                    {t('common.restoredRecords')}
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                    Lancé le
+                    {t('common.launchedAt')}
                   </th>
                 </tr>
               </thead>
@@ -109,7 +119,7 @@ export function ImportsPage({ restoreJobs, backupSources, availableBackups }: Im
                       {job.name}
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                      <span>{formatRestoreBackupSource(job.backupDate)}</span>
+                      <span>{t('common.backupFrom', { date: formatRestoreBackupDate(job.backupDate) })}</span>
                       <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-500">
                         {job.backupName}
                       </span>
@@ -168,6 +178,8 @@ const statusStyles: Record<RestoreJobStatus, string> = {
 }
 
 function RestoreStatusBadge({ status }: RestoreStatusBadgeProps) {
+  const { t } = useTranslation()
+
   return (
     <span
       className={[
@@ -178,7 +190,7 @@ function RestoreStatusBadge({ status }: RestoreStatusBadgeProps) {
       {status === 'in_progress' && (
         <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
       )}
-      {restoreJobStatusLabels[status]}
+      {t(`status.restore.${status}`)}
     </span>
   )
 }

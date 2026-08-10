@@ -1,8 +1,6 @@
+import { useTranslation } from 'react-i18next'
 import type { AuditEventsState } from '../../hooks/useAuditEvents'
-import {
-  auditEventStatusLabels,
-  type AuditEventStatus,
-} from '../../types/audit.types'
+import type { AuditEventStatus } from '../../types/audit.types'
 import { formatAuditDateTime } from '../../utils/auditFormatters'
 import { AuditSearchBar } from './AuditSearchBar'
 
@@ -11,16 +9,21 @@ interface AuditPageProps {
 }
 
 export function AuditPage({ auditEvents }: AuditPageProps) {
+  const { t } = useTranslation()
   const { events, query, setQuery, totalCount, filteredCount } = auditEvents
+
+  const eventCountLabel = query
+    ? t('common.auditResults', { count: filteredCount, total: totalCount })
+    : t('common.auditEvents', { count: totalCount })
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Journal d&apos;audit
+          {t('pages.audit.title')}
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Historique chronologique des actions effectuées sur la plateforme.
+          {t('pages.audit.subtitle')}
         </p>
       </div>
 
@@ -28,12 +31,10 @@ export function AuditPage({ auditEvents }: AuditPageProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-              Événements
+              {t('pages.audit.events')}
             </h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              {query
-                ? `${filteredCount} résultat${filteredCount > 1 ? 's' : ''} sur ${totalCount}`
-                : `${totalCount} événement${totalCount > 1 ? 's' : ''}`}
+              {eventCountLabel}
             </p>
           </div>
           <AuditSearchBar query={query} onQueryChange={setQuery} />
@@ -41,7 +42,7 @@ export function AuditPage({ auditEvents }: AuditPageProps) {
 
         {events.length === 0 ? (
           <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
-            Aucun événement ne correspond à votre recherche.
+            {t('pages.audit.noEvents')}
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
@@ -52,31 +53,31 @@ export function AuditPage({ auditEvents }: AuditPageProps) {
                     scope="col"
                     className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300"
                   >
-                    Date &amp; Heure
+                    {t('common.dateTime')}
                   </th>
                   <th
                     scope="col"
                     className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300"
                   >
-                    Utilisateur / Acteur
+                    {t('common.actor')}
                   </th>
                   <th
                     scope="col"
                     className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300"
                   >
-                    Action
+                    {t('common.action')}
                   </th>
                   <th
                     scope="col"
                     className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300"
                   >
-                    Adresse IP
+                    {t('common.ipAddress')}
                   </th>
                   <th
                     scope="col"
                     className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300"
                   >
-                    Statut
+                    {t('common.status')}
                   </th>
                 </tr>
               </thead>
@@ -119,6 +120,8 @@ const statusStyles: Record<AuditEventStatus, string> = {
 }
 
 function AuditStatusBadge({ status }: AuditStatusBadgeProps) {
+  const { t } = useTranslation()
+
   return (
     <span
       className={[
@@ -126,7 +129,7 @@ function AuditStatusBadge({ status }: AuditStatusBadgeProps) {
         statusStyles[status],
       ].join(' ')}
     >
-      {auditEventStatusLabels[status]}
+      {t(`status.audit.${status}`)}
     </span>
   )
 }

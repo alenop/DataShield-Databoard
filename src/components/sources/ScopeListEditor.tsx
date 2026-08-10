@@ -1,35 +1,33 @@
-import { useState, type KeyboardEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import { normalizeScopes } from '../../utils/backupSource.utils'
+import { useTranslation } from 'react-i18next'
+import { SOURCE_SCOPES, type SourceScope } from '../../types/sourceScope.types'
+import { getScopeLabel } from '../../utils/sourceScope.utils'
 
 interface ScopeListEditorProps {
   id: string
-  scopes: string[]
-  onChange: (scopes: string[]) => void
+  scopes: SourceScope[]
+  onChange: (scopes: SourceScope[]) => void
   disabled?: boolean
 }
 
 export function ScopeListEditor({ id, scopes, onChange, disabled = false }: ScopeListEditorProps) {
-  const [draft, setDraft] = useState('')
+  const { t } = useTranslation()
+  const [selectedScope, setSelectedScope] = useState<SourceScope | ''>('')
+
+  const availableScopes = useMemo(
+    () => SOURCE_SCOPES.filter((scope) => !scopes.includes(scope)),
+    [scopes],
+  )
 
   const addScope = () => {
-    const trimmed = draft.trim()
-    if (!trimmed) return
-
-    const next = normalizeScopes([...scopes, trimmed])
-    onChange(next)
-    setDraft('')
+    if (!selectedScope || scopes.includes(selectedScope)) return
+    onChange([...scopes, selectedScope])
+    setSelectedScope('')
   }
 
-  const removeScope = (scopeToRemove: string) => {
+  const removeScope = (scopeToRemove: SourceScope) => {
     onChange(scopes.filter((scope) => scope !== scopeToRemove))
-  }
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      addScope()
-    }
   }
 
   return (
@@ -38,31 +36,35 @@ export function ScopeListEditor({ id, scopes, onChange, disabled = false }: Scop
         htmlFor={id}
         className="block text-sm font-medium text-slate-700 dark:text-slate-300"
       >
-        Périmètres d&apos;export
+        {t('pages.sources.scopesLabel')}
       </label>
       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-        Définissez les périmètres disponibles lors de la création d&apos;un export.
+        {t('pages.sources.scopesHint')}
       </p>
 
       <div className="mt-2 flex gap-2">
-        <input
+        <select
           id={id}
-          type="text"
-          value={draft}
-          disabled={disabled}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ex. Contacts, Opportunités…"
+          value={selectedScope}
+          disabled={disabled || availableScopes.length === 0}
+          onChange={(event) => setSelectedScope(event.target.value as SourceScope | '')}
           className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-        />
+        >
+          <option value="">{t('pages.sources.scopesSelectPlaceholder')}</option>
+          {availableScopes.map((scope) => (
+            <option key={scope} value={scope}>
+              {getScopeLabel(scope, t)}
+            </option>
+          ))}
+        </select>
         <button
           type="button"
           onClick={addScope}
-          disabled={disabled || !draft.trim()}
+          disabled={disabled || !selectedScope}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
-          Ajouter
+          {t('common.add')}
         </button>
       </div>
 
@@ -71,12 +73,12 @@ export function ScopeListEditor({ id, scopes, onChange, disabled = false }: Scop
           {scopes.map((scope) => (
             <li key={scope}>
               <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                {scope}
+                {getScopeLabel(scope, t)}
                 {!disabled && (
                   <button
                     type="button"
                     onClick={() => removeScope(scope)}
-                    aria-label={`Retirer ${scope}`}
+                    aria-label={t('common.removeScopeAria', { scope: getScopeLabel(scope, t) })}
                     className="rounded-full p-0.5 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
                   >
                     <X className="h-3 w-3" aria-hidden="true" />
@@ -88,7 +90,7 @@ export function ScopeListEditor({ id, scopes, onChange, disabled = false }: Scop
         </ul>
       ) : (
         <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-          Ajoutez au moins un périmètre pour activer les exports.
+          {t('pages.sources.scopesRequired')}
         </p>
       )}
     </div>

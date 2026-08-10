@@ -1,4 +1,5 @@
 import { RotateCcw, Square } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { BackupRecord } from '../../types/backup.types'
 import type { BackupSource } from '../../types/backupSource.types'
 import { getBackupSourceLabel } from '../../utils/backupRecord.utils'
@@ -29,11 +30,13 @@ export function BackupDataTable({
   onRetry,
   onStop,
 }: BackupDataTableProps) {
+  const { t, i18n } = useTranslation()
+
   if (records.length === 0) {
     return (
       <div className="rounded-lg border border-slate-200 bg-slate-50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-800/50">
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Aucune sauvegarde ne correspond aux critères sélectionnés.
+          {t('pages.backups.emptyBackups')}
         </p>
       </div>
     )
@@ -45,25 +48,25 @@ export function BackupDataTable({
         <thead className="bg-slate-50 dark:bg-slate-800">
           <tr>
             <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-              Nom
+              {t('common.name')}
             </th>
             <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-              Source
+              {t('common.source')}
             </th>
             <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-              Date
+              {t('common.date')}
             </th>
             <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">
-              Volume
+              {t('common.volume')}
             </th>
             <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">
-              Durée
+              {t('common.duration')}
             </th>
             <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-              Statut
+              {t('common.status')}
             </th>
             <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">
-              Actions
+              {t('common.actions')}
             </th>
           </tr>
         </thead>
@@ -72,7 +75,7 @@ export function BackupDataTable({
             const isSelected = selectedId === record.id
             const isRetryDisabled = record.status === 'in_progress'
             const isStopEnabled = record.status === 'in_progress'
-            const displayName = formatBackupDisplayName(record.name, record.scheduleFrequency)
+            const displayName = formatBackupDisplayName(record.name, record.scheduleFrequency, t)
 
             return (
               <tr
@@ -98,13 +101,13 @@ export function BackupDataTable({
                   {getBackupSourceLabel(record, sources)}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400">
-                  {formatBackupDate(record.date)}
+                  {formatBackupDate(record.date, i18n.language)}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
-                  {formatBackupSize(record.sizeGb)}
+                  {formatBackupSize(record.sizeGb, t)}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
-                  {formatBackupDuration(record.durationMinutes)}
+                  {formatBackupDuration(record.durationMinutes, t)}
                 </td>
                 <td className="px-4 py-3">
                   <div className="space-y-1.5">
@@ -134,7 +137,7 @@ export function BackupDataTable({
                         event.stopPropagation()
                         onStop(record.id)
                       }}
-                      aria-label={`Arrêter la sauvegarde ${displayName}`}
+                      aria-label={t('common.stopBackupAria', { name: displayName })}
                       className={[
                         'inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors',
                         isStopEnabled
@@ -151,7 +154,7 @@ export function BackupDataTable({
                         event.stopPropagation()
                         onRetry(record.id)
                       }}
-                      aria-label={`Relancer la sauvegarde ${displayName}`}
+                      aria-label={t('common.retryBackupAria', { name: displayName })}
                       className={[
                         'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
                         isRetryDisabled
@@ -160,7 +163,7 @@ export function BackupDataTable({
                       ].join(' ')}
                     >
                       <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                      Relancer
+                      {t('common.retry')}
                     </button>
                   </div>
                 </td>

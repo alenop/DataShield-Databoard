@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import i18n from '../i18n'
 import { defaultRoles } from '../data/defaultRoles'
 import type { Permission, RoleDefinition } from '../types/role.types'
 import {
@@ -50,7 +51,7 @@ export function useRoles(currentUserRoleId: string) {
       const role = createCustomRole(input)
       setRoles((prev) => [...prev, role])
       setNotification({
-        message: `Rôle « ${role.name} » créé avec succès.`,
+        message: i18n.t('notifications.roleCreated', { name: role.name }),
         type: 'success',
       })
       return null
@@ -61,9 +62,9 @@ export function useRoles(currentUserRoleId: string) {
   const updateRolePermissions = useCallback(
     (roleId: string, permissions: Permission[]): string | null => {
       const targetRole = roles.find((role) => role.id === roleId)
-      if (!targetRole) return 'Rôle introuvable.'
+      if (!targetRole) return i18n.t('notifications.roleNotFound')
       if (!canEditRole(currentUserRoleId, targetRole, roles)) {
-        return "Vous n'avez pas l'autorisation de modifier ce rôle."
+        return i18n.t('notifications.roleEditForbidden')
       }
 
       const permissionsError = validateRolePermissions(permissions)
@@ -73,7 +74,7 @@ export function useRoles(currentUserRoleId: string) {
         prev.map((role) => (role.id === roleId ? { ...role, permissions } : role)),
       )
       setNotification({
-        message: `Droits du rôle « ${targetRole.name} » mis à jour.`,
+        message: i18n.t('notifications.roleUpdated', { name: targetRole.name }),
         type: 'success',
       })
       return null

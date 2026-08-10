@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import i18n from '../i18n'
 import { mockBackupSchedules } from '../data/mockBackupSchedules'
 import type { BackupSchedule, CreateBackupScheduleInput } from '../types/backupSchedule.types'
 import {
@@ -43,7 +44,7 @@ export function useBackupSchedules(availableSourceIds: string[]) {
       const created = createBackupSchedule(input)
       setScheduleRecords((prev) => [created, ...prev])
       setNotification({
-        message: `Planification « ${created.name} » créée.`,
+        message: i18n.t('notifications.scheduleCreated', { name: created.name }),
         type: 'success',
       })
       return null
@@ -62,7 +63,7 @@ export function useBackupSchedules(availableSourceIds: string[]) {
   const deleteSchedule = useCallback((scheduleId: string) => {
     setScheduleRecords((prev) => prev.filter((schedule) => schedule.id !== scheduleId))
     setNotification({
-      message: 'Planification supprimée.',
+      message: i18n.t('notifications.scheduleDeleted'),
       type: 'success',
     })
   }, [])

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { ConfirmActionType } from '../../hooks/useConfirmModal'
-import { confirmModalConfig } from '../../hooks/useConfirmModal'
 
 interface ConfirmModalProps {
   isOpen: boolean
@@ -10,7 +10,26 @@ interface ConfirmModalProps {
   onConfirm: () => void
 }
 
+const confirmModalKeys: Record<
+  ConfirmActionType,
+  { title: string; message: string; confirmLabel: string; variant: 'primary' | 'danger' }
+> = {
+  backup: {
+    title: 'pages.backups.confirmModal.backupTitle',
+    message: 'pages.backups.confirmModal.backupMessage',
+    confirmLabel: 'pages.backups.confirmModal.backupConfirm',
+    variant: 'primary',
+  },
+  restore: {
+    title: 'pages.backups.confirmModal.restoreTitle',
+    message: 'pages.backups.confirmModal.restoreMessage',
+    confirmLabel: 'pages.backups.confirmModal.restoreConfirm',
+    variant: 'danger',
+  },
+}
+
 export function ConfirmModal({ isOpen, action, onClose, onConfirm }: ConfirmModalProps) {
+  const { t } = useTranslation()
   const confirmButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -21,7 +40,7 @@ export function ConfirmModal({ isOpen, action, onClose, onConfirm }: ConfirmModa
 
   if (!isOpen || !action) return null
 
-  const config = confirmModalConfig[action]
+  const config = confirmModalKeys[action]
   const isDanger = config.variant === 'danger'
 
   return (
@@ -33,7 +52,7 @@ export function ConfirmModal({ isOpen, action, onClose, onConfirm }: ConfirmModa
     >
       <button
         type="button"
-        aria-label="Fermer la modale"
+        aria-label={t('common.closeModal')}
         onClick={onClose}
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
       />
@@ -42,7 +61,7 @@ export function ConfirmModal({ isOpen, action, onClose, onConfirm }: ConfirmModa
         <button
           type="button"
           onClick={onClose}
-          aria-label="Fermer"
+          aria-label={t('common.close')}
           className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <X className="h-5 w-5" />
@@ -52,11 +71,11 @@ export function ConfirmModal({ isOpen, action, onClose, onConfirm }: ConfirmModa
           id="confirm-modal-title"
           className="pr-8 text-lg font-semibold text-slate-900 dark:text-white"
         >
-          {config.title}
+          {t(config.title)}
         </h2>
 
         <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          {config.message}
+          {t(config.message)}
         </p>
 
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -65,7 +84,7 @@ export function ConfirmModal({ isOpen, action, onClose, onConfirm }: ConfirmModa
             onClick={onClose}
             className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
           >
-            Annuler
+            {t('common.cancel')}
           </button>
           <button
             ref={confirmButtonRef}
@@ -78,7 +97,7 @@ export function ConfirmModal({ isOpen, action, onClose, onConfirm }: ConfirmModa
                 : 'bg-blue-600 hover:bg-blue-700',
             ].join(' ')}
           >
-            {config.confirmLabel}
+            {t(config.confirmLabel)}
           </button>
         </div>
       </div>

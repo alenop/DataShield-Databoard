@@ -1,3 +1,4 @@
+import i18n from '../i18n'
 import type { InviteUserInput, User } from '../types/user.types'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -16,12 +17,12 @@ export function validateInviteUserInput(
 ): string | null {
   const email = input.email.trim().toLowerCase()
 
-  if (!email) return "L'adresse e-mail est requise."
-  if (!isValidEmail(email)) return 'Adresse e-mail invalide.'
-  if (!input.roleId.trim()) return 'Le rôle est requis.'
+  if (!email) return i18n.t('validation.emailRequired')
+  if (!isValidEmail(email)) return i18n.t('validation.emailInvalid')
+  if (!input.roleId.trim()) return i18n.t('validation.roleRequired')
 
   if (existingEmails.some((existing) => existing.toLowerCase() === email)) {
-    return 'Un utilisateur avec cet e-mail existe déjà.'
+    return i18n.t('validation.emailDuplicate')
   }
 
   return null

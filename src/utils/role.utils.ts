@@ -1,22 +1,23 @@
+import i18n from '../i18n'
 import { defaultRoles } from '../data/defaultRoles'
 import type { Permission, RoleDefinition } from '../types/role.types'
 import { ALL_PERMISSIONS, CUSTOM_ROLE_RANK } from '../types/role.types'
 
 export function validateRoleName(name: string, existingRoles: RoleDefinition[]): string | null {
   const trimmed = name.trim()
-  if (!trimmed) return 'Le nom du rôle est requis.'
-  if (trimmed.length < 3) return 'Le nom du rôle doit contenir au moins 3 caractères.'
+  if (!trimmed) return i18n.t('validation.roleNameRequired')
+  if (trimmed.length < 3) return i18n.t('validation.roleNameMinLength')
 
   const exists = existingRoles.some(
     (role) => role.name.toLowerCase() === trimmed.toLowerCase(),
   )
-  if (exists) return 'Un rôle avec ce nom existe déjà.'
+  if (exists) return i18n.t('validation.roleNameDuplicate')
 
   return null
 }
 
 export function validateRolePermissions(permissions: Permission[]): string | null {
-  if (permissions.length === 0) return 'Sélectionnez au moins un droit.'
+  if (permissions.length === 0) return i18n.t('validation.permissionsRequired')
   return null
 }
 

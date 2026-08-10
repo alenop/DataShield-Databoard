@@ -1,7 +1,7 @@
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Bell, CheckCheck, Info, ShieldAlert } from 'lucide-react'
 import type { AlertsState } from '../../hooks/useAlerts'
 import type { Alert, AlertSeverity } from '../../types/alert.types'
-import { alertSeverityLabels } from '../../types/alert.types'
 import { formatAlertDateTime } from '../../utils/alert.utils'
 
 interface AlertsPageProps {
@@ -9,14 +9,17 @@ interface AlertsPageProps {
 }
 
 export function AlertsPage({ alertsState }: AlertsPageProps) {
+  const { t } = useTranslation()
   const { alerts, summary, notification, markAsResolved } = alertsState
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Alertes</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          {t('pages.alerts.title')}
+        </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Avertissements techniques nécessitant l&apos;attention de l&apos;équipe informatique.
+          {t('pages.alerts.subtitle')}
         </p>
       </div>
 
@@ -36,19 +39,19 @@ export function AlertsPage({ alertsState }: AlertsPageProps) {
 
       <section className="grid gap-4 sm:grid-cols-3">
         <SummaryCard
-          label="Critiques"
+          label={t('pages.alerts.critical')}
           count={summary.critical}
           icon={ShieldAlert}
           tone="critical"
         />
         <SummaryCard
-          label="Avertissements"
+          label={t('pages.alerts.warnings')}
           count={summary.warning}
           icon={AlertTriangle}
           tone="warning"
         />
         <SummaryCard
-          label="Résolues"
+          label={t('pages.alerts.resolved')}
           count={summary.resolved}
           icon={CheckCheck}
           tone="resolved"
@@ -58,12 +61,12 @@ export function AlertsPage({ alertsState }: AlertsPageProps) {
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
           <Bell className="h-4 w-4" aria-hidden="true" />
-          Flux d&apos;alertes ({alerts.length})
+          {t('common.countWithLabel', { label: t('pages.alerts.feed'), count: alerts.length })}
         </h2>
 
         {alerts.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-            Aucune alerte enregistrée.
+            {t('pages.alerts.noAlerts')}
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-slate-200 dark:divide-slate-700">
@@ -129,6 +132,7 @@ interface AlertFeedItemProps {
 }
 
 function AlertFeedItem({ alert, onResolve }: AlertFeedItemProps) {
+  const { t } = useTranslation()
   const isResolved = alert.status === 'resolved'
 
   return (
@@ -138,7 +142,7 @@ function AlertFeedItem({ alert, onResolve }: AlertFeedItemProps) {
           <AlertSeverityBadge severity={alert.severity} />
           {isResolved && (
             <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-              Résolue
+              {t('common.resolved')}
             </span>
           )}
         </div>
@@ -155,9 +159,9 @@ function AlertFeedItem({ alert, onResolve }: AlertFeedItemProps) {
         </p>
 
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Déclenchée le {formatAlertDateTime(alert.triggeredAt)}
+          {t('common.triggeredAt', { date: formatAlertDateTime(alert.triggeredAt) })}
           {alert.resolvedAt && (
-            <span> — Résolue le {formatAlertDateTime(alert.resolvedAt)}</span>
+            <span>{t('common.resolvedAt', { date: formatAlertDateTime(alert.resolvedAt) })}</span>
           )}
         </p>
       </div>
@@ -174,7 +178,7 @@ function AlertFeedItem({ alert, onResolve }: AlertFeedItemProps) {
         ].join(' ')}
       >
         <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" />
-        {isResolved ? 'Résolue' : 'Marquer comme lu/résolu'}
+        {isResolved ? t('common.resolved') : t('common.markResolved')}
       </button>
     </li>
   )
@@ -191,6 +195,7 @@ const severityStyles: Record<AlertSeverity, string> = {
 }
 
 function AlertSeverityBadge({ severity }: AlertSeverityBadgeProps) {
+  const { t } = useTranslation()
   const Icon = severity === 'info' ? Info : severity === 'warning' ? AlertTriangle : ShieldAlert
 
   return (
@@ -201,7 +206,7 @@ function AlertSeverityBadge({ severity }: AlertSeverityBadgeProps) {
       ].join(' ')}
     >
       <Icon className="h-3 w-3" aria-hidden="true" />
-      {alertSeverityLabels[severity]}
+      {t(`status.alert.${severity}`)}
     </span>
   )
 }

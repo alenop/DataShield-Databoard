@@ -1,3 +1,4 @@
+import i18n from '../i18n'
 import type { BackupSource, BackupSourceStatus } from '../types/backupSource.types'
 
 export interface SourceTestResponse {
@@ -25,12 +26,12 @@ export async function postSourceConnectionTest(
   if (isSuccess) {
     return {
       status: 'CONNECTED',
-      message: `Connexion établie avec succès avec l'API ${source.name}`,
+      message: i18n.t('notifications.connectionSuccess', { source: source.name }),
     }
   }
 
   return {
     status: 'DISCONNECTED',
-    message: 'Échec de connexion : Jeton OAuth expiré',
+    message: i18n.t('notifications.connectionFailure'),
   }
 }

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { BackupActions } from './BackupActions'
 import { BackupDetailPanel } from './BackupDetailPanel'
 import { StopBackupConfirmModal } from '../ui/StopBackupConfirmModal'
@@ -29,6 +30,8 @@ export function DashboardPage({
   restoreJobs,
   availableRestoreBackups,
 }: DashboardPageProps) {
+  const { t } = useTranslation()
+
   const stopConfirm = useStopBackupConfirm({
     onConfirmStop: backupRecords.stopBackup,
     requireConfirmation: appSettings.settings.confirmStopBackup,
@@ -61,10 +64,10 @@ export function DashboardPage({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Tableau de bord
+            {t('pages.dashboard.title')}
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Vue d&apos;ensemble — consultez l&apos;historique complet dans Données → Sauvegardes.
+            {t('pages.dashboard.subtitle')}
           </p>
         </div>
         <BackupActions
@@ -91,10 +94,10 @@ export function DashboardPage({
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-          Dernières sauvegardes
+          {t('pages.dashboard.recentBackups')}
         </h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Aperçu des {DASHBOARD_PREVIEW_SIZE} opérations les plus récentes.
+          {t('pages.dashboard.recentBackupsHint', { count: DASHBOARD_PREVIEW_SIZE })}
         </p>
         <div className="mt-4">
           <BackupDataTable
@@ -111,7 +114,7 @@ export function DashboardPage({
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-          Volume de données sauvegardées
+          {t('pages.dashboard.backupVolume')}
         </h2>
         <div className="mt-4">
           <BackupVolumeChart data={backupVolume} />

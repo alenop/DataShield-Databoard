@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import i18n from '../i18n'
 import { mockBackupPolicies } from '../data/mockBackupPolicies'
 import type { BackupPolicy, CreateBackupPolicyInput } from '../types/backupPolicy.types'
 import type { RoleDefinition } from '../types/role.types'
@@ -50,7 +51,7 @@ export function useBackupPolicies({
   const createPolicy = useCallback(
     (input: CreateBackupPolicyInput): string | null => {
       if (!canManage) {
-        return "Vous n'avez pas l'autorisation de créer une politique."
+        return i18n.t('notifications.policyCreateForbidden')
       }
 
       const error = validateCreatePolicyInput(
@@ -63,7 +64,7 @@ export function useBackupPolicies({
       const policy = createBackupPolicy(input)
       setPolicies((prev) => [policy, ...prev])
       setNotification({
-        message: `Politique « ${policy.name} » créée avec succès.`,
+        message: i18n.t('notifications.policyCreated', { name: policy.name }),
         type: 'success',
       })
       return null
@@ -74,11 +75,11 @@ export function useBackupPolicies({
   const togglePolicyActive = useCallback(
     (policyId: string): string | null => {
       if (!canManage) {
-        return "Vous n'avez pas l'autorisation de modifier cette politique."
+        return i18n.t('notifications.policyEditForbidden')
       }
 
       const policy = policies.find((item) => item.id === policyId)
-      if (!policy) return 'Politique introuvable.'
+      if (!policy) return i18n.t('notifications.policyNotFound')
 
       setPolicies((prev) =>
         prev.map((item) =>
@@ -87,8 +88,8 @@ export function useBackupPolicies({
       )
       setNotification({
         message: policy.isActive
-          ? `Politique « ${policy.name} » désactivée.`
-          : `Politique « ${policy.name} » activée.`,
+          ? i18n.t('notifications.policyDeactivated', { name: policy.name })
+          : i18n.t('notifications.policyActivated', { name: policy.name }),
         type: 'success',
       })
       return null
@@ -99,11 +100,11 @@ export function useBackupPolicies({
   const updatePolicy = useCallback(
     (policyId: string, input: CreateBackupPolicyInput): string | null => {
       if (!canManage) {
-        return "Vous n'avez pas l'autorisation de modifier cette politique."
+        return i18n.t('notifications.policyEditForbidden')
       }
 
       const policy = policies.find((item) => item.id === policyId)
-      if (!policy) return 'Politique introuvable.'
+      if (!policy) return i18n.t('notifications.policyNotFound')
 
       const error = validateUpdatePolicyInput(
         input,
@@ -118,7 +119,7 @@ export function useBackupPolicies({
         prev.map((item) => (item.id === policyId ? updated : item)),
       )
       setNotification({
-        message: `Politique « ${updated.name} » mise à jour.`,
+        message: i18n.t('notifications.policyUpdated', { name: updated.name }),
         type: 'success',
       })
       return null

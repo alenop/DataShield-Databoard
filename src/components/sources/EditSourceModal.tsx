@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { BackupSource, BackupSourceInput } from '../../types/backupSource.types'
+import type { SourceScope } from '../../types/sourceScope.types'
 import { ScopeListEditor } from './ScopeListEditor'
 
 interface EditSourceModalProps {
@@ -11,10 +13,11 @@ interface EditSourceModalProps {
 }
 
 export function EditSourceModal({ isOpen, source, onClose, onSave }: EditSourceModalProps) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [environment, setEnvironment] = useState('')
   const [apiEndpoint, setApiEndpoint] = useState('')
-  const [scopes, setScopes] = useState<string[]>([])
+  const [scopes, setScopes] = useState<SourceScope[]>([])
   const [error, setError] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
@@ -64,7 +67,7 @@ export function EditSourceModal({ isOpen, source, onClose, onSave }: EditSourceM
     >
       <button
         type="button"
-        aria-label="Fermer la modale"
+        aria-label={t('common.closeModal')}
         onClick={onClose}
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
       />
@@ -76,7 +79,7 @@ export function EditSourceModal({ isOpen, source, onClose, onSave }: EditSourceM
         <button
           type="button"
           onClick={onClose}
-          aria-label="Fermer"
+          aria-label={t('common.close')}
           className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <X className="h-5 w-5" />
@@ -86,11 +89,11 @@ export function EditSourceModal({ isOpen, source, onClose, onSave }: EditSourceM
           id="edit-source-modal-title"
           className="pr-8 text-lg font-semibold text-slate-900 dark:text-white"
         >
-          Modifier la source
+          {t('pages.sources.editModal.title')}
         </h2>
 
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Mettez à jour la configuration et les périmètres d&apos;export de la source.
+          {t('pages.sources.editModal.description')}
         </p>
 
         <div className="mt-4 space-y-4">
@@ -99,7 +102,7 @@ export function EditSourceModal({ isOpen, source, onClose, onSave }: EditSourceM
               htmlFor="edit-source-name"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              Nom
+              {t('common.name')}
             </label>
             <input
               ref={nameInputRef}
@@ -116,7 +119,7 @@ export function EditSourceModal({ isOpen, source, onClose, onSave }: EditSourceM
               htmlFor="edit-source-environment"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              Environnement
+              {t('common.environment')}
             </label>
             <input
               id="edit-source-environment"
@@ -132,7 +135,7 @@ export function EditSourceModal({ isOpen, source, onClose, onSave }: EditSourceM
               htmlFor="edit-source-api-endpoint"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              Endpoint API (HTTPS)
+              {t('common.apiEndpoint')}
             </label>
             <input
               id="edit-source-api-endpoint"
@@ -162,13 +165,13 @@ export function EditSourceModal({ isOpen, source, onClose, onSave }: EditSourceM
             onClick={onClose}
             className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
           >
-            Annuler
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
-            Enregistrer
+            {t('common.save')}
           </button>
         </div>
       </form>

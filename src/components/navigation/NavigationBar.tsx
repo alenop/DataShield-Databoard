@@ -1,4 +1,5 @@
 import { Menu, PanelLeftClose, PanelLeftOpen, Shield, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { NavigationState } from '../../hooks/useNavigation'
 import { isNavGroup } from '../../types/navigation.types'
 import { NavGroup } from './NavGroup'
@@ -9,6 +10,7 @@ interface NavigationBarProps {
 }
 
 export function NavigationBar({ navigation }: NavigationBarProps) {
+  const { t } = useTranslation()
   const {
     items,
     activeId,
@@ -35,7 +37,7 @@ export function NavigationBar({ navigation }: NavigationBarProps) {
       <button
         type="button"
         onClick={toggleMobileOpen}
-        aria-label="Ouvrir le menu"
+        aria-label={t('nav.openMenu')}
         className="fixed left-4 top-4 z-50 rounded-lg bg-slate-900 p-2 text-white shadow-lg md:hidden"
       >
         <Menu className="h-5 w-5" />
@@ -44,13 +46,13 @@ export function NavigationBar({ navigation }: NavigationBarProps) {
       {isMobileOpen && (
         <button
           type="button"
-          aria-label="Fermer le menu"
+          aria-label={t('nav.closeMenu')}
           onClick={closeMobile}
           className="fixed inset-0 z-30 bg-black/50 md:hidden"
         />
       )}
 
-      <aside className={sidebarClasses} aria-label="Navigation principale">
+      <aside className={sidebarClasses} aria-label={t('nav.mainNavigation')}>
         <div
           className={[
             'flex h-16 shrink-0 items-center border-b border-slate-800',
@@ -60,7 +62,7 @@ export function NavigationBar({ navigation }: NavigationBarProps) {
           {!isCollapsed && (
             <div className="flex items-center gap-2">
               <Shield className="h-6 w-6 text-blue-400" aria-hidden="true" />
-              <span className="text-base font-bold tracking-tight">DataShield</span>
+              <span className="text-base font-bold tracking-tight">{t('common.appName')}</span>
             </div>
           )}
 
@@ -68,7 +70,7 @@ export function NavigationBar({ navigation }: NavigationBarProps) {
             <button
               type="button"
               onClick={toggleCollapsed}
-              aria-label={isCollapsed ? 'Déplier la barre' : 'Replier la barre'}
+              aria-label={isCollapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')}
               className="hidden rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white md:inline-flex"
             >
               {isCollapsed ? (
@@ -81,7 +83,7 @@ export function NavigationBar({ navigation }: NavigationBarProps) {
             <button
               type="button"
               onClick={closeMobile}
-              aria-label="Fermer le menu"
+              aria-label={t('nav.closeMenu')}
               className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white md:hidden"
             >
               <X className="h-5 w-5" />

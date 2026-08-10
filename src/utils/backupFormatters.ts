@@ -1,8 +1,14 @@
+import type { TFunction } from 'i18next'
 import type { BackupScheduleFrequency } from '../types/backup.types'
-import { backupScheduleFrequencyShortLabels } from '../types/backup.types'
 
-export function formatBackupDate(isoDate: string): string {
-  return new Intl.DateTimeFormat('fr-FR', {
+function resolveIntlLocale(language: string): string {
+  if (language.startsWith('en')) return 'en-US'
+  if (language.startsWith('fr')) return 'fr-FR'
+  return language
+}
+
+export function formatBackupDate(isoDate: string, locale = 'fr-FR'): string {
+  return new Intl.DateTimeFormat(resolveIntlLocale(locale), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -11,21 +17,26 @@ export function formatBackupDate(isoDate: string): string {
   }).format(new Date(isoDate))
 }
 
-export function formatBackupSize(gb: number): string {
-  return `${gb.toFixed(1)} Go`
+export function formatBackupSize(gb: number, t: TFunction): string {
+  return `${gb.toFixed(1)} ${t('common.volumeUnit')}`
 }
 
-export function formatBackupDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
+export function formatBackupDuration(minutes: number, t: TFunction): string {
+  if (minutes < 60) return t('common.durationMin', { count: minutes })
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
-  return mins > 0 ? `${hours} h ${mins} min` : `${hours} h`
+  return mins > 0
+    ? t('common.durationHourMin', { hours, minutes: mins })
+    : t('common.durationHour', { hours })
 }
 
 export function formatBackupDisplayName(
   name: string,
-  scheduleFrequency?: BackupScheduleFrequency | null,
+  scheduleFrequency: BackupScheduleFrequency | null | undefined,
+  t: TFunction,
 ): string {
   if (!scheduleFrequency) return name
-  return `${name} (${backupScheduleFrequencyShortLabels[scheduleFrequency]})`
+  const shortLabel =
+    scheduleFrequency === 'daily' ? t('common.dailyShort') : t('common.weeklyShort')
+  return `${name} (${shortLabel})`
 }

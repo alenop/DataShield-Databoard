@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CalendarClock, Clock, Database, Pencil, Plus, Shield } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { currentUser } from '../../data/currentUser'
 import type { BackupPoliciesState } from '../../hooks/useBackupPolicies'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
@@ -16,6 +17,7 @@ interface PoliciesPageProps {
 }
 
 export function PoliciesPage({ policiesState, backupSources, rolesState }: PoliciesPageProps) {
+  const { t } = useTranslation()
   const {
     policies,
     notification,
@@ -37,11 +39,12 @@ export function PoliciesPage({ policiesState, backupSources, rolesState }: Polic
       <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-900 dark:bg-red-950">
         <Shield className="mx-auto h-8 w-8 text-red-600 dark:text-red-400" aria-hidden="true" />
         <h1 className="mt-4 text-lg font-semibold text-red-800 dark:text-red-300">
-          Accès refusé
+          {t('common.accessDenied')}
         </h1>
         <p className="mt-2 text-sm text-red-700 dark:text-red-400">
-          Votre rôle ({actorRole?.name ?? currentUser.roleId}) ne permet pas de consulter les
-          politiques de sauvegarde.
+          {t('pages.policies.accessDeniedMessage', {
+            role: actorRole?.name ?? currentUser.roleId,
+          })}
         </p>
       </div>
     )
@@ -53,17 +56,24 @@ export function PoliciesPage({ policiesState, backupSources, rolesState }: Polic
       .filter(Boolean)
       .join(', ')
 
+  const loggedInSubtitle = canManage
+    ? t('common.loggedInAs', {
+        name: currentUser.name,
+        role: actorRole?.name ?? currentUser.roleId,
+      })
+    : `${t('common.loggedInAs', {
+        name: currentUser.name,
+        role: actorRole?.name ?? currentUser.roleId,
+      })} — ${t('common.readOnly')}`
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Politiques de sauvegarde
+            {t('pages.policies.title')}
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Connecté en tant que {currentUser.name} ({actorRole?.name ?? currentUser.roleId})
-            {!canManage && ' — consultation seule'}
-          </p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{loggedInSubtitle}</p>
         </div>
 
         {canManage && (
@@ -73,7 +83,7 @@ export function PoliciesPage({ policiesState, backupSources, rolesState }: Polic
             className="inline-flex items-center gap-2 self-start rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
-            Créer une politique
+            {t('pages.policies.createPolicy')}
           </button>
         )}
       </div>
@@ -99,7 +109,7 @@ export function PoliciesPage({ policiesState, backupSources, rolesState }: Polic
             aria-hidden="true"
           />
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-            Aucune politique configurée.
+            {t('pages.policies.noPolicies')}
           </p>
           {canManage && (
             <button
@@ -108,7 +118,7 @@ export function PoliciesPage({ policiesState, backupSources, rolesState }: Polic
               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Créer une politique
+              {t('pages.policies.createPolicy')}
             </button>
           )}
         </section>
@@ -129,7 +139,10 @@ export function PoliciesPage({ policiesState, backupSources, rolesState }: Polic
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-          Vue tableau ({policies.length})
+          {t('common.countWithLabel', {
+            label: t('pages.policies.tableView'),
+            count: policies.length,
+          })}
         </h2>
 
         <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
@@ -137,23 +150,23 @@ export function PoliciesPage({ policiesState, backupSources, rolesState }: Polic
             <thead className="bg-slate-50 dark:bg-slate-800">
               <tr>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  Politique
+                  {t('common.policy')}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  Fréquence / CRON
+                  {t('common.frequencyCron')}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  Rétention
+                  {t('common.retention')}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  Sources
+                  {t('common.source')}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  Statut
+                  {t('common.status')}
                 </th>
                 {canManage && (
                   <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">
-                    Actions
+                    {t('common.actions')}
                   </th>
                 )}
               </tr>
@@ -174,7 +187,7 @@ export function PoliciesPage({ policiesState, backupSources, rolesState }: Polic
                     {policy.retentionLabel}
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                    {getSourceNames(policy.sourceIds) || '—'}
+                    {getSourceNames(policy.sourceIds) || t('common.emptyDash')}
                   </td>
                   <td className="px-4 py-3">
                     <PolicyActiveToggle
@@ -189,11 +202,11 @@ export function PoliciesPage({ policiesState, backupSources, rolesState }: Polic
                       <button
                         type="button"
                         onClick={() => setEditingPolicy(policy)}
-                        aria-label={`Modifier ${policy.name}`}
+                        aria-label={t('common.editAria', { name: policy.name })}
                         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                       >
                         <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                        Modifier
+                        {t('common.edit')}
                       </button>
                     </td>
                   )}
@@ -231,6 +244,8 @@ interface PolicyCardProps {
 }
 
 function PolicyCard({ policy, sourceNames, canManage, onToggle, onEdit }: PolicyCardProps) {
+  const { t } = useTranslation()
+
   return (
     <article
       className={[
@@ -246,7 +261,7 @@ function PolicyCard({ policy, sourceNames, canManage, onToggle, onEdit }: Policy
           <button
             type="button"
             onClick={onEdit}
-            aria-label={`Modifier ${policy.name}`}
+            aria-label={t('common.editAria', { name: policy.name })}
             className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -264,10 +279,10 @@ function PolicyCard({ policy, sourceNames, canManage, onToggle, onEdit }: Policy
         <div className="flex items-start gap-2">
           <Clock className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
           <div>
-            <dt className="sr-only">Fréquence</dt>
+            <dt className="sr-only">{t('common.frequency')}</dt>
             <dd className="text-slate-700 dark:text-slate-300">{policy.frequencyLabel}</dd>
             <dd className="font-mono text-xs text-slate-500 dark:text-slate-400">
-              CRON {policy.cronExpression}
+              {t('common.cronPrefix', { value: policy.cronExpression })}
             </dd>
           </div>
         </div>
@@ -275,7 +290,7 @@ function PolicyCard({ policy, sourceNames, canManage, onToggle, onEdit }: Policy
         <div className="flex items-start gap-2">
           <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
           <div>
-            <dt className="sr-only">Rétention</dt>
+            <dt className="sr-only">{t('common.retention')}</dt>
             <dd className="text-slate-700 dark:text-slate-300">{policy.retentionLabel}</dd>
           </div>
         </div>
@@ -283,8 +298,10 @@ function PolicyCard({ policy, sourceNames, canManage, onToggle, onEdit }: Policy
         <div className="flex items-start gap-2">
           <Database className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
           <div>
-            <dt className="sr-only">Sources</dt>
-            <dd className="text-slate-700 dark:text-slate-300">{sourceNames || '—'}</dd>
+            <dt className="sr-only">{t('common.source')}</dt>
+            <dd className="text-slate-700 dark:text-slate-300">
+              {sourceNames || t('common.emptyDash')}
+            </dd>
           </div>
         </div>
       </dl>
@@ -305,6 +322,8 @@ function PolicyActiveToggle({
   canManage,
   onToggle,
 }: PolicyActiveToggleProps) {
+  const { t } = useTranslation()
+
   if (!canManage) {
     return (
       <span
@@ -315,7 +334,7 @@ function PolicyActiveToggle({
             : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
         ].join(' ')}
       >
-        {isActive ? 'Actif' : 'Inactif'}
+        {t(`status.policy.${isActive ? 'active' : 'inactive'}`)}
       </span>
     )
   }
@@ -326,7 +345,11 @@ function PolicyActiveToggle({
         type="button"
         role="switch"
         aria-checked={isActive}
-        aria-label={`${isActive ? 'Désactiver' : 'Activer'} la politique ${policyName}`}
+        aria-label={
+          isActive
+            ? t('common.deactivatePolicyAria', { name: policyName })
+            : t('common.activatePolicyAria', { name: policyName })
+        }
         onClick={onToggle}
         className={[
           'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors',
@@ -341,7 +364,7 @@ function PolicyActiveToggle({
         />
       </button>
       <span className="text-xs text-slate-600 dark:text-slate-400">
-        {isActive ? 'Actif' : 'Inactif'}
+        {t(`status.policy.${isActive ? 'active' : 'inactive'}`)}
       </span>
     </div>
   )

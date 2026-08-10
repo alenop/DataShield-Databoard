@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { Permission } from '../../types/role.types'
-import { ALL_PERMISSIONS, permissionLabels } from '../../types/role.types'
+import { ALL_PERMISSIONS } from '../../types/role.types'
 
 interface CreateRoleModalProps {
   isOpen: boolean
@@ -14,6 +15,7 @@ interface CreateRoleModalProps {
 }
 
 export function CreateRoleModal({ isOpen, onClose, onCreate }: CreateRoleModalProps) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [permissions, setPermissions] = useState<Permission[]>([])
@@ -68,7 +70,7 @@ export function CreateRoleModal({ isOpen, onClose, onCreate }: CreateRoleModalPr
     >
       <button
         type="button"
-        aria-label="Fermer la modale"
+        aria-label={t('common.closeModal')}
         onClick={onClose}
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
       />
@@ -80,7 +82,7 @@ export function CreateRoleModal({ isOpen, onClose, onCreate }: CreateRoleModalPr
         <button
           type="button"
           onClick={onClose}
-          aria-label="Fermer"
+          aria-label={t('common.close')}
           className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <X className="h-5 w-5" />
@@ -90,11 +92,11 @@ export function CreateRoleModal({ isOpen, onClose, onCreate }: CreateRoleModalPr
           id="create-role-modal-title"
           className="pr-8 text-lg font-semibold text-slate-900 dark:text-white"
         >
-          Créer un rôle
+          {t('pages.users.createRoleModal.title')}
         </h2>
 
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Définissez un nouveau rôle et sélectionnez les droits associés.
+          {t('pages.users.createRoleModal.description')}
         </p>
 
         <div className="mt-4 space-y-4">
@@ -103,7 +105,7 @@ export function CreateRoleModal({ isOpen, onClose, onCreate }: CreateRoleModalPr
               htmlFor="role-name"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              Nom du rôle
+              {t('common.roleName')}
             </label>
             <input
               ref={nameInputRef}
@@ -111,7 +113,7 @@ export function CreateRoleModal({ isOpen, onClose, onCreate }: CreateRoleModalPr
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Ex. Responsable conformité"
+              placeholder={t('pages.users.createRoleModal.namePlaceholder')}
               className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
             />
           </div>
@@ -121,21 +123,21 @@ export function CreateRoleModal({ isOpen, onClose, onCreate }: CreateRoleModalPr
               htmlFor="role-description"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300"
             >
-              Description
+              {t('common.description')}
             </label>
             <textarea
               id="role-description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={2}
-              placeholder="Décrivez le périmètre de ce rôle…"
+              placeholder={t('pages.users.createRoleModal.descriptionPlaceholder')}
               className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
             />
           </div>
 
           <fieldset>
             <legend className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Droits
+              {t('common.permissions')}
             </legend>
             <div className="mt-2 space-y-2">
               {ALL_PERMISSIONS.map((permission) => (
@@ -150,7 +152,7 @@ export function CreateRoleModal({ isOpen, onClose, onCreate }: CreateRoleModalPr
                     className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-slate-700 dark:text-slate-300">
-                    {permissionLabels[permission]}
+                    {t(`pages.users.permissions.${permission}`)}
                   </span>
                 </label>
               ))}
@@ -170,13 +172,13 @@ export function CreateRoleModal({ isOpen, onClose, onCreate }: CreateRoleModalPr
             onClick={onClose}
             className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
           >
-            Annuler
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
-            Créer le rôle
+            {t('pages.users.createRoleModal.create')}
           </button>
         </div>
       </form>

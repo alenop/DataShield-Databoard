@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import i18n from '../i18n'
 import { mockRestoreJobs } from '../data/mockRestoreJobs'
 import type {
   CreateRestoreJobInput,
@@ -95,7 +96,7 @@ export function useRestoreJobs({ availableBackups, availableTargets }: UseRestor
           const current = prev.find((job) => job.id === jobId)
           if (current) {
             setNotification({
-              message: `Restauration « ${current.name} » terminée avec succès.`,
+              message: i18n.t('notifications.restoreCompleted', { name: current.name }),
               type: 'success',
             })
           }
@@ -138,13 +139,13 @@ export function useRestoreJobs({ availableBackups, availableTargets }: UseRestor
       if (error) return error
 
       const backup = availableBackups.find((item) => item.id === input.backupId)
-      if (!backup) return 'Sauvegarde source introuvable.'
+      if (!backup) return i18n.t('notifications.backupNotFound')
 
       const created = createRestoreJob(input, backup)
       setJobRecords((prev) => [created, ...prev])
       scheduleRestoreSimulation(created.id)
       setNotification({
-        message: `Restauration « ${created.name} » lancée…`,
+        message: i18n.t('notifications.restoreLaunched', { name: created.name }),
         type: 'success',
       })
       return null

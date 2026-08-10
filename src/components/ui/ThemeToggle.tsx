@@ -1,4 +1,5 @@
 import { Moon, Sun } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { ThemeState } from '../../hooks/useTheme'
 import type { Theme } from '../../types/theme.types'
 
@@ -6,21 +7,22 @@ interface ThemeToggleProps {
   theme: ThemeState
 }
 
-const options: { value: Theme; label: string; icon: typeof Sun }[] = [
-  { value: 'light', label: 'Clair', icon: Sun },
-  { value: 'dark', label: 'Sombre', icon: Moon },
+const options: { value: Theme; labelKey: string; icon: typeof Sun }[] = [
+  { value: 'light', labelKey: 'theme.light', icon: Sun },
+  { value: 'dark', labelKey: 'theme.dark', icon: Moon },
 ]
 
 export function ThemeToggle({ theme }: ThemeToggleProps) {
+  const { t } = useTranslation()
   const { theme: current, setTheme } = theme
 
   return (
     <div
       role="group"
-      aria-label="Sélecteur de thème"
+      aria-label={t('theme.selector')}
       className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800"
     >
-      {options.map(({ value, label, icon: Icon }) => {
+      {options.map(({ value, labelKey, icon: Icon }) => {
         const isActive = current === value
 
         return (
@@ -37,7 +39,7 @@ export function ThemeToggle({ theme }: ThemeToggleProps) {
             ].join(' ')}
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
-            {label}
+            {t(labelKey)}
           </button>
         )
       })}

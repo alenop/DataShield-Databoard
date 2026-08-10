@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import i18n from '../i18n'
 import type { BackupRecord, BackupStatusFilter } from '../types/backup.types'
 import { applyBackupFilters, countBackupStatuses } from '../utils/backupFilters.utils'
 import type { BackupSource } from '../types/backupSource.types'
@@ -190,7 +191,10 @@ export function useBackupRecords({ initialRecords, username, sources }: UseBacku
         status: 'in_progress',
         durationMinutes: 0,
         scheduleFrequency: null,
-        description: `Sauvegarde depuis ${source.apiEndpoint} (${source.environment})`,
+        description: i18n.t('common.backupDescription', {
+          endpoint: source.apiEndpoint,
+          environment: source.environment,
+        }),
       }
 
       setRecords((prev) => [newRecord, ...prev])

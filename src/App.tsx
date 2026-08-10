@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AuditPage } from './components/audit/AuditPage'
 import { AlertsPage } from './components/alerts/AlertsPage'
 import { BackupsPage } from './components/backups/BackupsPage'
@@ -10,6 +11,7 @@ import { PoliciesPage } from './components/policies/PoliciesPage'
 import { SettingsPage } from './components/settings/SettingsPage'
 import { SourcesPage } from './components/sources/SourcesPage'
 import { UsersPage } from './components/users/UsersPage'
+import { LanguageToggle } from './components/ui/LanguageToggle'
 import { ThemeToggle } from './components/ui/ThemeToggle'
 import { currentUser } from './data/currentUser'
 import { buildMockBackupRecords } from './data/mockBackups'
@@ -28,9 +30,11 @@ import { useTheme } from './hooks/useTheme'
 import { useUsers } from './hooks/useUsers'
 import { isNavGroup } from './types/navigation.types'
 import { buildNavigationItems } from './utils/navigationBadges.utils'
+import { localizeNavigationItems } from './utils/navigationI18n.utils'
 import { buildRestoreBackupOptions } from './utils/backupRecord.utils'
 
 function App() {
+  const { t, i18n } = useTranslation()
   const theme = useTheme()
   const appSettings = useAppSettings()
   const backupSources = useBackupSources()
@@ -74,7 +78,7 @@ function App() {
     })),
   })
 
-  const navigationItems = useMemo(
+  const rawNavigationItems = useMemo(
     () =>
       buildNavigationItems({
         criticalAlerts: alertsState.summary.critical,
@@ -86,6 +90,11 @@ function App() {
           .length,
       }),
     [alertsState.summary, backupRecords.statusCounts.failure, dataExports.exports, restoreJobs.restoreJobs],
+  )
+
+  const navigationItems = useMemo(
+    () => localizeNavigationItems(rawNavigationItems, t),
+    [rawNavigationItems, i18n.language, t],
   )
 
   const navigation = useNavigation({
@@ -120,7 +129,8 @@ function App() {
         ].join(' ')}
       >
         <div className="mx-auto max-w-6xl">
-          <div className="mb-6 flex justify-end">
+          <div className="mb-6 flex justify-end gap-3">
+            <LanguageToggle />
             <ThemeToggle theme={theme} />
           </div>
 
@@ -166,18 +176,18 @@ function App() {
           ) : (
             <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                {activeItem?.label ?? 'Page'}
+                {activeItem?.label ?? t('common.page')}
               </h1>
               {activeHref && (
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  Route fictive :{' '}
+                  {t('common.demoRoute')}{' '}
                   <code className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800 dark:text-slate-300">
                     {activeHref}
                   </code>
                 </p>
               )}
               <p className="mt-4 text-slate-600 dark:text-slate-400">
-                Contenu de démonstration pour la section sélectionnée.
+                {t('common.demoContent')}
               </p>
             </div>
           )}
