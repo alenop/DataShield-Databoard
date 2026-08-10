@@ -1,3 +1,5 @@
+import i18n from '../i18n'
+
 export const BACKUP_SIMULATION_DURATION_MS = 8000
 export const BACKUP_TICK_INTERVAL_MS = 1000
 export const BACKUP_SIZE_INCREMENT_GB = 10
@@ -13,11 +15,11 @@ export function getBackupProgressPercent(sizeGb: number): number {
 }
 
 export function getLaunchSuccessNotification(sourceName: string): string {
-  return `Sauvegarde terminée avec succès — ${sourceName}`
+  return i18n.t('notifications.backupSuccess', { source: sourceName })
 }
 
 export function getLaunchFailureNotification(): string {
-  return 'Échec de la sauvegarde : timeout de connexion au stockage distant'
+  return i18n.t('notifications.backupFailure')
 }
 
 export function getLaunchFailureDetails(): Pick<
@@ -25,8 +27,7 @@ export function getLaunchFailureDetails(): Pick<
   'errorReason' | 'errorMessage'
 > {
   return {
-    errorReason: 'Timeout de connexion au stockage distant',
-    errorMessage:
-      'STORAGE_TIMEOUT : Le service de stockage n\'a pas répondu dans le délai imparti (30 s).',
+    errorReason: i18n.t('notifications.backupFailureReason'),
+    errorMessage: i18n.t('notifications.backupFailureMessage'),
   }
 }

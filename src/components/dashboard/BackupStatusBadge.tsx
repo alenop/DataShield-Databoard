@@ -1,5 +1,5 @@
+import { useTranslation } from 'react-i18next'
 import type { BackupStatus } from '../../types/backup.types'
-import { backupStatusLabels } from '../../types/backup.types'
 
 interface BackupStatusBadgeProps {
   status: BackupStatus
@@ -12,6 +12,8 @@ const statusStyles: Record<BackupStatus, string> = {
 }
 
 export function BackupStatusBadge({ status }: BackupStatusBadgeProps) {
+  const { t } = useTranslation()
+
   return (
     <span
       className={[
@@ -22,7 +24,7 @@ export function BackupStatusBadge({ status }: BackupStatusBadgeProps) {
       {status === 'in_progress' && (
         <span className="mr-1.5 h-1.5 w-1.5 animate-pulse rounded-full bg-blue-500" />
       )}
-      {backupStatusLabels[status]}
+      {t(`status.backup.${status}`)}
     </span>
   )
 }

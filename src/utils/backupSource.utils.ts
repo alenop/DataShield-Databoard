@@ -1,5 +1,9 @@
+import i18n from '../i18n'
 import type { BackupSource, BackupSourceInput, BackupSourceStatus } from '../types/backupSource.types'
-import { DEFAULT_SOURCE_SCOPES, DEFAULT_SOURCE_STATUS } from '../types/backupSource.types'
+import { DEFAULT_SOURCE_STATUS } from '../types/backupSource.types'
+import { normalizeScopes, resolveScopeKey } from './sourceScope.utils'
+
+export { normalizeScopes } from './sourceScope.utils'
 
 interface LegacyBackupSourceRecord {
   id?: string
@@ -15,27 +19,6 @@ const VALID_STATUSES: BackupSourceStatus[] = ['CONNECTED', 'DISCONNECTED', 'ERRO
 
 function isBackupSourceStatus(value: string): value is BackupSourceStatus {
   return VALID_STATUSES.includes(value as BackupSourceStatus)
-}
-
-export function normalizeScopes(scopes: unknown): string[] {
-  if (!Array.isArray(scopes)) return [...DEFAULT_SOURCE_SCOPES]
-
-  const seen = new Set<string>()
-  const normalized: string[] = []
-
-  for (const scope of scopes) {
-    if (typeof scope !== 'string') continue
-    const trimmed = scope.trim()
-    if (!trimmed) continue
-
-    const key = trimmed.toLowerCase()
-    if (seen.has(key)) continue
-
-    seen.add(key)
-    normalized.push(trimmed)
-  }
-
-  return normalized.length > 0 ? normalized : [...DEFAULT_SOURCE_SCOPES]
 }
 
 export function normalizeBackupSource(raw: unknown): BackupSource | null {
@@ -89,19 +72,19 @@ export function isValidHttpsApiEndpoint(apiEndpoint: string): boolean {
 }
 
 export function hasValidScopes(scopes: unknown): boolean {
-  if (!Array.isArray(scopes)) return false
-  return scopes.some((scope) => typeof scope === 'string' && scope.trim().length > 0)
+  if (!Array.isArray(scopes) || scopes.length === 0) return false
+  return scopes.some((scope) => typeof scope === 'string' && resolveScopeKey(scope) !== null)
 }
 
 export function validateBackupSourceInput(input: BackupSourceInput): string | null {
-  if (!input.name.trim()) return 'Le nom est requis.'
-  if (!input.environment.trim()) return "L'environnement est requis."
-  if (!input.apiEndpoint.trim()) return "L'endpoint API est requis."
+  if (!input.name.trim()) return i18n.t('validation.nameRequired')
+  if (!input.environment.trim()) return i18n.t('validation.environmentRequired')
+  if (!input.apiEndpoint.trim()) return i18n.t('validation.apiEndpointRequired')
   if (!isValidHttpsApiEndpoint(input.apiEndpoint)) {
-    return "L'endpoint API doit être une URL HTTPS valide (https://…)."
+    return i18n.t('validation.apiEndpointHttps')
   }
   if (!hasValidScopes(input.scopes)) {
-    return 'Au moins un périmètre est requis.'
+    return i18n.t('validation.scopeRequired')
   }
   return null
 }

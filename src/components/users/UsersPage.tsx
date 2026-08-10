@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Shield, ShieldOff, UserPlus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { currentUser } from '../../data/currentUser'
 import type { RolesState } from '../../hooks/useRoles'
 import type { UsersState } from '../../hooks/useUsers'
 import type { RoleDefinition } from '../../types/role.types'
-import { userStatusLabels, type UserStatus } from '../../types/user.types'
+import type { UserStatus } from '../../types/user.types'
 import { formatBackupDate } from '../../utils/backupFormatters'
 import { InviteUserModal } from './InviteUserModal'
 import { RolesSection } from './RolesSection'
@@ -16,6 +17,7 @@ interface UsersPageProps {
 }
 
 export function UsersPage({ usersState, rolesState }: UsersPageProps) {
+  const { t } = useTranslation()
   const {
     users,
     notification,
@@ -36,13 +38,14 @@ export function UsersPage({ usersState, rolesState }: UsersPageProps) {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Utilisateurs</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            {t('pages.users.title')}
+          </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Connecté en tant que{' '}
-            <span className="font-medium text-slate-700 dark:text-slate-300">
-              {currentUser.name}
-            </span>{' '}
-            ({currentUserRole?.name ?? currentUser.roleId})
+            {t('common.loggedInAs', {
+              name: currentUser.name,
+              role: currentUserRole?.name ?? currentUser.roleId,
+            })}
           </p>
         </div>
 
@@ -53,7 +56,7 @@ export function UsersPage({ usersState, rolesState }: UsersPageProps) {
             className="inline-flex items-center gap-2 self-start rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
             <UserPlus className="h-4 w-4" aria-hidden="true" />
-            Inviter un utilisateur
+            {t('pages.users.inviteUser')}
           </button>
         )}
       </div>
@@ -79,7 +82,7 @@ export function UsersPage({ usersState, rolesState }: UsersPageProps) {
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-          Utilisateurs ({users.length})
+          {t('common.countWithLabel', { label: t('pages.users.usersSection'), count: users.length })}
         </h2>
 
         <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
@@ -87,25 +90,25 @@ export function UsersPage({ usersState, rolesState }: UsersPageProps) {
             <thead className="bg-slate-50 dark:bg-slate-800">
               <tr>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  Nom
+                  {t('common.name')}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  E-mail
+                  {t('common.email')}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  Rôle
+                  {t('common.role')}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  Statut
+                  {t('common.status')}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  MFA
+                  {t('common.mfa')}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  Dernière connexion
+                  {t('common.lastLogin')}
                 </th>
                 <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                  Actions
+                  {t('common.actions')}
                 </th>
               </tr>
             </thead>
@@ -126,7 +129,7 @@ export function UsersPage({ usersState, rolesState }: UsersPageProps) {
                       {user.name}
                       {isCurrentUser && (
                         <span className="ml-2 text-xs font-normal text-blue-600 dark:text-blue-400">
-                          (vous)
+                          ({t('common.you')})
                         </span>
                       )}
                     </td>
@@ -141,7 +144,7 @@ export function UsersPage({ usersState, rolesState }: UsersPageProps) {
                       <MfaBadge enabled={user.mfaEnabled} />
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                      {user.lastLogin ? formatBackupDate(user.lastLogin) : '—'}
+                      {user.lastLogin ? formatBackupDate(user.lastLogin) : t('common.emptyDash')}
                     </td>
                     <td className="px-4 py-3">
                       <UserActionsCell
@@ -208,6 +211,8 @@ const statusStyles: Record<UserStatus, string> = {
 }
 
 function UserStatusBadge({ status }: UserStatusBadgeProps) {
+  const { t } = useTranslation()
+
   return (
     <span
       className={[
@@ -215,7 +220,7 @@ function UserStatusBadge({ status }: UserStatusBadgeProps) {
         statusStyles[status],
       ].join(' ')}
     >
-      {userStatusLabels[status]}
+      {t(`status.user.${status}`)}
     </span>
   )
 }
@@ -225,11 +230,13 @@ interface MfaBadgeProps {
 }
 
 function MfaBadge({ enabled }: MfaBadgeProps) {
+  const { t } = useTranslation()
+
   if (enabled) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
         <Shield className="h-3.5 w-3.5" aria-hidden="true" />
-        Activé
+        {t('common.enabled')}
       </span>
     )
   }
@@ -237,7 +244,7 @@ function MfaBadge({ enabled }: MfaBadgeProps) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
       <ShieldOff className="h-3.5 w-3.5" aria-hidden="true" />
-      Désactivé
+      {t('common.disabled')}
     </span>
   )
 }

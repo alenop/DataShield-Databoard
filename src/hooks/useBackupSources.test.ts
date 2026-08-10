@@ -2,11 +2,13 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import * as sourceApi from '../api/sourceApi'
 import { BACKUP_SOURCES_STORAGE_KEY, useBackupSources } from './useBackupSources'
 
-const sampleInput = {
+import type { BackupSourceInput } from '../types/backupSource.types'
+
+const sampleInput: BackupSourceInput = {
   name: 'Test Source',
   environment: 'Production',
   apiEndpoint: 'https://test.example.com/services/data/v58.0',
-  scopes: ['Contacts', 'Comptes'],
+  scopes: ['contacts', 'accounts'],
 }
 
 describe('useBackupSources', () => {
@@ -31,7 +33,7 @@ describe('useBackupSources', () => {
     const added = result.current.sources[result.current.sources.length - 1]
     expect(added?.name).toBe('Test Source')
     expect(added?.status).toBe('CONNECTED')
-    expect(added?.scopes).toEqual(['Contacts', 'Comptes'])
+    expect(added?.scopes).toEqual(['contacts', 'accounts'])
     expect(added?.id).toMatch(/^[0-9a-f-]{36}$/i)
   })
 
@@ -43,14 +45,14 @@ describe('useBackupSources', () => {
       const error = result.current.updateSource(source.id, {
         ...sampleInput,
         name: 'Updated Source',
-        scopes: ['Leads', 'Opportunités'],
+        scopes: ['leads', 'opportunities'],
       })
       expect(error).toBeNull()
     })
 
     const updated = result.current.sources.find((item) => item.id === source.id)
     expect(updated?.name).toBe('Updated Source')
-    expect(updated?.scopes).toEqual(['Leads', 'Opportunités'])
+    expect(updated?.scopes).toEqual(['leads', 'opportunities'])
   })
 
   it('tests connection and updates status with notification', async () => {

@@ -1,12 +1,7 @@
+import i18n from '../i18n'
 import type { BackupRecord } from '../types/backup.types'
 
 const RETRY_DELAY_MS = 3000
-
-const RETRY_FAILURE = {
-  errorReason: 'Échec de connexion au stockage distant',
-  errorMessage:
-    'STORAGE_TIMEOUT : Le service de stockage n\'a pas répondu dans le délai imparti (30 s).',
-} as const
 
 export function markBackupInProgress(record: BackupRecord): BackupRecord {
   return {
@@ -26,7 +21,8 @@ export function resolveRetryOutcome(wasFailure: boolean): Pick<
     return {
       status: 'failure',
       date: new Date().toISOString(),
-      ...RETRY_FAILURE,
+      errorReason: i18n.t('notifications.retryFailureReason'),
+      errorMessage: i18n.t('notifications.backupFailureMessage'),
     }
   }
 
@@ -49,7 +45,7 @@ export function resolveUserStoppedOutcome(username: string): Pick<
   return {
     status: 'failure',
     date: new Date().toISOString(),
-    errorReason: 'Sauvegarde annulée',
-    errorMessage: `Arrêtée par l'utilisateur : ${username}`,
+    errorReason: i18n.t('notifications.backupStoppedReason'),
+    errorMessage: i18n.t('notifications.backupStoppedMessage', { username }),
   }
 }

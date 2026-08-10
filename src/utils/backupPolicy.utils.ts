@@ -1,13 +1,20 @@
+import i18n from '../i18n'
 import type { BackupPolicy, CreateBackupPolicyInput } from '../types/backupPolicy.types'
 import {
   POLICY_FREQUENCY_PRESETS,
   POLICY_RETENTION_PRESETS,
 } from '../types/backupPolicy.types'
 
+export function formatFrequencyLabel(presetId: string): string {
+  const preset = getFrequencyPreset(presetId)
+  if (!preset) return ''
+  return i18n.t(`pages.policies.frequencyPresets.${preset.id}`)
+}
+
 export function formatRetentionLabel(days: number): string {
   const preset = POLICY_RETENTION_PRESETS.find((item) => item.days === days)
-  if (preset) return preset.label
-  return `Conserver ${days} jours`
+  if (preset) return i18n.t(`pages.policies.retentionPresets.${preset.days}`)
+  return i18n.t('pages.policies.retentionCustom', { days })
 }
 
 export function getFrequencyPreset(presetId: string) {
@@ -27,11 +34,11 @@ export function validateCreatePolicyInput(
   availableSourceIds: string[],
 ): string | null {
   const name = input.name.trim()
-  if (!name) return 'Le nom de la politique est requis.'
-  if (name.length < 3) return 'Le nom doit contenir au moins 3 caractères.'
+  if (!name) return i18n.t('validation.policyNameRequired')
+  if (name.length < 3) return i18n.t('validation.scheduleNameMinLength')
 
   if (existingNames.some((existing) => existing.toLowerCase() === name.toLowerCase())) {
-    return 'Une politique avec ce nom existe déjà.'
+    return i18n.t('validation.policyNameDuplicate')
   }
 
   return validatePolicyFields(input, availableSourceIds)
@@ -44,14 +51,14 @@ export function validateUpdatePolicyInput(
   availableSourceIds: string[],
 ): string | null {
   const name = input.name.trim()
-  if (!name) return 'Le nom de la politique est requis.'
-  if (name.length < 3) return 'Le nom doit contenir au moins 3 caractères.'
+  if (!name) return i18n.t('validation.policyNameRequired')
+  if (name.length < 3) return i18n.t('validation.scheduleNameMinLength')
 
   const duplicate = policies.some(
     (policy) =>
       policy.id !== policyId && policy.name.toLowerCase() === name.toLowerCase(),
   )
-  if (duplicate) return 'Une politique avec ce nom existe déjà.'
+  if (duplicate) return i18n.t('validation.policyNameDuplicate')
 
   return validatePolicyFields(input, availableSourceIds)
 }
@@ -61,17 +68,17 @@ function validatePolicyFields(
   availableSourceIds: string[],
 ): string | null {
   if (!getFrequencyPreset(input.frequencyPresetId)) {
-    return 'Fréquence invalide.'
+    return i18n.t('validation.frequencyInvalid')
   }
 
-  if (input.retentionDays <= 0) return 'La rétention doit être supérieure à 0 jours.'
+  if (input.retentionDays <= 0) return i18n.t('validation.retentionInvalid')
 
   if (input.sourceIds.length === 0) {
-    return 'Sélectionnez au moins une source.'
+    return i18n.t('validation.sourcesRequired')
   }
 
   const invalidSource = input.sourceIds.some((id) => !availableSourceIds.includes(id))
-  if (invalidSource) return 'Une ou plusieurs sources sélectionnées sont invalides.'
+  if (invalidSource) return i18n.t('validation.sourcesInvalid')
 
   return null
 }
@@ -86,7 +93,7 @@ export function applyPolicyInput(
     ...policy,
     name: input.name.trim(),
     cronExpression: preset?.cronExpression ?? policy.cronExpression,
-    frequencyLabel: preset?.label ?? policy.frequencyLabel,
+    frequencyLabel: preset ? formatFrequencyLabel(preset.id) : policy.frequencyLabel,
     retentionDays: input.retentionDays,
     retentionLabel: formatRetentionLabel(input.retentionDays),
     sourceIds: input.sourceIds,
@@ -100,7 +107,9 @@ export function createBackupPolicy(input: CreateBackupPolicyInput): BackupPolicy
     id: crypto.randomUUID(),
     name: input.name.trim(),
     cronExpression: preset?.cronExpression ?? '0 2 * * *',
-    frequencyLabel: preset?.label ?? 'Tous les jours à 02:00',
+    frequencyLabel: preset
+      ? formatFrequencyLabel(preset.id)
+      : i18n.t('pages.policies.frequencyPresets.daily-02'),
     retentionDays: input.retentionDays,
     retentionLabel: formatRetentionLabel(input.retentionDays),
     sourceIds: input.sourceIds,

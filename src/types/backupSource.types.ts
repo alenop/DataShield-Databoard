@@ -1,3 +1,5 @@
+import type { SourceScope } from './sourceScope.types'
+
 export type BackupSourceStatus = 'CONNECTED' | 'DISCONNECTED' | 'ERROR'
 
 export interface BackupSource {
@@ -6,14 +8,14 @@ export interface BackupSource {
   environment: string
   apiEndpoint: string
   status: BackupSourceStatus
-  scopes: string[]
+  scopes: SourceScope[]
 }
 
 export interface BackupSourceInput {
   name: string
   environment: string
   apiEndpoint: string
-  scopes: string[]
+  scopes: SourceScope[]
 }
 
 export const backupSourceStatusLabels: Record<BackupSourceStatus, string> = {
@@ -23,5 +25,3 @@ export const backupSourceStatusLabels: Record<BackupSourceStatus, string> = {
 }
 
 export const DEFAULT_SOURCE_STATUS: BackupSourceStatus = 'CONNECTED'
-
-export const DEFAULT_SOURCE_SCOPES = ['Données complètes']

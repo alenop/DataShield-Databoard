@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import i18n from '../i18n'
 import { mockAlerts } from '../data/mockAlerts'
 import type { Alert } from '../types/alert.types'
 import {
@@ -37,12 +38,12 @@ export function useAlerts() {
 
   const markAsResolved = useCallback((alertId: string): string | null => {
     const alert = alertRecords.find((item) => item.id === alertId)
-    if (!alert) return 'Alerte introuvable.'
-    if (alert.status === 'resolved') return 'Cette alerte est déjà résolue.'
+    if (!alert) return i18n.t('notifications.alertNotFound')
+    if (alert.status === 'resolved') return i18n.t('notifications.alertAlreadyResolved')
 
     setAlertRecords((prev) => markAlertAsResolved(prev, alertId))
     setNotification({
-      message: 'Alerte marquée comme résolue.',
+      message: i18n.t('notifications.alertResolved'),
       type: 'success',
     })
     return null

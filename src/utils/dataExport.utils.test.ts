@@ -35,19 +35,19 @@ describe('dataExport.utils', () => {
           name: 'Export_Test.csv',
           format: 'csv',
           sourceId: 'src-1',
-          scope: 'Contacts',
+          scope: 'contacts',
           exportDate: '2026-08-07',
         },
         [],
-        [{ id: 'src-1', scopes: ['Contacts'] }],
+        [{ id: 'src-1', scopes: ['contacts'] }],
       ),
     ).toBeNull()
 
     expect(
       validateCreateExportInput(
-        { name: '', format: 'csv', sourceId: 'src-1', scope: 'Contacts', exportDate: '2026-08-07' },
+        { name: '', format: 'csv', sourceId: 'src-1', scope: 'contacts', exportDate: '2026-08-07' },
         [],
-        [{ id: 'src-1', scopes: ['Contacts'] }],
+        [{ id: 'src-1', scopes: ['contacts'] }],
       ),
     ).not.toBeNull()
 
@@ -57,11 +57,11 @@ describe('dataExport.utils', () => {
           name: 'Export_Test.csv',
           format: 'csv',
           sourceId: 'src-1',
-          scope: 'Leads',
+          scope: 'leads',
           exportDate: '2026-08-07',
         },
         [],
-        [{ id: 'src-1', scopes: ['Contacts'] }],
+        [{ id: 'src-1', scopes: ['contacts'] }],
       ),
     ).toBe('Périmètre invalide pour cette source.')
   })

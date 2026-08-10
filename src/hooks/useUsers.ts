@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import i18n from '../i18n'
 import { mockUsers } from '../data/mockUsers'
 import type { CurrentUser, InviteUserInput, User, UserStatus } from '../types/user.types'
 import type { RoleDefinition } from '../types/role.types'
@@ -51,7 +52,7 @@ export function useUsers({ currentUser, roles }: UseUsersOptions) {
   const inviteUser = useCallback(
     (input: InviteUserInput): string | null => {
       if (!canInviteUsers(currentUser.roleId, roles)) {
-        return "Vous n'avez pas l'autorisation d'inviter des utilisateurs."
+        return i18n.t('notifications.inviteForbidden')
       }
 
       const error = validateInviteUserInput(
@@ -63,7 +64,7 @@ export function useUsers({ currentUser, roles }: UseUsersOptions) {
       const invited = createInvitedUser(input)
       setUsers((prev) => [...prev, invited])
       setNotification({
-        message: `Invitation envoyée à ${invited.email}.`,
+        message: i18n.t('notifications.inviteSent', { email: invited.email }),
         type: 'success',
       })
       return null
@@ -74,7 +75,7 @@ export function useUsers({ currentUser, roles }: UseUsersOptions) {
   const assignUserRole = useCallback(
     (userId: string, roleId: string): string | null => {
       const targetUser = users.find((user) => user.id === userId)
-      if (!targetUser) return 'Utilisateur introuvable.'
+      if (!targetUser) return i18n.t('notifications.userNotFound')
 
       if (
         !canAssignRoleToUser(
@@ -85,7 +86,7 @@ export function useUsers({ currentUser, roles }: UseUsersOptions) {
           roles,
         )
       ) {
-        return "Vous n'avez pas l'autorisation d'attribuer ce rôle à cet utilisateur."
+        return i18n.t('notifications.assignRoleForbidden')
       }
 
       if (targetUser.roleId === roleId) return null
@@ -95,7 +96,7 @@ export function useUsers({ currentUser, roles }: UseUsersOptions) {
         prev.map((user) => (user.id === userId ? { ...user, roleId } : user)),
       )
       setNotification({
-        message: `Rôle « ${roleName} » attribué à ${targetUser.name}.`,
+        message: i18n.t('notifications.roleAssigned', { role: roleName, name: targetUser.name }),
         type: 'success',
       })
       return null
@@ -106,10 +107,10 @@ export function useUsers({ currentUser, roles }: UseUsersOptions) {
   const toggleUserStatus = useCallback(
     (userId: string): string | null => {
       const targetUser = users.find((user) => user.id === userId)
-      if (!targetUser) return 'Utilisateur introuvable.'
+      if (!targetUser) return i18n.t('notifications.userNotFound')
 
       if (!canToggleUserStatus(currentUser.id, currentUser.roleId, targetUser, roles)) {
-        return "Vous n'avez pas l'autorisation de modifier le statut de cet utilisateur."
+        return i18n.t('notifications.toggleStatusForbidden')
       }
 
       const nextStatus: UserStatus =
@@ -121,7 +122,14 @@ export function useUsers({ currentUser, roles }: UseUsersOptions) {
         ),
       )
       setNotification({
-        message: `${targetUser.name} est maintenant ${nextStatus === 'active' ? 'actif' : 'inactif'}.`,
+        message: i18n.t('notifications.userStatusChanged', {
+          name: targetUser.name,
+          status: i18n.t(
+            nextStatus === 'active'
+              ? 'notifications.userStatusActive'
+              : 'notifications.userStatusInactive',
+          ),
+        }),
         type: 'success',
       })
       return null

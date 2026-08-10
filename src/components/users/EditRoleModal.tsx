@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { Permission, RoleDefinition } from '../../types/role.types'
-import { ALL_PERMISSIONS, permissionLabels } from '../../types/role.types'
+import { ALL_PERMISSIONS } from '../../types/role.types'
 
 interface EditRoleModalProps {
   isOpen: boolean
@@ -11,6 +12,7 @@ interface EditRoleModalProps {
 }
 
 export function EditRoleModal({ isOpen, role, onClose, onSave }: EditRoleModalProps) {
+  const { t } = useTranslation()
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [error, setError] = useState<string | null>(null)
 
@@ -59,7 +61,7 @@ export function EditRoleModal({ isOpen, role, onClose, onSave }: EditRoleModalPr
     >
       <button
         type="button"
-        aria-label="Fermer la modale"
+        aria-label={t('common.closeModal')}
         onClick={onClose}
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
       />
@@ -71,7 +73,7 @@ export function EditRoleModal({ isOpen, role, onClose, onSave }: EditRoleModalPr
         <button
           type="button"
           onClick={onClose}
-          aria-label="Fermer"
+          aria-label={t('common.close')}
           className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           <X className="h-5 w-5" />
@@ -81,7 +83,7 @@ export function EditRoleModal({ isOpen, role, onClose, onSave }: EditRoleModalPr
           id="edit-role-modal-title"
           className="pr-8 text-lg font-semibold text-slate-900 dark:text-white"
         >
-          Modifier les droits — {role.name}
+          {t('pages.users.editRoleModal.title', { name: role.name })}
         </h2>
 
         {role.description && (
@@ -90,7 +92,7 @@ export function EditRoleModal({ isOpen, role, onClose, onSave }: EditRoleModalPr
 
         <fieldset className="mt-4">
           <legend className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            Droits attribués
+            {t('common.assignedPermissions')}
           </legend>
           <div className="mt-2 space-y-2">
             {ALL_PERMISSIONS.map((permission) => (
@@ -105,7 +107,7 @@ export function EditRoleModal({ isOpen, role, onClose, onSave }: EditRoleModalPr
                   className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
-                  {permissionLabels[permission]}
+                  {t(`pages.users.permissions.${permission}`)}
                 </span>
               </label>
             ))}
@@ -124,13 +126,13 @@ export function EditRoleModal({ isOpen, role, onClose, onSave }: EditRoleModalPr
             onClick={onClose}
             className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
           >
-            Annuler
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
-            Enregistrer
+            {t('common.save')}
           </button>
         </div>
       </form>

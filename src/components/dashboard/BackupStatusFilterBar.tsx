@@ -1,32 +1,30 @@
+import { useTranslation } from 'react-i18next'
 import type { BackupRecordsState } from '../../hooks/useBackupRecords'
 import type { BackupStatusFilter } from '../../types/backup.types'
-import { backupStatusLabels } from '../../types/backup.types'
 
 interface BackupStatusFilterProps {
   filters: BackupRecordsState
 }
 
-const filterOptions: { value: BackupStatusFilter; label: string }[] = [
-  { value: 'all', label: 'Tous' },
-  { value: 'success', label: backupStatusLabels.success },
-  { value: 'in_progress', label: backupStatusLabels.in_progress },
-  { value: 'failure', label: backupStatusLabels.failure },
-]
+const filterValues: BackupStatusFilter[] = ['all', 'success', 'in_progress', 'failure']
 
 export function BackupStatusFilterBar({ filters }: BackupStatusFilterProps) {
+  const { t } = useTranslation()
   const { statusFilter, setStatusFilter, statusCounts } = filters
 
   return (
     <div className="flex flex-wrap gap-2">
-      {filterOptions.map((option) => {
-        const isActive = statusFilter === option.value
-        const count = statusCounts[option.value]
+      {filterValues.map((value) => {
+        const isActive = statusFilter === value
+        const count = statusCounts[value]
+        const label =
+          value === 'all' ? t('common.all') : t(`status.backup.${value}`)
 
         return (
           <button
-            key={option.value}
+            key={value}
             type="button"
-            onClick={() => setStatusFilter(option.value)}
+            onClick={() => setStatusFilter(value)}
             aria-pressed={isActive}
             className={[
               'inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
@@ -35,7 +33,7 @@ export function BackupStatusFilterBar({ filters }: BackupStatusFilterProps) {
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700',
             ].join(' ')}
           >
-            {option.label}
+            {label}
             <span
               className={[
                 'rounded-full px-1.5 py-0.5 text-xs tabular-nums',

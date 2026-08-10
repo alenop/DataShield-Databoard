@@ -8,6 +8,7 @@ import {
   updateBackupSource,
   validateBackupSourceInput,
 } from './backupSource.utils'
+import type { BackupSource } from '../types/backupSource.types'
 
 describe('isValidHttpsApiEndpoint', () => {
   it('accepts valid https URLs', () => {
@@ -25,14 +26,14 @@ describe('isValidHttpsApiEndpoint', () => {
 
 describe('normalizeScopes', () => {
   it('trims, deduplicates and rejects empty values', () => {
-    expect(normalizeScopes([' Contacts ', 'contacts', '', 'Leads'])).toEqual([
-      'Contacts',
-      'Leads',
+    expect(normalizeScopes([' contacts ', 'contacts', '', 'leads'])).toEqual([
+      'contacts',
+      'leads',
     ])
   })
 
   it('falls back to default scopes when empty', () => {
-    expect(normalizeScopes([])).toEqual(['Données complètes'])
+    expect(normalizeScopes([])).toEqual(['full'])
   })
 })
 
@@ -43,7 +44,7 @@ describe('validateBackupSourceInput', () => {
         name: 'Salesforce Production Core',
         environment: 'Production',
         apiEndpoint: 'https://org-prod.my.salesforce.com/services/data/v58.0',
-        scopes: ['Contacts'],
+        scopes: ['contacts'],
       }),
     ).toBeNull()
   })
@@ -54,7 +55,7 @@ describe('validateBackupSourceInput', () => {
         name: '',
         environment: 'Production',
         apiEndpoint: 'https://example.com',
-        scopes: ['Contacts'],
+        scopes: ['contacts'],
       }),
     ).toBe('Le nom est requis.')
   })
@@ -65,7 +66,7 @@ describe('validateBackupSourceInput', () => {
         name: 'Prod',
         environment: '',
         apiEndpoint: 'https://example.com',
-        scopes: ['Contacts'],
+        scopes: ['contacts'],
       }),
     ).toBe("L'environnement est requis.")
   })
@@ -76,7 +77,7 @@ describe('validateBackupSourceInput', () => {
         name: 'Prod',
         environment: 'Production',
         apiEndpoint: 'http://example.com',
-        scopes: ['Contacts'],
+        scopes: ['contacts'],
       }),
     ).toContain('HTTPS')
   })
@@ -108,12 +109,12 @@ describe('createBackupSource', () => {
       name: '  Salesforce Production Core  ',
       environment: '  Production  ',
       apiEndpoint: '  https://org-prod.my.salesforce.com/services/data/v58.0  ',
-      scopes: [' Contacts ', 'Leads'],
+      scopes: ['contacts', 'leads'],
     })
     expect(source.name).toBe('Salesforce Production Core')
     expect(source.environment).toBe('Production')
     expect(source.apiEndpoint).toBe('https://org-prod.my.salesforce.com/services/data/v58.0')
-    expect(source.scopes).toEqual(['Contacts', 'Leads'])
+    expect(source.scopes).toEqual(['contacts', 'leads'])
     expect(source.status).toBe('CONNECTED')
     expect(source.id).toMatch(/^[0-9a-f-]{36}$/i)
   })
@@ -128,18 +129,18 @@ describe('updateBackupSource', () => {
         environment: 'Staging',
         apiEndpoint: 'https://old.com',
         status: 'CONNECTED',
-        scopes: ['Contacts'],
+        scopes: ['contacts'],
       },
       {
         name: 'New',
         environment: 'Production',
         apiEndpoint: 'https://new.com',
-        scopes: ['Leads'],
+        scopes: ['leads'],
       },
     )
     expect(updated.status).toBe('CONNECTED')
     expect(updated.name).toBe('New')
-    expect(updated.scopes).toEqual(['Leads'])
+    expect(updated.scopes).toEqual(['leads'])
   })
 })
 
@@ -156,24 +157,34 @@ describe('normalizeBackupSource', () => {
       environment: 'Production',
       apiEndpoint: 'https://prod.salesforce.com',
       status: 'CONNECTED',
-      scopes: ['Données complètes'],
+      scopes: ['full'],
     })
   })
 
   it('returns null when required fields are missing', () => {
     expect(normalizeBackupSource({ name: 'Test' })).toBeNull()
   })
+
+  it('migrates legacy scope labels to canonical keys', () => {
+    const source = normalizeBackupSource({
+      id: 'src-002',
+      name: 'Legacy Source',
+      apiEndpoint: 'https://example.com',
+      scopes: ['Contacts', 'Opportunités'],
+    })
+    expect(source?.scopes).toEqual(['contacts', 'opportunities'])
+  })
 })
 
 describe('parseStoredBackupSources', () => {
-  const fallback = [
+  const fallback: BackupSource[] = [
     {
       id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       name: 'Default',
       environment: 'Production',
       apiEndpoint: 'https://default.example.com',
       status: 'CONNECTED' as const,
-      scopes: ['Contacts'],
+      scopes: ['contacts'],
     },
   ]
 
@@ -189,13 +200,13 @@ describe('parseStoredBackupSources', () => {
         environment: 'Staging',
         apiEndpoint: 'https://stored.example.com',
         status: 'CONNECTED',
-        scopes: ['Leads'],
+        scopes: ['leads'],
       },
     ])
     expect(parseStoredBackupSources(stored, fallback)[0].apiEndpoint).toBe(
       'https://stored.example.com',
     )
-    expect(parseStoredBackupSources(stored, fallback)[0].scopes).toEqual(['Leads'])
+    expect(parseStoredBackupSources(stored, fallback)[0].scopes).toEqual(['leads'])
   })
 
   it('returns fallback when stored data is invalid', () => {

@@ -1,3 +1,4 @@
+import i18n from '../i18n'
 import type {
   CreateRestoreJobInput,
   RestoreBackupOption,
@@ -6,19 +7,22 @@ import type {
 } from '../types/restoreJob.types'
 
 export function formatRestoreProgress(restoredCount: number, totalCount: number): string {
-  const formatCount = (value: number) => value.toLocaleString('fr-FR')
-  return `${formatCount(restoredCount)} / ${formatCount(totalCount)} objets`
+  const formatCount = (value: number) => value.toLocaleString(i18n.language)
+  return i18n.t('common.restoreProgress', {
+    restored: formatCount(restoredCount),
+    total: formatCount(totalCount),
+  })
 }
 
 export function formatRestoreBackupSource(backupDate: string, backupName?: string): string {
-  const dateLabel = new Intl.DateTimeFormat('fr-FR', {
+  const dateLabel = new Intl.DateTimeFormat(i18n.language, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   }).format(new Date(backupDate))
 
-  if (!backupName) return `Backup du ${dateLabel}`
-  return `Backup du ${dateLabel} — ${backupName}`
+  if (!backupName) return i18n.t('common.backupFrom', { date: dateLabel })
+  return i18n.t('common.backupFromWithName', { date: dateLabel, name: backupName })
 }
 
 export function filterRestoreBackupsByTarget(
@@ -36,24 +40,24 @@ export function validateCreateRestoreJobInput(
   targets: RestoreTargetOption[],
 ): string | null {
   const name = input.name.trim()
-  if (!name) return 'Le nom de la restauration est requis.'
-  if (name.length < 3) return 'Le nom doit contenir au moins 3 caractères.'
+  if (!name) return i18n.t('validation.restoreNameRequired')
+  if (name.length < 3) return i18n.t('validation.scheduleNameMinLength')
 
   if (existingNames.some((existing) => existing.toLowerCase() === name.toLowerCase())) {
-    return 'Une restauration avec ce nom existe déjà.'
+    return i18n.t('validation.restoreNameDuplicate')
   }
 
   if (!backups.some((backup) => backup.id === input.backupId)) {
-    return 'Sauvegarde source invalide ou indisponible.'
+    return i18n.t('validation.backupInvalid')
   }
 
   const selectedBackup = backups.find((backup) => backup.id === input.backupId)
   if (selectedBackup && selectedBackup.sourceId !== input.targetSourceId) {
-    return 'Cette sauvegarde ne correspond pas à la cible sélectionnée.'
+    return i18n.t('validation.backupTargetMismatch')
   }
 
   if (!targets.some((target) => target.id === input.targetSourceId)) {
-    return 'Cible de restauration invalide.'
+    return i18n.t('validation.restoreTargetInvalid')
   }
 
   return null

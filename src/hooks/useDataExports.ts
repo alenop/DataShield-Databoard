@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import i18n from '../i18n'
 import { mockDataExports } from '../data/mockDataExports'
 import type { CreateDataExportInput, DataExport, ExportSourceOption } from '../types/dataExport.types'
 import { EXPORT_PREPARATION_MS } from '../types/dataExport.types'
@@ -48,7 +49,7 @@ export function useDataExports(sources: ExportSourceOption[]) {
         const current = prev.find((item) => item.id === exportId)
         if (current) {
           setNotification({
-            message: `Export « ${current.name} » prêt au téléchargement.`,
+            message: i18n.t('notifications.exportReady', { name: current.name }),
             type: 'success',
           })
         }
@@ -92,7 +93,7 @@ export function useDataExports(sources: ExportSourceOption[]) {
       setExportRecords((prev) => [created, ...prev])
       scheduleExportFinalization(created.id)
       setNotification({
-        message: `Export « ${created.name} » en cours de préparation…`,
+        message: i18n.t('notifications.exportPreparing', { name: created.name }),
         type: 'success',
       })
       return null
@@ -103,24 +104,24 @@ export function useDataExports(sources: ExportSourceOption[]) {
   const downloadExport = useCallback(
     (exportId: string): string | null => {
       const item = exportRecords.find((record) => record.id === exportId)
-      if (!item) return 'Export introuvable.'
+      if (!item) return i18n.t('notifications.exportNotFound')
       if (item.status === 'preparing') {
         setNotification({
-          message: "L'export est encore en cours de préparation.",
+          message: i18n.t('notifications.exportStillPreparing'),
           type: 'error',
         })
-        return "L'export est encore en cours de préparation."
+        return i18n.t('notifications.exportStillPreparing')
       }
       if (item.status === 'expired') {
         setNotification({
-          message: 'Cet export a expiré et ne peut plus être téléchargé.',
+          message: i18n.t('notifications.exportExpired'),
           type: 'error',
         })
-        return 'Cet export a expiré et ne peut plus être téléchargé.'
+        return i18n.t('notifications.exportExpired')
       }
 
       setNotification({
-        message: `Téléchargement sécurisé lancé : ${item.name}`,
+        message: i18n.t('notifications.exportDownloadStarted', { name: item.name }),
         type: 'success',
       })
       return null
