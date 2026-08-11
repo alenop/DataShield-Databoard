@@ -54,13 +54,16 @@ export function loadDemoCurrentUser(): DemoCurrentUser {
   }
 }
 
+import { normalizeAuditEvents } from './auditLogger.utils'
+
 export function loadAuditEventsFromStorage(fallback: AuditEvent[]): AuditEvent[] {
   const stored = localStorage.getItem(AUDIT_EVENTS_STORAGE_KEY)
   if (!stored) return fallback
 
   try {
     const parsed: unknown = JSON.parse(stored)
-    return Array.isArray(parsed) ? (parsed as AuditEvent[]) : fallback
+    const normalized = normalizeAuditEvents(parsed)
+    return normalized.length > 0 ? normalized : fallback
   } catch {
     return fallback
   }

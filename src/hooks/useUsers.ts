@@ -16,6 +16,7 @@ import {
   parseStoredUsers,
   validateInviteUserInput,
 } from '../utils/user.utils'
+import type { AuditLogger } from '../utils/auditLogger.utils'
 
 export const USERS_STORAGE_KEY = 'datashield-users'
 
@@ -28,9 +29,10 @@ export function loadUsers(): User[] {
 interface UseUsersOptions {
   currentUser: CurrentUser
   roles: RoleDefinition[]
+  logAudit?: AuditLogger
 }
 
-export function useUsers({ currentUser, roles }: UseUsersOptions) {
+export function useUsers({ currentUser, roles, logAudit }: UseUsersOptions) {
   const [users, setUsers] = useState<User[]>(loadUsers)
   const [notification, setNotification] = useState<{
     message: string
@@ -63,13 +65,18 @@ export function useUsers({ currentUser, roles }: UseUsersOptions) {
 
       const invited = createInvitedUser(input)
       setUsers((prev) => [...prev, invited])
+      logAudit?.({
+        actionCode: 'USER_INVITED',
+        status: 'success',
+        metadata: { email: invited.email },
+      })
       setNotification({
         message: i18n.t('notifications.inviteSent', { email: invited.email }),
         type: 'success',
       })
       return null
     },
-    [users, currentUser.roleId, roles],
+    [users, currentUser.roleId, roles, logAudit],
   )
 
   const assignUserRole = useCallback(
@@ -86,6 +93,11 @@ export function useUsers({ currentUser, roles }: UseUsersOptions) {
           roles,
         )
       ) {
+        logAudit?.({
+          actionCode: 'USER_ROLE_CHANGED',
+          status: 'denied',
+          metadata: { name: targetUser.name, role: roleId },
+        })
         return i18n.t('notifications.assignRoleForbidden')
       }
 
@@ -95,13 +107,18 @@ export function useUsers({ currentUser, roles }: UseUsersOptions) {
       setUsers((prev) =>
         prev.map((user) => (user.id === userId ? { ...user, roleId } : user)),
       )
+      logAudit?.({
+        actionCode: 'USER_ROLE_CHANGED',
+        status: 'success',
+        metadata: { name: targetUser.name, role: roleName },
+      })
       setNotification({
         message: i18n.t('notifications.roleAssigned', { role: roleName, name: targetUser.name }),
         type: 'success',
       })
       return null
     },
-    [users, currentUser, roles],
+    [users, currentUser, roles, logAudit],
   )
 
   const toggleUserStatus = useCallback(

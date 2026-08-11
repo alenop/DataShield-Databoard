@@ -478,11 +478,37 @@
     },
     "audit": {
       "title": "Audit log",
-      "subtitle": "Chronological history of actions performed on the platform.",
+      "subtitle": "Critical actions only: authentication, configuration, data operations, and sensitive data access.",
       "events": "Events",
       "noEvents": "No events match your search.",
       "searchPlaceholder": "Search by user, action, or status…",
       "searchAria": "Search audit log"
+    }
+  },
+  "audit": {
+    "categories": {
+      "auth": "Authentication & access",
+      "config": "Configuration",
+      "data_ops": "Data operations",
+      "sensitive_read": "Sensitive data access"
+    },
+    "actions": {
+      "LOGIN_SUCCESS": "Successful login",
+      "LOGIN_FAILED": "Failed login — {{source}}",
+      "LOGOUT": "Logout",
+      "PASSWORD_RESET": "Password reset",
+      "SOURCE_CREATED": "Source created — « {{name}} »",
+      "SOURCE_UPDATED": "Source updated — « {{name}} »",
+      "SOURCE_DELETED": "Source deleted — « {{name}} »",
+      "POLICY_CREATED": "Policy created — « {{name}} »",
+      "POLICY_UPDATED": "Policy updated — « {{name}} »",
+      "USER_ROLE_CHANGED": "Role changed — {{name}} ({{role}})",
+      "USER_INVITED": "User invited — {{email}}",
+      "BACKUP_MANUAL_TRIGGERED": "Manual backup triggered — {{name}}",
+      "RESTORE_JOB_TRIGGERED": "Restore triggered — {{name}}",
+      "DATA_EXPORT_REQUESTED": "Export requested — {{name}}",
+      "DATA_EXPORT_DOWNLOADED": "Export downloaded — {{name}}",
+      "BACKUP_RECORD_VIEWED": "Backup record viewed — {{name}}"
     }
   },
   "validation": {

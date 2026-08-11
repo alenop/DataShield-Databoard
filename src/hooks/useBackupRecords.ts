@@ -16,6 +16,7 @@ import {
 import { markBackupInProgress, resolveUserStoppedOutcome } from '../utils/backupRetry.utils'
 import { filterBackupsWithKnownSources } from '../utils/backupRecord.utils'
 import { loadBackupRecordsFromStorage } from '../utils/demoScenario.utils'
+import type { AuditLogger } from '../utils/auditLogger.utils'
 
 interface LaunchBackupInput {
   name: string
@@ -31,9 +32,15 @@ interface UseBackupRecordsOptions {
   initialRecords: BackupRecord[]
   username: string
   sources: BackupSource[]
+  logAudit?: AuditLogger
 }
 
-export function useBackupRecords({ initialRecords, username, sources }: UseBackupRecordsOptions) {
+export function useBackupRecords({
+  initialRecords,
+  username,
+  sources,
+  logAudit,
+}: UseBackupRecordsOptions) {
   const [records, setRecords] = useState(() => {
     const storedRecords = loadBackupRecordsFromStorage([])
     const baseRecords = storedRecords.length > 0 ? storedRecords : initialRecords
@@ -145,7 +152,15 @@ export function useBackupRecords({ initialRecords, username, sources }: UseBacku
 
   const selectBackup = useCallback((id: string) => {
     setSelectedId(id)
-  }, [])
+    const record = records.find((item) => item.id === id)
+    if (record) {
+      logAudit?.({
+        actionCode: 'BACKUP_RECORD_VIEWED',
+        status: 'success',
+        metadata: { name: record.name },
+      })
+    }
+  }, [records, logAudit])
 
   const clearSelection = useCallback(() => {
     setSelectedId(null)
@@ -201,9 +216,14 @@ export function useBackupRecords({ initialRecords, username, sources }: UseBacku
       }
 
       setRecords((prev) => [newRecord, ...prev])
+      logAudit?.({
+        actionCode: 'BACKUP_MANUAL_TRIGGERED',
+        status: 'success',
+        metadata: { name },
+      })
       startBackupSimulation(id, source.name)
     },
-    [startBackupSimulation],
+    [startBackupSimulation, logAudit],
   )
 
   useEffect(() => {

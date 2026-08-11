@@ -9,6 +9,7 @@ import {
   simulateExportSizeBytes,
   validateCreateExportInput,
 } from '../utils/dataExport.utils'
+import type { AuditLogger } from '../utils/auditLogger.utils'
 
 export const EXPORTS_STORAGE_KEY = 'datashield-data-exports'
 
@@ -17,7 +18,7 @@ export function loadDataExports(): DataExport[] {
   return parseStoredDataExports(stored, mockDataExports)
 }
 
-export function useDataExports(sources: ExportSourceOption[]) {
+export function useDataExports(sources: ExportSourceOption[], logAudit?: AuditLogger) {
   const [exportRecords, setExportRecords] = useState<DataExport[]>(loadDataExports)
   const [notification, setNotification] = useState<{
     message: string
@@ -91,6 +92,11 @@ export function useDataExports(sources: ExportSourceOption[]) {
 
       const created = createDataExport(input)
       setExportRecords((prev) => [created, ...prev])
+      logAudit?.({
+        actionCode: 'DATA_EXPORT_REQUESTED',
+        status: 'success',
+        metadata: { name: created.name },
+      })
       scheduleExportFinalization(created.id)
       setNotification({
         message: i18n.t('notifications.exportPreparing', { name: created.name }),
@@ -98,7 +104,7 @@ export function useDataExports(sources: ExportSourceOption[]) {
       })
       return null
     },
-    [exportRecords, sources, scheduleExportFinalization],
+    [exportRecords, sources, scheduleExportFinalization, logAudit],
   )
 
   const downloadExport = useCallback(
@@ -120,13 +126,18 @@ export function useDataExports(sources: ExportSourceOption[]) {
         return i18n.t('notifications.exportExpired')
       }
 
+      logAudit?.({
+        actionCode: 'DATA_EXPORT_DOWNLOADED',
+        status: 'success',
+        metadata: { name: item.name },
+      })
       setNotification({
         message: i18n.t('notifications.exportDownloadStarted', { name: item.name }),
         type: 'success',
       })
       return null
     },
-    [exportRecords],
+    [exportRecords, logAudit],
   )
 
   return {

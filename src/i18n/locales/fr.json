@@ -478,11 +478,37 @@
     },
     "audit": {
       "title": "Journal d'audit",
-      "subtitle": "Historique chronologique des actions effectuées sur la plateforme.",
+      "subtitle": "Traçabilité des actions critiques uniquement : authentification, configuration, opérations sur les données et accès sensibles.",
       "events": "Événements",
       "noEvents": "Aucun événement ne correspond à votre recherche.",
       "searchPlaceholder": "Rechercher par utilisateur, action ou statut…",
       "searchAria": "Rechercher dans le journal d'audit"
+    }
+  },
+  "audit": {
+    "categories": {
+      "auth": "Authentification & accès",
+      "config": "Configuration",
+      "data_ops": "Opérations sur les données",
+      "sensitive_read": "Accès données sensibles"
+    },
+    "actions": {
+      "LOGIN_SUCCESS": "Connexion réussie",
+      "LOGIN_FAILED": "Connexion échouée — {{source}}",
+      "LOGOUT": "Déconnexion",
+      "PASSWORD_RESET": "Réinitialisation de mot de passe",
+      "SOURCE_CREATED": "Création de la source « {{name}} »",
+      "SOURCE_UPDATED": "Modification de la source « {{name}} »",
+      "SOURCE_DELETED": "Suppression de la source « {{name}} »",
+      "POLICY_CREATED": "Création de la politique « {{name}} »",
+      "POLICY_UPDATED": "Modification de la politique « {{name}} »",
+      "USER_ROLE_CHANGED": "Changement de rôle — {{name}} ({{role}})",
+      "USER_INVITED": "Invitation utilisateur — {{email}}",
+      "BACKUP_MANUAL_TRIGGERED": "Sauvegarde manuelle lancée — {{name}}",
+      "RESTORE_JOB_TRIGGERED": "Restauration lancée — {{name}}",
+      "DATA_EXPORT_REQUESTED": "Demande d'export — {{name}}",
+      "DATA_EXPORT_DOWNLOADED": "Téléchargement d'export — {{name}}",
+      "BACKUP_RECORD_VIEWED": "Consultation du détail de sauvegarde — {{name}}"
     }
   },
   "validation": {

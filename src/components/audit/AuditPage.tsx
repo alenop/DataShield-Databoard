@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { AuditEventsState } from '../../hooks/useAuditEvents'
 import type { AuditEventStatus } from '../../types/audit.types'
 import { formatAuditDateTime } from '../../utils/auditFormatters'
+import { getAuditActionLabel } from '../../utils/auditLogger.utils'
 import { AuditSearchBar } from './AuditSearchBar'
 
 interface AuditPageProps {
@@ -91,7 +92,7 @@ export function AuditPage({ auditEvents }: AuditPageProps) {
                       {event.actor}
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                      {event.action}
+                      {getAuditActionLabel(event, t)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
                       {event.ipAddress}

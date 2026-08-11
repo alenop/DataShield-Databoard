@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-
 import { useTranslation } from 'react-i18next'
 
 import { AuditPage } from './components/audit/AuditPage'
@@ -69,6 +68,7 @@ import { buildNavigationItems } from './utils/navigationBadges.utils'
 import { localizeNavigationItems } from './utils/navigationI18n.utils'
 
 import { buildRestoreBackupOptions } from './utils/backupRecord.utils'
+import { createAuditLogger } from './utils/auditLogger.utils'
 
 
 
@@ -90,102 +90,67 @@ function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
 
   const appSettings = useAppSettings()
 
-  const backupSources = useBackupSources()
+  const auditEvents = useAuditEvents()
+
+  const logAudit = useMemo(
+    () =>
+      createAuditLogger(auditEvents.appendEvent, {
+        actor: currentUser.name,
+      }),
+    [auditEvents.appendEvent, currentUser.name],
+  )
+
+  const backupSources = useBackupSources({ logAudit })
 
   const initialBackupRecords = useMemo(
-
     () => buildMockBackupRecords(backupSources.sources),
-
     [backupSources.sources],
-
   )
 
   const backupRecords = useBackupRecords({
-
     initialRecords: initialBackupRecords,
-
     username: currentUser.name,
-
     sources: backupSources.sources,
-
+    logAudit,
   })
 
   const backupSchedules = useBackupSchedules(
-
     backupSources.sources.map((source) => source.id),
-
   )
 
   const rolesState = useRoles(currentUser.roleId)
 
-  const usersState = useUsers({ currentUser, roles: rolesState.roles })
+  const usersState = useUsers({ currentUser, roles: rolesState.roles, logAudit })
 
   const policiesState = useBackupPolicies({
-
     actorRoleId: currentUser.roleId,
-
     roles: rolesState.roles,
-
     availableSourceIds: backupSources.sources.map((source) => source.id),
-
+    logAudit,
   })
-
-  const auditEvents = useAuditEvents()
 
   const alertsState = useAlerts()
 
   const dataExports = useDataExports(
-
     backupSources.sources.map((source) => ({
-
       id: source.id,
-
       scopes: source.scopes,
-
     })),
-
+    logAudit,
   )
 
   const availableRestoreBackups = useMemo(
-
     () => buildRestoreBackupOptions(backupRecords.records, backupSources.sources),
-
     [backupRecords.records, backupSources.sources],
-
   )
 
-
-
   const restoreJobs = useRestoreJobs({
-
     availableBackups: availableRestoreBackups,
-
     availableTargets: backupSources.sources.map((source) => ({
-
       id: source.id,
-
       name: `${source.name} (${source.environment})`,
-
     })),
-
-    onRestoreComplete: (job) => {
-
-      auditEvents.appendEvent({
-
-        timestamp: new Date().toISOString(),
-
-        actor: currentUser.name,
-
-        action: t('demo.audit.restoreCompleted', { name: job.name }),
-
-        ipAddress: '192.168.10.12',
-
-        status: 'success',
-
-      })
-
-    },
-
+    logAudit,
   })
 
 

@@ -13,6 +13,7 @@ import {
   parseStoredRestoreJobs,
   validateCreateRestoreJobInput,
 } from '../utils/restoreJob.utils'
+import type { AuditLogger } from '../utils/auditLogger.utils'
 
 export const RESTORE_JOBS_STORAGE_KEY = 'datashield-restore-jobs'
 
@@ -24,13 +25,13 @@ export function loadRestoreJobs(): RestoreJob[] {
 interface UseRestoreJobsOptions {
   availableBackups: RestoreBackupOption[]
   availableTargets: RestoreTargetOption[]
-  onRestoreComplete?: (job: RestoreJob) => void
+  logAudit?: AuditLogger
 }
 
 export function useRestoreJobs({
   availableBackups,
   availableTargets,
-  onRestoreComplete,
+  logAudit,
 }: UseRestoreJobsOptions) {
   const [jobRecords, setJobRecords] = useState<RestoreJob[]>(loadRestoreJobs)
   const [notification, setNotification] = useState<{
@@ -104,7 +105,6 @@ export function useRestoreJobs({
               message: i18n.t('notifications.restoreCompleted', { name: current.name }),
               type: 'success',
             })
-            onRestoreComplete?.(current)
           }
 
           return prev.map((job) =>
@@ -121,7 +121,7 @@ export function useRestoreJobs({
 
       finalizeTimersRef.current.set(jobId, finalizeTimer)
     },
-    [clearJobTimers, onRestoreComplete],
+    [clearJobTimers],
   )
 
   useEffect(() => {
@@ -149,6 +149,11 @@ export function useRestoreJobs({
 
       const created = createRestoreJob(input, backup)
       setJobRecords((prev) => [created, ...prev])
+      logAudit?.({
+        actionCode: 'RESTORE_JOB_TRIGGERED',
+        status: 'success',
+        metadata: { name: created.name },
+      })
       scheduleRestoreSimulation(created.id)
       setNotification({
         message: i18n.t('notifications.restoreLaunched', { name: created.name }),
@@ -156,7 +161,7 @@ export function useRestoreJobs({
       })
       return null
     },
-    [jobRecords, availableBackups, availableTargets, scheduleRestoreSimulation],
+    [jobRecords, availableBackups, availableTargets, scheduleRestoreSimulation, logAudit],
   )
 
   return {
