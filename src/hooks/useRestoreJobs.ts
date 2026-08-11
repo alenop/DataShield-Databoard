@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import i18n from '../i18n'
 import { mockRestoreJobs } from '../data/mockRestoreJobs'
 import type {
@@ -40,6 +41,7 @@ export function useRestoreJobs({
   } | null>(null)
   const intervalsRef = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map())
   const finalizeTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  const completedJobsRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     localStorage.setItem(RESTORE_JOBS_STORAGE_KEY, JSON.stringify(jobRecords))
@@ -76,9 +78,61 @@ export function useRestoreJobs({
     }
   }, [])
 
+  const completeRestoreJob = useCallback(
+    (jobId: string, jobName: string) => {
+      if (completedJobsRef.current.has(jobId)) return
+      completedJobsRef.current.add(jobId)
+
+      clearJobTimers(jobId)
+
+      let didComplete = false
+
+      flushSync(() => {
+        setJobRecords((prev) => {
+          const current = prev.find((job) => job.id === jobId)
+          if (!current || current.status !== 'in_progress') {
+            completedJobsRef.current.delete(jobId)
+            return prev
+          }
+
+          didComplete = true
+
+          return prev.map((job) =>
+            job.id === jobId
+              ? {
+                  ...job,
+                  status: 'success' as const,
+                  restoredCount: job.totalCount,
+                }
+              : job,
+          )
+        })
+      })
+
+      if (!didComplete) return
+
+      setNotification({
+        message: i18n.t('notifications.restoreCompleted', { name: jobName }),
+        type: 'success',
+      })
+      logAudit?.({
+        actionCode: 'RESTORE_JOB_COMPLETED',
+        status: 'success',
+        metadata: { name: jobName },
+      })
+    },
+    [clearJobTimers, logAudit],
+  )
+
   const scheduleRestoreSimulation = useCallback(
-    (jobId: string) => {
-      if (intervalsRef.current.has(jobId)) return
+    (jobId: string, jobName: string) => {
+      if (
+        intervalsRef.current.has(jobId) ||
+        finalizeTimersRef.current.has(jobId) ||
+        completedJobsRef.current.has(jobId)
+      ) {
+        return
+      }
 
       const interval = setInterval(() => {
         setJobRecords((prev) =>
@@ -96,41 +150,19 @@ export function useRestoreJobs({
       intervalsRef.current.set(jobId, interval)
 
       const finalizeTimer = setTimeout(() => {
-        clearJobTimers(jobId)
-
-        setJobRecords((prev) => {
-          const current = prev.find((job) => job.id === jobId)
-          if (current) {
-            setNotification({
-              message: i18n.t('notifications.restoreCompleted', { name: current.name }),
-              type: 'success',
-            })
-          }
-
-          return prev.map((job) =>
-            job.id === jobId
-              ? {
-                  ...job,
-                  status: 'success' as const,
-                  restoredCount: job.totalCount,
-                }
-              : job,
-          )
-        })
+        completeRestoreJob(jobId, jobName)
       }, RESTORE_SIMULATION_MS)
 
       finalizeTimersRef.current.set(jobId, finalizeTimer)
     },
-    [clearJobTimers],
+    [completeRestoreJob],
   )
 
   useEffect(() => {
     jobRecords
       .filter((job) => job.status === 'in_progress')
       .forEach((job) => {
-        if (!intervalsRef.current.has(job.id) && !finalizeTimersRef.current.has(job.id)) {
-          scheduleRestoreSimulation(job.id)
-        }
+        scheduleRestoreSimulation(job.id, job.name)
       })
   }, [jobRecords, scheduleRestoreSimulation])
 
@@ -138,7 +170,6 @@ export function useRestoreJobs({
     (input: CreateRestoreJobInput): string | null => {
       const error = validateCreateRestoreJobInput(
         input,
-        jobRecords.map((job) => job.name),
         availableBackups,
         availableTargets,
       )
@@ -154,14 +185,14 @@ export function useRestoreJobs({
         status: 'success',
         metadata: { name: created.name },
       })
-      scheduleRestoreSimulation(created.id)
+      scheduleRestoreSimulation(created.id, created.name)
       setNotification({
         message: i18n.t('notifications.restoreLaunched', { name: created.name }),
         type: 'success',
       })
       return null
     },
-    [jobRecords, availableBackups, availableTargets, scheduleRestoreSimulation, logAudit],
+    [availableBackups, availableTargets, scheduleRestoreSimulation, logAudit],
   )
 
   return {

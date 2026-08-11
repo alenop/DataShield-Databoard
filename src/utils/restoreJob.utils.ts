@@ -35,17 +35,12 @@ export function filterRestoreBackupsByTarget(
 
 export function validateCreateRestoreJobInput(
   input: CreateRestoreJobInput,
-  existingNames: string[],
   backups: RestoreBackupOption[],
   targets: RestoreTargetOption[],
 ): string | null {
   const name = input.name.trim()
   if (!name) return i18n.t('validation.restoreNameRequired')
   if (name.length < 3) return i18n.t('validation.scheduleNameMinLength')
-
-  if (existingNames.some((existing) => existing.toLowerCase() === name.toLowerCase())) {
-    return i18n.t('validation.restoreNameDuplicate')
-  }
 
   if (!backups.some((backup) => backup.id === input.backupId)) {
     return i18n.t('validation.backupInvalid')

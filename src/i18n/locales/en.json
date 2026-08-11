@@ -506,6 +506,8 @@
       "USER_INVITED": "User invited — {{email}}",
       "BACKUP_MANUAL_TRIGGERED": "Manual backup triggered — {{name}}",
       "RESTORE_JOB_TRIGGERED": "Restore triggered — {{name}}",
+      "RESTORE_JOB_COMPLETED": "Restore completed successfully — {{name}}",
+      "DATA_BULK_UPDATED": "Bulk data update — {{name}} ({{records}} records)",
       "DATA_EXPORT_REQUESTED": "Export requested — {{name}}",
       "DATA_EXPORT_DOWNLOADED": "Export downloaded — {{name}}",
       "BACKUP_RECORD_VIEWED": "Backup record viewed — {{name}}"

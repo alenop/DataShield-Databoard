@@ -506,6 +506,8 @@
       "USER_INVITED": "Invitation utilisateur — {{email}}",
       "BACKUP_MANUAL_TRIGGERED": "Sauvegarde manuelle lancée — {{name}}",
       "RESTORE_JOB_TRIGGERED": "Restauration lancée — {{name}}",
+      "RESTORE_JOB_COMPLETED": "Restauration terminée avec succès — {{name}}",
+      "DATA_BULK_UPDATED": "Mise à jour en masse des données — {{name}} ({{records}} enregistrements)",
       "DATA_EXPORT_REQUESTED": "Demande d'export — {{name}}",
       "DATA_EXPORT_DOWNLOADED": "Téléchargement d'export — {{name}}",
       "BACKUP_RECORD_VIEWED": "Consultation du détail de sauvegarde — {{name}}"

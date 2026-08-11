@@ -51,7 +51,6 @@ describe('restoreJob.utils', () => {
           backupId: 'BAK-1001',
           targetSourceId: 'src-1',
         },
-        [],
         backups,
         targets,
       ),
@@ -60,7 +59,6 @@ describe('restoreJob.utils', () => {
     expect(
       validateCreateRestoreJobInput(
         { name: '', backupId: 'BAK-1001', targetSourceId: 'src-1' },
-        [],
         backups,
         targets,
       ),
@@ -73,10 +71,21 @@ describe('restoreJob.utils', () => {
           backupId: 'BAK-1002',
           targetSourceId: 'src-1',
         },
-        [],
         backups,
         targets,
       ),
     ).toBe('Cette sauvegarde ne correspond pas à la cible sélectionnée.')
+
+    expect(
+      validateCreateRestoreJobInput(
+        {
+          name: 'Reload Contacts',
+          backupId: 'BAK-1001',
+          targetSourceId: 'src-1',
+        },
+        backups,
+        targets,
+      ),
+    ).toBeNull()
   })
 })

@@ -16,6 +16,8 @@ export type AuditActionCode =
   | 'USER_INVITED'
   | 'BACKUP_MANUAL_TRIGGERED'
   | 'RESTORE_JOB_TRIGGERED'
+  | 'RESTORE_JOB_COMPLETED'
+  | 'DATA_BULK_UPDATED'
   | 'DATA_EXPORT_REQUESTED'
   | 'DATA_EXPORT_DOWNLOADED'
   | 'BACKUP_RECORD_VIEWED'
@@ -45,6 +47,8 @@ export const AUDIT_ACTION_CATEGORY: Record<AuditActionCode, AuditEventCategory> 
   USER_INVITED: 'config',
   BACKUP_MANUAL_TRIGGERED: 'data_ops',
   RESTORE_JOB_TRIGGERED: 'data_ops',
+  RESTORE_JOB_COMPLETED: 'data_ops',
+  DATA_BULK_UPDATED: 'data_ops',
   DATA_EXPORT_REQUESTED: 'sensitive_read',
   DATA_EXPORT_DOWNLOADED: 'sensitive_read',
   BACKUP_RECORD_VIEWED: 'sensitive_read',
