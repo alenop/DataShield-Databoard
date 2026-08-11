@@ -1,7 +1,7 @@
 import type { BackupRecord, BackupStatus, BackupScheduleFrequency } from '../types/backup.types'
 import type { BackupSource } from '../types/backupSource.types'
 
-interface MockBackupTemplate {
+export interface MockBackupTemplate {
   name: string
   daysAgo: number
   hour: number
@@ -13,6 +13,7 @@ interface MockBackupTemplate {
   description: string
   errorReason?: string
   errorMessage?: string
+  sourceIndex?: number
 }
 
 const MOCK_BACKUP_TEMPLATES: MockBackupTemplate[] = [
@@ -192,24 +193,35 @@ export function buildMockBackupRecords(
   sources: BackupSource[],
   referenceDate: Date = new Date(),
 ): BackupRecord[] {
+  return buildBackupRecordsFromTemplates(MOCK_BACKUP_TEMPLATES, sources, referenceDate)
+}
+
+export function buildBackupRecordsFromTemplates(
+  templates: MockBackupTemplate[],
+  sources: BackupSource[],
+  referenceDate: Date = new Date(),
+): BackupRecord[] {
   if (sources.length === 0) return []
 
-  return MOCK_BACKUP_TEMPLATES.map((template, index) => {
-    const source = sources[index % sources.length]
+  return templates
+    .map((template, index) => {
+      const sourceIndex = template.sourceIndex ?? index % sources.length
+      const source = sources[sourceIndex] ?? sources[0]
 
-    return {
-      id: `BAK-${1001 + index}`,
-      name: template.name,
-      sourceId: source.id,
-      source: source.name,
-      date: buildBackupDate(referenceDate, template.daysAgo, template.hour, template.minute),
-      sizeGb: template.sizeGb,
-      status: template.status,
-      durationMinutes: template.durationMinutes,
-      scheduleFrequency: template.scheduleFrequency ?? null,
-      description: template.description,
-      errorReason: template.errorReason,
-      errorMessage: template.errorMessage,
-    }
-  }).sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())
+      return {
+        id: `BAK-${1001 + index}`,
+        name: template.name,
+        sourceId: source.id,
+        source: source.name,
+        date: buildBackupDate(referenceDate, template.daysAgo, template.hour, template.minute),
+        sizeGb: template.sizeGb,
+        status: template.status,
+        durationMinutes: template.durationMinutes,
+        scheduleFrequency: template.scheduleFrequency ?? null,
+        description: template.description,
+        errorReason: template.errorReason,
+        errorMessage: template.errorMessage,
+      }
+    })
+    .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())
 }

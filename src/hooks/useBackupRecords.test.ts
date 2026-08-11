@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { defaultBackupSources } from '../data/defaultBackupSources'
 import type { BackupRecord } from '../types/backup.types'
+import { BACKUP_RECORDS_STORAGE_KEY } from '../types/demoScenario.types'
 import * as backupSimulation from '../utils/backupSimulation.utils'
 import { useBackupRecords } from './useBackupRecords'
 
@@ -38,6 +39,7 @@ const hookOptions = {
 
 describe('useBackupRecords', () => {
   beforeEach(() => {
+    localStorage.removeItem(BACKUP_RECORDS_STORAGE_KEY)
     jest.useFakeTimers()
   })
 

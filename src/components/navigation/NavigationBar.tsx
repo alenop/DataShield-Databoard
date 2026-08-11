@@ -1,15 +1,18 @@
 import { Menu, PanelLeftClose, PanelLeftOpen, Shield, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { NavigationState } from '../../hooks/useNavigation'
+import type { DemoCurrentUser } from '../../types/demoScenario.types'
 import { isNavGroup } from '../../types/navigation.types'
+import { getUserInitials } from '../../utils/userDisplay.utils'
 import { NavGroup } from './NavGroup'
 import { NavLinkButton } from './NavLinkButton'
 
 interface NavigationBarProps {
   navigation: NavigationState
+  currentUser: DemoCurrentUser
 }
 
-export function NavigationBar({ navigation }: NavigationBarProps) {
+export function NavigationBar({ navigation, currentUser }: NavigationBarProps) {
   const { t } = useTranslation()
   const {
     items,
@@ -23,6 +26,8 @@ export function NavigationBar({ navigation }: NavigationBarProps) {
     toggleGroup,
     selectItem,
   } = navigation
+
+  const initials = getUserInitials(currentUser.name)
 
   const sidebarClasses = [
     'fixed inset-y-0 left-0 z-40 flex flex-col bg-slate-900 text-white transition-all duration-300',
@@ -117,19 +122,28 @@ export function NavigationBar({ navigation }: NavigationBarProps) {
           </ul>
         </nav>
 
-        {!isCollapsed && (
-          <div className="border-t border-slate-800 p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold">
-                AD
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">Admin Demo</p>
-                <p className="truncate text-xs text-slate-400">admin@datashield.test</p>
-              </div>
+        <div className="border-t border-slate-800 p-4">
+          <div
+            className={[
+              'flex items-center',
+              isCollapsed ? 'justify-center' : 'gap-3',
+            ].join(' ')}
+            title={`${currentUser.name} (${currentUser.email})`}
+          >
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold"
+              aria-hidden="true"
+            >
+              {initials}
             </div>
+            {!isCollapsed && (
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{currentUser.name}</p>
+                <p className="truncate text-xs text-slate-400">{currentUser.email}</p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </aside>
     </>
   )

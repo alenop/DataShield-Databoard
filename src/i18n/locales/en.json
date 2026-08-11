@@ -37,6 +37,38 @@
     "aggregatedMetrics": "Aggregated metrics",
     "apiLogs": "API logs"
   },
+  "demo": {
+    "label": "Demo mode",
+    "selectLabel": "Choose a demonstration scenario",
+    "persona": "Persona: {{name}} — {{role}}",
+    "audit": {
+      "restoreCompleted": "Restore « {{name}} » completed successfully"
+    },
+    "roles": {
+      "super_admin": "Salesforce Super Admin",
+      "admin": "Security Admin",
+      "backup_operator": "Backup Operator",
+      "read_only": "DPO / Compliance"
+    },
+    "scenarios": {
+      "none": {
+        "option": "No scenario — Admin Demo (me)",
+        "hint": "Default application data, without a demo storyline."
+      },
+      "admin": {
+        "option": "Scenario 1 — Emergency restore (CRM Admin)",
+        "hint": "Alex: Production source connected, Contacts restore from yesterday 11 PM, audit trail."
+      },
+      "secops": {
+        "option": "Scenario 2 — Alert response (SecOps)",
+        "hint": "Sam: critical OAuth alert on Staging, connection test, role verification."
+      },
+      "dpo": {
+        "option": "Scenario 3 — Compliance audit (DPO)",
+        "hint": "Camille: 7-year legal retention, CSV export for auditor, filtered audit log."
+      }
+    }
+  },
   "common": {
     "appName": "DataShield",
     "page": "Page",
@@ -507,6 +539,7 @@
     "scheduleDeleted": "Schedule deleted.",
     "connectionSuccess": "Successfully connected to API {{source}}",
     "connectionFailure": "Connection failed: OAuth token expired",
+    "connectionFailureOAuth": "OAuth authentication failed — {{source}}: token expired or revoked",
     "exportPreparing": "Export \"{{name}}\" is being prepared…",
     "exportReady": "Export \"{{name}}\" is ready to download.",
     "exportStillPreparing": "The export is still being prepared.",

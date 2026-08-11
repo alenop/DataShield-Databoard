@@ -24,9 +24,14 @@ export function loadRestoreJobs(): RestoreJob[] {
 interface UseRestoreJobsOptions {
   availableBackups: RestoreBackupOption[]
   availableTargets: RestoreTargetOption[]
+  onRestoreComplete?: (job: RestoreJob) => void
 }
 
-export function useRestoreJobs({ availableBackups, availableTargets }: UseRestoreJobsOptions) {
+export function useRestoreJobs({
+  availableBackups,
+  availableTargets,
+  onRestoreComplete,
+}: UseRestoreJobsOptions) {
   const [jobRecords, setJobRecords] = useState<RestoreJob[]>(loadRestoreJobs)
   const [notification, setNotification] = useState<{
     message: string
@@ -99,6 +104,7 @@ export function useRestoreJobs({ availableBackups, availableTargets }: UseRestor
               message: i18n.t('notifications.restoreCompleted', { name: current.name }),
               type: 'success',
             })
+            onRestoreComplete?.(current)
           }
 
           return prev.map((job) =>
@@ -115,7 +121,7 @@ export function useRestoreJobs({ availableBackups, availableTargets }: UseRestor
 
       finalizeTimersRef.current.set(jobId, finalizeTimer)
     },
-    [clearJobTimers],
+    [clearJobTimers, onRestoreComplete],
   )
 
   useEffect(() => {

@@ -12,6 +12,8 @@ import { useStopBackupConfirm } from '../../hooks/useStopBackupConfirm'
 import { buildBackupVolumeFromRecords } from '../../utils/backupVolume.utils'
 import { BackupDataTable } from './BackupDataTable'
 import { BackupVolumeChart } from './BackupVolumeChart'
+import type { DemoScenarioState } from '../../hooks/useDemoScenario'
+import { DemoScenarioSwitcher } from './DemoScenarioSwitcher'
 
 const DASHBOARD_PREVIEW_SIZE = 3
 
@@ -21,6 +23,7 @@ interface DashboardPageProps {
   backupRecords: BackupRecordsState
   restoreJobs: RestoreJobsState
   availableRestoreBackups: RestoreBackupOption[]
+  demoScenario: DemoScenarioState
 }
 
 export function DashboardPage({
@@ -29,6 +32,7 @@ export function DashboardPage({
   backupRecords,
   restoreJobs,
   availableRestoreBackups,
+  demoScenario,
 }: DashboardPageProps) {
   const { t } = useTranslation()
 
@@ -61,6 +65,8 @@ export function DashboardPage({
 
   return (
     <div className="space-y-6">
+      <DemoScenarioSwitcher demoScenario={demoScenario} />
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">

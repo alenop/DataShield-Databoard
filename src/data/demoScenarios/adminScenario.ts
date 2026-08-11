@@ -1,0 +1,178 @@
+import type { DemoScenarioData } from './types'
+import {
+  ALEX_USER_ID,
+  DEMO_REFERENCE_DATE,
+  PRODUCTION_SOURCE_ID,
+  STAGING_SOURCE_ID,
+} from './shared'
+import { DEFAULT_SOURCE_STATUS } from '../../types/backupSource.types'
+import { mockBackupSchedules } from '../mockBackupSchedules'
+import { defaultRoles } from '../defaultRoles'
+
+export const adminScenarioData: DemoScenarioData = {
+  id: 'admin',
+  currentUser: {
+    id: ALEX_USER_ID,
+    name: 'Alex Martin',
+    email: 'alex.martin@salesforce-corp.com',
+    roleId: 'super_admin',
+  },
+  sources: [
+    {
+      id: PRODUCTION_SOURCE_ID,
+      name: 'Salesforce Production Core',
+      environment: 'Production',
+      apiEndpoint: 'https://org-prod.my.salesforce.com/services/data/v58.0',
+      status: DEFAULT_SOURCE_STATUS,
+      scopes: ['contacts', 'accounts', 'leads', 'opportunities'],
+    },
+    {
+      id: STAGING_SOURCE_ID,
+      name: 'Salesforce Staging Sandbox',
+      environment: 'Staging',
+      apiEndpoint: 'https://org-staging.my.salesforce.com/services/data/v58.0',
+      status: DEFAULT_SOURCE_STATUS,
+      scopes: ['contacts', 'opportunities'],
+    },
+  ],
+  backupTemplates: [
+    {
+      name: 'Sauvegarde Contacts Production',
+      daysAgo: 1,
+      hour: 23,
+      minute: 0,
+      sizeGb: 28.4,
+      status: 'success',
+      durationMinutes: 12,
+      scheduleFrequency: 'daily',
+      description:
+        'Point de restauration Contacts — export complet avant suppression Data Loader (500 enregistrements).',
+      sourceIndex: 0,
+    },
+    {
+      name: 'Sauvegarde Opportunités Q2',
+      daysAgo: 0,
+      hour: 6,
+      minute: 0,
+      sizeGb: 98.3,
+      status: 'success',
+      durationMinutes: 32,
+      scheduleFrequency: 'daily',
+      description: 'Export des opportunités clôturées au T2.',
+      sourceIndex: 0,
+    },
+    {
+      name: 'Sauvegarde Comptes Enterprise',
+      daysAgo: 2,
+      hour: 6,
+      minute: 0,
+      sizeGb: 76.4,
+      status: 'success',
+      durationMinutes: 28,
+      scheduleFrequency: 'daily',
+      description: 'Snapshot des comptes segment Enterprise.',
+      sourceIndex: 0,
+    },
+  ],
+  alerts: [
+    {
+      id: 'al-admin-001',
+      severity: 'info',
+      message: 'Maintenance planifiée du connecteur Salesforce samedi 02h00–04h00 UTC',
+      triggeredAt: '2026-08-08T09:00:00',
+      status: 'active',
+    },
+    {
+      id: 'al-admin-002',
+      severity: 'info',
+      message: 'Dernière sauvegarde Contacts Production réussie (07/08 à 23h00)',
+      triggeredAt: '2026-08-07T23:05:00',
+      status: 'active',
+    },
+  ],
+  restoreJobs: [],
+  auditEvents: [
+    {
+      id: 'au-admin-001',
+      timestamp: '2026-08-08T08:45:00',
+      actor: 'Alex Martin',
+      action: 'Consultation du tableau de bord',
+      ipAddress: '192.168.10.12',
+      status: 'success',
+    },
+    {
+      id: 'au-admin-002',
+      timestamp: '2026-08-07T23:05:00',
+      actor: 'Système',
+      action: 'Sauvegarde planifiée Contacts Production',
+      ipAddress: '10.0.0.1',
+      status: 'success',
+    },
+    {
+      id: 'au-admin-003',
+      timestamp: '2026-08-07T14:22:00',
+      actor: 'Lucas Dupont',
+      action: 'Mise à jour en masse Data Loader (Contacts)',
+      ipAddress: '192.168.10.45',
+      status: 'success',
+    },
+  ],
+  policies: [
+    {
+      id: 'p1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
+      name: 'Sauvegarde Quotidienne Production',
+      cronExpression: '0 2 * * *',
+      frequencyLabel: 'Tous les jours à 02:00',
+      retentionDays: 30,
+      retentionLabel: 'Conserver 30 jours',
+      sourceIds: [PRODUCTION_SOURCE_ID],
+      isActive: true,
+    },
+  ],
+  exports: [
+    {
+      id: 'ex-admin-001',
+      name: 'Export_Contacts_Audit_Q2.csv',
+      format: 'csv',
+      sizeBytes: 1.2 * 1024 ** 3,
+      status: 'ready',
+      sourceId: PRODUCTION_SOURCE_ID,
+      scope: 'contacts',
+      exportDate: '2026-06-30',
+      createdAt: '2026-08-01T10:00:00',
+    },
+  ],
+  users: [
+    {
+      id: ALEX_USER_ID,
+      name: 'Alex Martin',
+      email: 'alex.martin@salesforce-corp.com',
+      roleId: 'super_admin',
+      status: 'active',
+      lastLogin: '2026-08-08T08:30:00',
+      mfaEnabled: true,
+    },
+    {
+      id: 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
+      name: 'Sophie Martin',
+      email: 'admin@entreprise.com',
+      roleId: 'admin',
+      status: 'active',
+      lastLogin: '2026-08-07T08:15:00',
+      mfaEnabled: true,
+    },
+    {
+      id: 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a02',
+      name: 'Lucas Dupont',
+      email: 'operator@entreprise.com',
+      roleId: 'backup_operator',
+      status: 'active',
+      lastLogin: '2026-08-07T14:00:00',
+      mfaEnabled: true,
+    },
+  ],
+  schedules: mockBackupSchedules.filter((schedule) => schedule.sourceId === PRODUCTION_SOURCE_ID),
+  roles: defaultRoles,
+}
+
+export const adminScenarioReferenceDate = DEMO_REFERENCE_DATE

@@ -1,5 +1,7 @@
 import i18n from '../i18n'
 import type { BackupSource, BackupSourceStatus } from '../types/backupSource.types'
+import { STAGING_SOURCE_ID } from '../data/demoScenarios/shared'
+import { DEMO_SCENARIO_STORAGE_KEY } from '../types/demoScenario.types'
 
 export interface SourceTestResponse {
   status: BackupSourceStatus
@@ -19,7 +21,15 @@ function delay(ms: number): Promise<void> {
 export async function postSourceConnectionTest(
   source: BackupSource,
 ): Promise<SourceTestResponse> {
-  await delay(1000 + Math.random() * 1000)
+  await delay(1500)
+
+  const scenario = localStorage.getItem(DEMO_SCENARIO_STORAGE_KEY)
+  if (scenario === 'secops' && source.id === STAGING_SOURCE_ID) {
+    return {
+      status: 'DISCONNECTED',
+      message: i18n.t('notifications.connectionFailureOAuth', { source: source.name }),
+    }
+  }
 
   const isSuccess = Math.random() >= 0.25
 

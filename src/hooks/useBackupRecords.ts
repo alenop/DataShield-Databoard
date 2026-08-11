@@ -15,6 +15,7 @@ import {
 } from '../utils/backupSimulation.utils'
 import { markBackupInProgress, resolveUserStoppedOutcome } from '../utils/backupRetry.utils'
 import { filterBackupsWithKnownSources } from '../utils/backupRecord.utils'
+import { loadBackupRecordsFromStorage } from '../utils/demoScenario.utils'
 
 interface LaunchBackupInput {
   name: string
@@ -33,9 +34,11 @@ interface UseBackupRecordsOptions {
 }
 
 export function useBackupRecords({ initialRecords, username, sources }: UseBackupRecordsOptions) {
-  const [records, setRecords] = useState(() =>
-    filterBackupsWithKnownSources(initialRecords, sources),
-  )
+  const [records, setRecords] = useState(() => {
+    const storedRecords = loadBackupRecordsFromStorage([])
+    const baseRecords = storedRecords.length > 0 ? storedRecords : initialRecords
+    return filterBackupsWithKnownSources(baseRecords, sources)
+  })
   const [statusFilter, setStatusFilter] = useState<BackupStatusFilter>('all')
   const [sourceQuery, setSourceQuery] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)

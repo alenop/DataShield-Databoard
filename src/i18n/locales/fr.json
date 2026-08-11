@@ -37,6 +37,38 @@
     "aggregatedMetrics": "Métriques agrégées",
     "apiLogs": "Logs API"
   },
+  "demo": {
+    "label": "Mode démo",
+    "selectLabel": "Choisir un scénario de démonstration",
+    "persona": "Personnage : {{name}} — {{role}}",
+    "audit": {
+      "restoreCompleted": "Restauration « {{name}} » terminée avec succès"
+    },
+    "roles": {
+      "super_admin": "Super Admin Salesforce",
+      "admin": "Admin Sécurité",
+      "backup_operator": "Opérateur Sauvegarde",
+      "read_only": "DPO / Conformité"
+    },
+    "scenarios": {
+      "none": {
+        "option": "Aucun scénario — Admin Demo (moi)",
+        "hint": "Données par défaut de l'application, sans mise en scène de démo."
+      },
+      "admin": {
+        "option": "Scénario 1 — Restauration urgente (Admin CRM)",
+        "hint": "Alex : source Production connectée, restauration Contacts d'hier 23h, traçabilité audit."
+      },
+      "secops": {
+        "option": "Scénario 2 — Gestion d'alerte (SecOps)",
+        "hint": "Sam : alerte OAuth critique sur Staging, diagnostic connexion, contrôle des rôles."
+      },
+      "dpo": {
+        "option": "Scénario 3 — Audit de conformité (DPO)",
+        "hint": "Camille : rétention légale 7 ans, export CSV auditeur, journal d'audit filtré."
+      }
+    }
+  },
   "common": {
     "appName": "DataShield",
     "page": "Page",
@@ -507,6 +539,7 @@
     "scheduleDeleted": "Planification supprimée.",
     "connectionSuccess": "Connexion établie avec succès avec l'API {{source}}",
     "connectionFailure": "Échec de connexion : Jeton OAuth expiré",
+    "connectionFailureOAuth": "Échec d'authentification OAuth — {{source}} : jeton expiré ou révoqué",
     "exportPreparing": "Export « {{name}} » en cours de préparation…",
     "exportReady": "Export « {{name}} » prêt au téléchargement.",
     "exportStillPreparing": "L'export est encore en cours de préparation.",
