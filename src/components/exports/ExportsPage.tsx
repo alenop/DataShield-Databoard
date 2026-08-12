@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FileOutput, Loader2, Plus, ShieldCheck } from 'lucide-react'
 import type { DataExportsState } from '../../hooks/useDataExports'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
 import type { ExportFormat, ExportStatus } from '../../types/dataExport.types'
+import { ListSearchBar } from '../ui/ListSearchBar'
 import { formatBackupDate } from '../../utils/backupFormatters'
 import { formatExportSize, formatExportDate } from '../../utils/dataExport.utils'
+import { filterByListSearchQuery } from '../../utils/listSearch.utils'
 import { getScopeLabel } from '../../utils/sourceScope.utils'
 import { NewExportModal } from './NewExportModal'
 
@@ -19,9 +21,27 @@ export function ExportsPage({ dataExports, backupSources }: ExportsPageProps) {
   const { exports, notification, createExport, downloadExport } = dataExports
   const { sources } = backupSources
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [query, setQuery] = useState('')
 
   const getSourceName = (sourceId: string) =>
     sources.find((source) => source.id === sourceId)?.name ?? t('common.emptyDash')
+
+  const filteredExports = useMemo(
+    () =>
+      filterByListSearchQuery(exports, query, (item) => [
+        item.name,
+        item.format,
+        t(`formats.${item.format}`),
+        getScopeLabel(item.scope, t),
+        getSourceName(item.sourceId),
+        t(`status.export.${item.status}`),
+      ]),
+    [exports, query, t, sources],
+  )
+
+  const listCountLabel = query.trim()
+    ? t('pages.exports.matchingExports', { count: filteredExports.length, total: exports.length })
+    : t('common.countWithLabel', { label: t('pages.exports.history'), count: exports.length })
 
   return (
     <div className="space-y-6">
@@ -60,14 +80,29 @@ export function ExportsPage({ dataExports, backupSources }: ExportsPageProps) {
       )}
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-          <FileOutput className="h-4 w-4" aria-hidden="true" />
-          {t('common.countWithLabel', { label: t('pages.exports.history'), count: exports.length })}
-        </h2>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
+              <FileOutput className="h-4 w-4" aria-hidden="true" />
+              {t('pages.exports.history')}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{listCountLabel}</p>
+          </div>
+          <ListSearchBar
+            query={query}
+            onQueryChange={setQuery}
+            placeholder={t('pages.exports.searchPlaceholder')}
+            ariaLabel={t('pages.exports.searchAria')}
+          />
+        </div>
 
         {exports.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
             {t('pages.exports.noExports')}
+          </p>
+        ) : filteredExports.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            {t('pages.exports.noSearchResults')}
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
@@ -104,7 +139,7 @@ export function ExportsPage({ dataExports, backupSources }: ExportsPageProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
-                {exports.map((item) => (
+                {filteredExports.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <td className="px-4 py-3 font-mono text-xs font-medium text-slate-900 dark:text-slate-100">
                       {item.name}

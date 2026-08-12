@@ -10,16 +10,21 @@ import { currentUser } from '../data/currentUser'
 import { buildDemoScenarioPack } from '../data/demoScenarios'
 import type { AuditEvent } from '../types/audit.types'
 import type { BackupRecord } from '../types/backup.types'
+import type { BackupSource } from '../types/backupSource.types'
 import type { DemoCurrentUser, DemoScenarioSelection } from '../types/demoScenario.types'
 import {
   AUDIT_EVENTS_STORAGE_KEY,
   BACKUP_RECORDS_STORAGE_KEY,
   CURRENT_USER_STORAGE_KEY,
+  DEMO_PACK_VERSION,
+  DEMO_PACK_VERSION_KEY,
   DEMO_SCENARIO_APPLIED_KEY,
   DEMO_SCENARIO_STORAGE_KEY,
   isDemoScenarioSelection,
 } from '../types/demoScenario.types'
 import { getDefaultDemoScenarioSelection } from '../data/demoScenarios'
+import { filterBackupsWithKnownSources } from './backupRecord.utils'
+import { normalizeAuditEvents } from './auditLogger.utils'
 
 export function getStoredDemoScenarioSelection(): DemoScenarioSelection {
   const stored = localStorage.getItem(DEMO_SCENARIO_STORAGE_KEY)
@@ -54,8 +59,6 @@ export function loadDemoCurrentUser(): DemoCurrentUser {
   }
 }
 
-import { normalizeAuditEvents } from './auditLogger.utils'
-
 export function loadAuditEventsFromStorage(fallback: AuditEvent[]): AuditEvent[] {
   const stored = localStorage.getItem(AUDIT_EVENTS_STORAGE_KEY)
   if (!stored) return fallback
@@ -69,13 +72,19 @@ export function loadAuditEventsFromStorage(fallback: AuditEvent[]): AuditEvent[]
   }
 }
 
-export function loadBackupRecordsFromStorage(fallback: BackupRecord[]): BackupRecord[] {
+export function loadBackupRecordsFromStorage(
+  fallback: BackupRecord[],
+  sources: BackupSource[] = [],
+): BackupRecord[] {
   const stored = localStorage.getItem(BACKUP_RECORDS_STORAGE_KEY)
   if (!stored) return fallback
 
   try {
     const parsed: unknown = JSON.parse(stored)
-    return Array.isArray(parsed) ? (parsed as BackupRecord[]) : fallback
+    if (!Array.isArray(parsed)) return fallback
+
+    const records = parsed as BackupRecord[]
+    return sources.length > 0 ? filterBackupsWithKnownSources(records, sources) : records
   } catch {
     return fallback
   }
@@ -97,13 +106,20 @@ export function applyDemoScenario(id: DemoScenarioSelection): void {
   localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(pack.users))
   localStorage.setItem(BACKUP_SCHEDULES_STORAGE_KEY, JSON.stringify(pack.schedules))
   localStorage.setItem(ROLES_STORAGE_KEY, JSON.stringify(pack.roles))
+  localStorage.setItem(DEMO_PACK_VERSION_KEY, DEMO_PACK_VERSION)
 }
 
 export function ensureDemoScenarioApplied(): DemoScenarioSelection {
   const scenarioId = getStoredDemoScenarioSelection()
   const applied = localStorage.getItem(DEMO_SCENARIO_APPLIED_KEY)
 
-  if (applied !== scenarioId || !localStorage.getItem(BACKUP_SOURCES_STORAGE_KEY)) {
+  const packVersion = localStorage.getItem(DEMO_PACK_VERSION_KEY)
+
+  if (
+    applied !== scenarioId ||
+    !localStorage.getItem(BACKUP_SOURCES_STORAGE_KEY) ||
+    packVersion !== DEMO_PACK_VERSION
+  ) {
     applyDemoScenario(scenarioId)
   }
 

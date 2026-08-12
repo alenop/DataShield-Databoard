@@ -12,7 +12,7 @@ export type NavIconName =
   | 'scroll-text'
   | 'globe'
 
-export type NavBadgeVariant = 'default' | 'danger' | 'warning'
+export type NavBadgeVariant = 'default' | 'danger' | 'warning' | 'info'
 
 export interface NavBadge {
   count: number
@@ -25,6 +25,7 @@ export interface NavLinkItem {
   icon?: NavIconName
   href: string
   badge?: NavBadge
+  badges?: NavBadge[]
 }
 
 export interface NavGroupItem {

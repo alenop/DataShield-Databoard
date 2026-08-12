@@ -38,6 +38,7 @@ describe('alert.utils', () => {
     expect(countAlertSummary(sampleAlerts)).toEqual({
       critical: 1,
       warning: 1,
+      info: 1,
       resolved: 1,
     })
   })

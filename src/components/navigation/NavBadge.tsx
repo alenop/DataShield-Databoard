@@ -8,7 +8,8 @@ interface NavBadgeProps {
 const variantClasses: Record<NonNullable<NavBadgeType['variant']>, string> = {
   default: 'bg-slate-600 text-white',
   danger: 'bg-red-500 text-white',
-  warning: 'bg-amber-500 text-slate-900',
+  warning: 'bg-amber-400 text-slate-900',
+  info: 'bg-blue-500 text-white',
 }
 
 export function NavBadge({ badge, collapsed = false }: NavBadgeProps) {

@@ -16,6 +16,7 @@ const mockRecords: BackupRecord[] = [
     sizeGb: 10,
     status: 'success',
     durationMinutes: 15,
+    scopes: ['full'],
   },
   {
     id: '2',
@@ -26,6 +27,7 @@ const mockRecords: BackupRecord[] = [
     sizeGb: 5,
     status: 'failure',
     durationMinutes: 4,
+    scopes: ['contacts'],
   },
   {
     id: '3',
@@ -36,6 +38,7 @@ const mockRecords: BackupRecord[] = [
     sizeGb: 20,
     status: 'in_progress',
     durationMinutes: 30,
+    scopes: ['full'],
   },
   {
     id: '4',
@@ -46,6 +49,7 @@ const mockRecords: BackupRecord[] = [
     sizeGb: 8,
     status: 'success',
     durationMinutes: 12,
+    scopes: ['apiLogs'],
   },
 ]
 

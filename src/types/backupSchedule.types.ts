@@ -1,9 +1,12 @@
+import type { SourceScope } from './sourceScope.types'
+
 export type BackupScheduleFrequency = 'daily' | 'weekly'
 
 export interface BackupSchedule {
   id: string
   name: string
   sourceId: string
+  scopes: SourceScope[]
   frequency: BackupScheduleFrequency
   time: string
   weekday: number | null
@@ -14,6 +17,7 @@ export interface BackupSchedule {
 export interface CreateBackupScheduleInput {
   name: string
   sourceId: string
+  scopes: SourceScope[]
   frequency: BackupScheduleFrequency
   time: string
   weekday: number | null

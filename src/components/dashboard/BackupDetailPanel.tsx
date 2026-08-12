@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { BackupRecord } from '../../types/backup.types'
 import type { BackupSource } from '../../types/backupSource.types'
 import { getBackupSourceLabel } from '../../utils/backupRecord.utils'
+import { formatScopeLabels } from '../../utils/sourceScope.utils'
 import {
   formatBackupDate,
   formatBackupDuration,
@@ -78,6 +79,7 @@ export function BackupDetailPanel({ backup, sources, onClose }: BackupDetailPane
           <dl className="space-y-4 text-sm">
             <DetailRow label={t('common.type')} value={typeValue} />
             <DetailRow label={t('common.source')} value={getBackupSourceLabel(backup, sources)} />
+            <DetailRow label={t('common.scope')} value={formatScopeLabels(backup.scopes, t)} />
             <DetailRow label={t('common.date')} value={formatBackupDate(backup.date, i18n.language)} />
             <DetailRow label={t('common.volume')} value={formatBackupSize(backup.sizeGb, t)} />
             <DetailRow label={t('common.duration')} value={formatBackupDuration(backup.durationMinutes, t)} />

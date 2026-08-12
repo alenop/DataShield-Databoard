@@ -3,6 +3,8 @@ import i18n from '../i18n'
 import type { BackupRecord, BackupStatusFilter } from '../types/backup.types'
 import { applyBackupFilters, countBackupStatuses } from '../utils/backupFilters.utils'
 import type { BackupSource } from '../types/backupSource.types'
+import type { SourceScope } from '../types/sourceScope.types'
+import { isValidBackupScopesForSource } from '../utils/sourceScope.utils'
 import {
   BACKUP_SIMULATION_DURATION_MS,
   BACKUP_SIZE_INCREMENT_GB,
@@ -21,6 +23,7 @@ import type { AuditLogger } from '../utils/auditLogger.utils'
 interface LaunchBackupInput {
   name: string
   source: BackupSource
+  scopes: SourceScope[]
 }
 
 interface BackupNotification {
@@ -42,7 +45,7 @@ export function useBackupRecords({
   logAudit,
 }: UseBackupRecordsOptions) {
   const [records, setRecords] = useState(() => {
-    const storedRecords = loadBackupRecordsFromStorage([])
+    const storedRecords = loadBackupRecordsFromStorage([], sources)
     const baseRecords = storedRecords.length > 0 ? storedRecords : initialRecords
     return filterBackupsWithKnownSources(baseRecords, sources)
   })
@@ -197,13 +200,16 @@ export function useBackupRecords({
   )
 
   const launchBackup = useCallback(
-    ({ name, source }: LaunchBackupInput) => {
+    ({ name, source, scopes }: LaunchBackupInput) => {
+      if (!isValidBackupScopesForSource(source, scopes)) return
+
       const id = `BAK-${Date.now().toString(36)}`
       const newRecord: BackupRecord = {
         id,
         name,
         sourceId: source.id,
         source: source.name,
+        scopes,
         date: new Date().toISOString(),
         sizeGb: 0,
         status: 'in_progress',

@@ -2,31 +2,69 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { BackupSource } from '../../types/backupSource.types'
+import type {
+  BackupScheduleFrequency,
+  CreateBackupScheduleInput,
+} from '../../types/backupSchedule.types'
+import { DEFAULT_SCHEDULE_TIME } from '../../types/backupSchedule.types'
+import type { SourceScope } from '../../types/sourceScope.types'
+import { getBackupScopeOptions } from '../../utils/sourceScope.utils'
+import { ScopeListEditor } from '../sources/ScopeListEditor'
 
-interface LaunchBackupModalProps {
+interface LaunchBackupModalBaseProps {
   isOpen: boolean
   sources: BackupSource[]
   onClose: () => void
-  onLaunch: (name: string, sourceId: string) => void
 }
 
-export function LaunchBackupModal({
-  isOpen,
-  sources,
-  onClose,
-  onLaunch,
-}: LaunchBackupModalProps) {
+interface LaunchBackupModalLaunchProps extends LaunchBackupModalBaseProps {
+  variant?: 'launch'
+  onLaunch: (name: string, sourceId: string, scopes: SourceScope[]) => void
+  onCreate?: never
+}
+
+interface LaunchBackupModalScheduleProps extends LaunchBackupModalBaseProps {
+  variant: 'schedule'
+  onCreate: (input: CreateBackupScheduleInput) => string | null
+  onLaunch?: never
+}
+
+export type LaunchBackupModalProps = LaunchBackupModalLaunchProps | LaunchBackupModalScheduleProps
+
+const FREQUENCY_VALUES: BackupScheduleFrequency[] = ['daily', 'weekly']
+const WEEKDAY_VALUES = [0, 1, 2, 3, 4, 5, 6] as const
+
+export function LaunchBackupModal(props: LaunchBackupModalProps) {
+  const { isOpen, sources, onClose, variant = 'launch' } = props
   const { t } = useTranslation()
+  const isSchedule = variant === 'schedule'
+
   const [name, setName] = useState('')
   const [sourceId, setSourceId] = useState('')
+  const [scopes, setScopes] = useState<SourceScope[]>([])
+  const [frequency, setFrequency] = useState<BackupScheduleFrequency>('daily')
+  const [time, setTime] = useState(DEFAULT_SCHEDULE_TIME)
+  const [weekday, setWeekday] = useState<number>(0)
   const [error, setError] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
+
+  const selectedSource = sources.find((source) => source.id === sourceId)
+  const availableScopes = selectedSource ? getBackupScopeOptions(selectedSource) : []
 
   useEffect(() => {
     if (!isOpen) return
 
-    setName('')
-    setSourceId(sources[0]?.id ?? '')
+    const initialSource = sources[0]
+    setName(isSchedule ? t('pages.backups.scheduleModal.defaultName') : '')
+    setSourceId(initialSource?.id ?? '')
+    setScopes(() => {
+      if (!initialSource) return []
+      const options = getBackupScopeOptions(initialSource)
+      return options[0] ? [options[0]] : []
+    })
+    setFrequency('daily')
+    setTime(DEFAULT_SCHEDULE_TIME)
+    setWeekday(0)
     setError(null)
     nameInputRef.current?.focus()
 
@@ -36,7 +74,21 @@ export function LaunchBackupModal({
 
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen, sources, onClose])
+  }, [isOpen, sources, onClose, isSchedule, t])
+
+  useEffect(() => {
+    if (!selectedSource) {
+      setScopes([])
+      return
+    }
+
+    setScopes((current) => {
+      const options = getBackupScopeOptions(selectedSource)
+      const valid = current.filter((scope) => options.includes(scope))
+      if (valid.length > 0) return valid
+      return options[0] ? [options[0]] : []
+    })
+  }, [selectedSource])
 
   if (!isOpen) return null
 
@@ -44,24 +96,49 @@ export function LaunchBackupModal({
     event.preventDefault()
 
     if (!name.trim()) {
-      setError(t('validation.backupNameRequired'))
+      setError(t(isSchedule ? 'validation.scheduleNameRequired' : 'validation.backupNameRequired'))
       return
     }
     if (!sourceId) {
       setError(t('validation.sourceRequired'))
       return
     }
+    if (scopes.length === 0) {
+      setError(t('validation.backupScopeRequired'))
+      return
+    }
 
-    onLaunch(name.trim(), sourceId)
+    if (isSchedule && props.onCreate) {
+      const validationError = props.onCreate({
+        name,
+        sourceId,
+        scopes,
+        frequency,
+        time,
+        weekday: frequency === 'weekly' ? weekday : null,
+      })
+      if (validationError) {
+        setError(validationError)
+        return
+      }
+      onClose()
+      return
+    }
+
+    if (props.onLaunch) {
+      props.onLaunch(name.trim(), sourceId, scopes)
+    }
     onClose()
   }
+
+  const titleId = isSchedule ? 'schedule-backup-modal-title' : 'launch-backup-modal-title'
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="launch-backup-modal-title"
+      aria-labelledby={titleId}
     >
       <button
         type="button"
@@ -72,7 +149,7 @@ export function LaunchBackupModal({
 
       <form
         onSubmit={handleSubmit}
-        className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+        className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900"
       >
         <button
           type="button"
@@ -83,15 +160,16 @@ export function LaunchBackupModal({
           <X className="h-5 w-5" />
         </button>
 
-        <h2
-          id="launch-backup-modal-title"
-          className="pr-8 text-lg font-semibold text-slate-900 dark:text-white"
-        >
-          {t('pages.backups.launchModal.title')}
+        <h2 id={titleId} className="pr-8 text-lg font-semibold text-slate-900 dark:text-white">
+          {t(isSchedule ? 'pages.backups.scheduleModal.title' : 'pages.backups.launchModal.title')}
         </h2>
 
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          {t('pages.backups.launchModal.description')}
+          {t(
+            isSchedule
+              ? 'pages.backups.scheduleModal.description'
+              : 'pages.backups.launchModal.description',
+          )}
         </p>
 
         {sources.length === 0 ? (
@@ -105,7 +183,11 @@ export function LaunchBackupModal({
                 htmlFor="backup-name"
                 className="block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
-                {t('pages.backups.launchModal.backupNameLabel')}
+                {t(
+                  isSchedule
+                    ? 'pages.backups.scheduleModal.scheduleNameLabel'
+                    : 'pages.backups.launchModal.backupNameLabel',
+                )}
               </label>
               <input
                 ref={nameInputRef}
@@ -113,7 +195,11 @@ export function LaunchBackupModal({
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder={t('pages.backups.launchModal.backupNamePlaceholder')}
+                placeholder={t(
+                  isSchedule
+                    ? 'pages.backups.scheduleModal.scheduleNamePlaceholder'
+                    : 'pages.backups.launchModal.backupNamePlaceholder',
+                )}
                 className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
               />
             </div>
@@ -138,6 +224,81 @@ export function LaunchBackupModal({
                 ))}
               </select>
             </div>
+
+            <ScopeListEditor
+              id="backup-scopes"
+              scopes={scopes}
+              onChange={setScopes}
+              availableScopes={availableScopes}
+              disabled={availableScopes.length === 0}
+              label={t('pages.backups.launchModal.backupScopeLabel')}
+              hint={t('pages.backups.launchModal.backupScopeHint')}
+              requiredMessage={t('validation.backupScopeRequired')}
+            />
+
+            {isSchedule && (
+              <>
+                <div>
+                  <label
+                    htmlFor="schedule-frequency"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    {t('common.frequency')}
+                  </label>
+                  <select
+                    id="schedule-frequency"
+                    value={frequency}
+                    onChange={(event) => setFrequency(event.target.value as BackupScheduleFrequency)}
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                  >
+                    {FREQUENCY_VALUES.map((value) => (
+                      <option key={value} value={value}>
+                        {t(`schedule.frequency.${value}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {frequency === 'weekly' && (
+                  <div>
+                    <label
+                      htmlFor="schedule-weekday"
+                      className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                    >
+                      {t('common.weekday')}
+                    </label>
+                    <select
+                      id="schedule-weekday"
+                      value={weekday}
+                      onChange={(event) => setWeekday(Number(event.target.value))}
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                    >
+                      {WEEKDAY_VALUES.map((day) => (
+                        <option key={day} value={day}>
+                          {t(`schedule.weekdays.${day}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    htmlFor="schedule-time"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    {t('common.executionTime')}
+                  </label>
+                  <input
+                    id="schedule-time"
+                    type="time"
+                    value={time}
+                    onChange={(event) => setTime(event.target.value)}
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                  />
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -157,10 +318,10 @@ export function LaunchBackupModal({
           </button>
           <button
             type="submit"
-            disabled={sources.length === 0}
+            disabled={sources.length === 0 || availableScopes.length === 0}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {t('pages.backups.launchModal.start')}
+            {t(isSchedule ? 'common.schedule' : 'pages.backups.launchModal.start')}
           </button>
         </div>
       </form>

@@ -16,6 +16,9 @@ export const DEMO_SCENARIOS = DEMO_SCENARIO_IDS
 
 export const DEMO_SCENARIO_STORAGE_KEY = 'datashield-demo-scenario'
 export const DEMO_SCENARIO_APPLIED_KEY = 'datashield-demo-scenario-applied'
+export const DEMO_PACK_VERSION_KEY = 'datashield-demo-pack-version'
+/** Bump when demo seed data shape changes (e.g. backup scopes). */
+export const DEMO_PACK_VERSION = '4'
 export const CURRENT_USER_STORAGE_KEY = 'datashield-current-user'
 export const AUDIT_EVENTS_STORAGE_KEY = 'datashield-audit-events'
 export const BACKUP_RECORDS_STORAGE_KEY = 'datashield-backup-records'

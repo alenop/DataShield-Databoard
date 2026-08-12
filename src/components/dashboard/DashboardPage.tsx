@@ -8,6 +8,7 @@ import type { BackupRecordsState } from '../../hooks/useBackupRecords'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
 import type { RestoreJobsState } from '../../hooks/useRestoreJobs'
 import type { RestoreBackupOption } from '../../types/restoreJob.types'
+import type { SourceScope } from '../../types/sourceScope.types'
 import { useStopBackupConfirm } from '../../hooks/useStopBackupConfirm'
 import { buildBackupVolumeFromRecords } from '../../utils/backupVolume.utils'
 import { BackupDataTable } from './BackupDataTable'
@@ -57,10 +58,10 @@ export function DashboardPage({
     stopConfirm.requestStop(id, backup.name)
   }
 
-  const handleLaunchBackup = (name: string, sourceId: string) => {
+  const handleLaunchBackup = (name: string, sourceId: string, scopes: SourceScope[]) => {
     const source = backupSources.getSourceById(sourceId)
     if (!source) return
-    backupRecords.launchBackup({ name, source })
+    backupRecords.launchBackup({ name, source, scopes })
   }
 
   return (

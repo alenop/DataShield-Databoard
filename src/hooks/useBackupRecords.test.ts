@@ -18,6 +18,7 @@ const records: BackupRecord[] = [
     status: 'failure',
     durationMinutes: 10,
     errorMessage: 'ERR_001',
+    scopes: ['full'],
   },
   {
     id: '2',
@@ -28,6 +29,7 @@ const records: BackupRecord[] = [
     sizeGb: 5,
     status: 'success',
     durationMinutes: 5,
+    scopes: ['aggregatedMetrics'],
   },
 ]
 
@@ -60,6 +62,7 @@ describe('useBackupRecords', () => {
         sizeGb: 1,
         status: 'success',
         durationMinutes: 1,
+        scopes: ['full'],
       },
     ]
 
@@ -118,11 +121,13 @@ describe('useBackupRecords', () => {
           status: 'CONNECTED',
           scopes: ['contacts'],
         },
+        scopes: ['contacts'],
       })
     })
 
     expect(result.current.records[0].status).toBe('in_progress')
     expect(result.current.records[0].sizeGb).toBe(0)
+    expect(result.current.records[0].scopes).toEqual(['contacts'])
 
     act(() => {
       jest.advanceTimersByTime(3000)

@@ -313,15 +313,17 @@
       "searchAria": "Search backups by source",
       "launchModal": {
         "title": "Start backup",
-        "description": "Enter a name and choose the backup source.",
+        "description": "Enter a name, choose the source, and select the backup scope.",
         "noSources": "No sources available. Add sources under Data → Sources.",
         "backupNameLabel": "Backup name",
         "backupNamePlaceholder": "e.g. Daily CRM backup",
+        "backupScopeLabel": "Backup scope",
+        "backupScopeHint": "Select one or more scopes allowed by the source (never more than the source permits).",
         "start": "Start"
       },
       "scheduleModal": {
         "title": "Schedule backup",
-        "description": "Configure automatic daily or weekly runs.",
+        "description": "Configure the name, source, scopes, and recurrence.",
         "defaultName": "Scheduled backup",
         "scheduleNameLabel": "Schedule name",
         "scheduleNamePlaceholder": "e.g. Daily CRM backup"
@@ -356,7 +358,12 @@
       "editModal": {
         "title": "Edit source",
         "description": "Update the source configuration and export scopes."
-      }
+      },
+      "searchPlaceholder": "Search by name, environment, scope…",
+      "searchAria": "Search sources",
+      "noSearchResults": "No sources match your search.",
+      "matchingSources_one": "{{count}} matching source of {{total}}",
+      "matchingSources_other": "{{count}} matching sources of {{total}}"
     },
     "settings": {
       "title": "Settings",
@@ -371,6 +378,11 @@
       "newExport": "New on-demand export",
       "history": "Export history",
       "noExports": "No exports yet. Start a new on-demand export.",
+      "searchPlaceholder": "Search by name, source, scope…",
+      "searchAria": "Search exports",
+      "noSearchResults": "No exports match your search.",
+      "matchingExports_one": "{{count}} matching export of {{total}}",
+      "matchingExports_other": "{{count}} matching exports of {{total}}",
       "modal": {
         "title": "New on-demand export",
         "description": "Generate an export for external analysis or data migration.",
@@ -389,6 +401,11 @@
       "launchRestore": "Start restore",
       "operations": "Restore operations",
       "noOperations": "No restore operations yet. Start one above.",
+      "searchPlaceholder": "Search by name, backup, target…",
+      "searchAria": "Search restore operations",
+      "noSearchResults": "No restore operations match your search.",
+      "matchingImports_one": "{{count}} matching restore of {{total}}",
+      "matchingImports_other": "{{count}} matching restores of {{total}}",
       "modal": {
         "title": "Start restore",
         "description": "Restore data from a backup to a Salesforce target.",
@@ -442,7 +459,19 @@
         "backups.manage": "Manage backups",
         "sources.manage": "Manage sources",
         "audit.view": "View audit log",
-        "settings.manage": "Manage settings"
+        "settings.manage": "Manage settings",
+        "secrets.manage": "Manage secrets and authentication"
+      },
+      "roleGuide": {
+        "title": "What can each role do?",
+        "hint": "Click to expand a breakdown of permissions by role.",
+        "capabilitiesLabel": "Granted permissions",
+        "roles": {
+          "super_admin": "Full platform control: users, roles, sources, backups, policies, audit log, settings, secrets, and authentication.",
+          "admin": "Manage users and backup policies, without role creation or system settings access.",
+          "backup_operator": "Run and monitor backups and sources. View backup policies only.",
+          "read_only": "Read-only access to policies and the audit log, with no write actions."
+        }
       }
     },
     "policies": {
@@ -515,6 +544,7 @@
   },
   "validation": {
     "backupNameRequired": "Backup name is required.",
+    "backupScopeRequired": "Select a backup scope.",
     "sourceRequired": "Please select a source.",
     "scheduleNameRequired": "Schedule name is required.",
     "scheduleNameMinLength": "Name must be at least 3 characters.",

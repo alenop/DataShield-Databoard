@@ -1,33 +1,36 @@
 import { buildNavigationItems } from './navigationBadges.utils'
 
 describe('buildNavigationItems', () => {
-  it('shows active alert count excluding info and resolved alerts', () => {
+  it('shows separate alert badges by severity', () => {
     const items = buildNavigationItems({
       criticalAlerts: 2,
-      warningAlerts: 2,
+      warningAlerts: 1,
+      infoAlerts: 3,
       failedBackups: 0,
       exportsPreparing: 0,
       importsInProgress: 0,
     })
 
     const alerts = items.find((item) => item.id === 'alerts')
-    expect(alerts && 'badge' in alerts && alerts.badge).toEqual({
-      count: 4,
-      variant: 'danger',
-    })
+    expect(alerts && 'badges' in alerts && alerts.badges).toEqual([
+      { count: 2, variant: 'danger' },
+      { count: 1, variant: 'warning' },
+      { count: 3, variant: 'info' },
+    ])
   })
 
-  it('omits badges when there is nothing actionable', () => {
+  it('omits alert badges when there are no active alerts', () => {
     const items = buildNavigationItems({
       criticalAlerts: 0,
       warningAlerts: 0,
+      infoAlerts: 0,
       failedBackups: 0,
       exportsPreparing: 0,
       importsInProgress: 0,
     })
 
     const alerts = items.find((item) => item.id === 'alerts')
-    expect(alerts && 'badge' in alerts && alerts.badge).toBeUndefined()
+    expect(alerts && 'badges' in alerts && alerts.badges).toBeUndefined()
 
     const data = items.find((item) => item.id === 'data')
     expect(data && 'badge' in data && data.badge).toBeUndefined()
@@ -37,6 +40,7 @@ describe('buildNavigationItems', () => {
     const items = buildNavigationItems({
       criticalAlerts: 0,
       warningAlerts: 0,
+      infoAlerts: 0,
       failedBackups: 2,
       exportsPreparing: 1,
       importsInProgress: 1,
@@ -53,6 +57,7 @@ describe('buildNavigationItems', () => {
     const items = buildNavigationItems({
       criticalAlerts: 1,
       warningAlerts: 0,
+      infoAlerts: 0,
       failedBackups: 0,
       exportsPreparing: 0,
       importsInProgress: 0,

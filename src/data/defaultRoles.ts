@@ -17,6 +17,7 @@ export const defaultRoles: RoleDefinition[] = [
       'sources.manage',
       'audit.view',
       'settings.manage',
+      'secrets.manage',
     ],
     isSystem: true,
     rank: 100,

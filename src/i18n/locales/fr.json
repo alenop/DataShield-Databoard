@@ -313,15 +313,17 @@
       "searchAria": "Rechercher une sauvegarde par source",
       "launchModal": {
         "title": "Lancer une sauvegarde",
-        "description": "Renseignez le nom et choisissez la source de sauvegarde.",
+        "description": "Renseignez le nom, choisissez la source et le périmètre à sauvegarder.",
         "noSources": "Aucune source disponible. Ajoutez des sources dans Données → Sources.",
         "backupNameLabel": "Nom de la sauvegarde",
         "backupNamePlaceholder": "Ex. Sauvegarde quotidienne CRM",
+        "backupScopeLabel": "Périmètre de sauvegarde",
+        "backupScopeHint": "Sélectionnez un ou plusieurs périmètres autorisés par la source (jamais plus que la source).",
         "start": "Démarrer"
       },
       "scheduleModal": {
         "title": "Planifier une sauvegarde",
-        "description": "Configurez une exécution automatique quotidienne ou hebdomadaire.",
+        "description": "Configurez le nom, la source, les périmètres et la récurrence.",
         "defaultName": "Sauvegarde planifiée",
         "scheduleNameLabel": "Nom de la planification",
         "scheduleNamePlaceholder": "Ex. Sauvegarde quotidienne CRM"
@@ -356,7 +358,12 @@
       "editModal": {
         "title": "Modifier la source",
         "description": "Mettez à jour la configuration et les périmètres d'export de la source."
-      }
+      },
+      "searchPlaceholder": "Rechercher par nom, environnement, périmètre…",
+      "searchAria": "Rechercher une source",
+      "noSearchResults": "Aucune source ne correspond à votre recherche.",
+      "matchingSources_one": "{{count}} source correspondante sur {{total}}",
+      "matchingSources_other": "{{count}} sources correspondantes sur {{total}}"
     },
     "settings": {
       "title": "Paramètres",
@@ -371,6 +378,11 @@
       "newExport": "Nouvel export à la demande",
       "history": "Historique des exports",
       "noExports": "Aucun export généré. Lancez un nouvel export à la demande.",
+      "searchPlaceholder": "Rechercher par nom, source, périmètre…",
+      "searchAria": "Rechercher un export",
+      "noSearchResults": "Aucun export ne correspond à votre recherche.",
+      "matchingExports_one": "{{count}} export correspondant sur {{total}}",
+      "matchingExports_other": "{{count}} exports correspondants sur {{total}}",
       "modal": {
         "title": "Nouvel export à la demande",
         "description": "Générez un export pour analyse externe ou migration de données.",
@@ -389,6 +401,11 @@
       "launchRestore": "Lancer une restauration",
       "operations": "Opérations de restauration",
       "noOperations": "Aucune restauration lancée. Démarrez une opération de restauration ci-dessus.",
+      "searchPlaceholder": "Rechercher par nom, sauvegarde, cible…",
+      "searchAria": "Rechercher une restauration",
+      "noSearchResults": "Aucune restauration ne correspond à votre recherche.",
+      "matchingImports_one": "{{count}} restauration correspondante sur {{total}}",
+      "matchingImports_other": "{{count}} restaurations correspondantes sur {{total}}",
       "modal": {
         "title": "Lancer une restauration",
         "description": "Réinjectez des données depuis une sauvegarde vers une cible Salesforce.",
@@ -442,7 +459,19 @@
         "backups.manage": "Gérer les sauvegardes",
         "sources.manage": "Gérer les sources",
         "audit.view": "Consulter le journal d'audit",
-        "settings.manage": "Gérer les paramètres"
+        "settings.manage": "Gérer les paramètres",
+        "secrets.manage": "Gérer les secrets et l'authentification"
+      },
+      "roleGuide": {
+        "title": "Que peut faire chaque rôle ?",
+        "hint": "Cliquez pour afficher le détail des permissions par rôle.",
+        "capabilitiesLabel": "Droits accordés",
+        "roles": {
+          "super_admin": "Contrôle total de la plateforme : utilisateurs, rôles, sources, sauvegardes, politiques, audit, paramètres, secrets et authentification.",
+          "admin": "Gestion des utilisateurs et des politiques de sauvegarde, sans création de rôles ni accès aux paramètres système.",
+          "backup_operator": "Exécution et supervision des sauvegardes et des sources. Consultation des politiques uniquement.",
+          "read_only": "Consultation en lecture seule des politiques et du journal d'audit, sans action d'écriture."
+        }
       }
     },
     "policies": {
@@ -515,6 +544,7 @@
   },
   "validation": {
     "backupNameRequired": "Le nom de la sauvegarde est requis.",
+    "backupScopeRequired": "Sélectionnez un périmètre de sauvegarde.",
     "sourceRequired": "Veuillez sélectionner une source.",
     "scheduleNameRequired": "Le nom de la planification est requis.",
     "scheduleNameMinLength": "Le nom doit contenir au moins 3 caractères.",

@@ -24,7 +24,7 @@ export const adminScenarioData: DemoScenarioData = {
       environment: 'Production',
       apiEndpoint: 'https://org-prod.my.salesforce.com/services/data/v58.0',
       status: DEFAULT_SOURCE_STATUS,
-      scopes: ['contacts', 'accounts', 'leads', 'opportunities'],
+      scopes: ['full', 'contacts', 'accounts', 'leads', 'opportunities'],
     },
     {
       id: STAGING_SOURCE_ID,
@@ -45,6 +45,7 @@ export const adminScenarioData: DemoScenarioData = {
       status: 'success',
       durationMinutes: 12,
       scheduleFrequency: 'daily',
+      scopes: ['contacts'],
       description:
         'Point de restauration Contacts — snapshot nocturne (état sain avant la mise à jour Data Loader).',
       sourceIndex: 0,
@@ -92,26 +93,6 @@ export const adminScenarioData: DemoScenarioData = {
   ],
   restoreJobs: [],
   auditEvents: [
-    {
-      id: 'au-admin-004',
-      timestamp: '2026-08-08T09:30:08',
-      actor: 'Alex Martin',
-      actionCode: 'RESTORE_JOB_COMPLETED',
-      category: 'data_ops',
-      ipAddress: '192.168.10.12',
-      status: 'success',
-      metadata: { name: 'Restauration Contacts — test DR' },
-    },
-    {
-      id: 'au-admin-003',
-      timestamp: '2026-08-08T09:30:00',
-      actor: 'Alex Martin',
-      actionCode: 'RESTORE_JOB_TRIGGERED',
-      category: 'data_ops',
-      ipAddress: '192.168.10.12',
-      status: 'success',
-      metadata: { name: 'Restauration Contacts — test DR' },
-    },
     {
       id: 'au-admin-002',
       timestamp: '2026-08-08T08:15:00',

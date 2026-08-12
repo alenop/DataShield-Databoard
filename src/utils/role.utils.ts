@@ -1,7 +1,7 @@
 import i18n from '../i18n'
 import { defaultRoles } from '../data/defaultRoles'
 import type { Permission, RoleDefinition } from '../types/role.types'
-import { ALL_PERMISSIONS, CUSTOM_ROLE_RANK } from '../types/role.types'
+import { ALL_PERMISSIONS, CUSTOM_ROLE_RANK, sanitizeRolePermissions } from '../types/role.types'
 
 export function validateRoleName(name: string, existingRoles: RoleDefinition[]): string | null {
   const trimmed = name.trim()
@@ -30,7 +30,7 @@ export function createCustomRole(input: {
     id: crypto.randomUUID(),
     name: input.name.trim(),
     description: input.description.trim(),
-    permissions: input.permissions,
+    permissions: sanitizeRolePermissions('custom', input.permissions),
     isSystem: false,
     rank: CUSTOM_ROLE_RANK,
   }
@@ -71,7 +71,7 @@ function normalizeRole(raw: unknown): RoleDefinition | null {
     id,
     name,
     description,
-    permissions,
+    permissions: sanitizeRolePermissions(id, permissions),
     isSystem: Boolean(record.isSystem ?? fallback?.isSystem),
     rank: fallback?.rank ?? rank,
   }
@@ -94,9 +94,15 @@ export function mergeRolesWithDefaults(storedRoles: RoleDefinition[]): RoleDefin
     return {
       ...defaultRole,
       ...stored,
-      permissions: [...new Set([...defaultRole.permissions, ...stored.permissions])],
+      permissions: sanitizeRolePermissions(
+        defaultRole.id,
+        [...new Set([...defaultRole.permissions, ...stored.permissions])],
+      ),
     }
   })
 
-  return [...mergedSystemRoles, ...customRoles]
+  return [...mergedSystemRoles, ...customRoles.map((role) => ({
+    ...role,
+    permissions: sanitizeRolePermissions(role.id, role.permissions),
+  }))]
 }

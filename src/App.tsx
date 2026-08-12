@@ -27,8 +27,6 @@ import { LanguageToggle } from './components/ui/LanguageToggle'
 
 import { ThemeToggle } from './components/ui/ThemeToggle'
 
-import { buildMockBackupRecords } from './data/mockBackups'
-
 import { useAlerts } from './hooks/useAlerts'
 
 import { useAppSettings } from './hooks/useAppSettings'
@@ -103,8 +101,8 @@ function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
   const backupSources = useBackupSources({ logAudit })
 
   const initialBackupRecords = useMemo(
-    () => buildMockBackupRecords(backupSources.sources),
-    [backupSources.sources],
+    () => demoScenario.scenarioMeta.backupRecords,
+    [demoScenario.scenarioMeta.backupRecords],
   )
 
   const backupRecords = useBackupRecords({
@@ -114,9 +112,7 @@ function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
     logAudit,
   })
 
-  const backupSchedules = useBackupSchedules(
-    backupSources.sources.map((source) => source.id),
-  )
+  const backupSchedules = useBackupSchedules(backupSources.sources)
 
   const rolesState = useRoles(currentUser.roleId)
 
@@ -164,6 +160,8 @@ function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
         criticalAlerts: alertsState.summary.critical,
 
         warningAlerts: alertsState.summary.warning,
+
+        infoAlerts: alertsState.summary.info,
 
         failedBackups: backupRecords.statusCounts.failure,
 

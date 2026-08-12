@@ -5,13 +5,14 @@ import { LaunchRestoreModal } from '../imports/LaunchRestoreModal'
 import type { RestoreJobsState } from '../../hooks/useRestoreJobs'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
 import type { RestoreBackupOption } from '../../types/restoreJob.types'
+import type { SourceScope } from '../../types/sourceScope.types'
 import { LaunchBackupModal } from './LaunchBackupModal'
 
 interface BackupActionsProps {
   backupSources: BackupSourcesState
   restoreJobs: RestoreJobsState
   availableRestoreBackups: RestoreBackupOption[]
-  onLaunchBackup: (name: string, sourceId: string) => void
+  onLaunchBackup: (name: string, sourceId: string, scopes: SourceScope[]) => void
 }
 
 export function BackupActions({

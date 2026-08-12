@@ -10,6 +10,11 @@ interface NavLinkButtonProps {
   onSelect: (id: string) => void
 }
 
+function getNavBadges(item: NavLinkItem) {
+  if (item.badges && item.badges.length > 0) return item.badges
+  return item.badge ? [item.badge] : []
+}
+
 export function NavLinkButton({
   item,
   isActive,
@@ -17,6 +22,9 @@ export function NavLinkButton({
   isNested = false,
   onSelect,
 }: NavLinkButtonProps) {
+  const badges = getNavBadges(item)
+  const showCollapsedBadges = isCollapsed && !isNested && badges.length > 0
+
   return (
     <button
       type="button"
@@ -41,8 +49,21 @@ export function NavLinkButton({
 
       {!isCollapsed && <span className="flex-1 truncate text-left">{item.label}</span>}
 
-      {item.badge && (
-        <NavBadge badge={item.badge} collapsed={isCollapsed && !isNested} />
+      {badges.length > 0 && (
+        <span
+          className={[
+            'inline-flex items-center gap-1',
+            showCollapsedBadges ? 'absolute -top-1 -right-1' : 'shrink-0',
+          ].join(' ')}
+        >
+          {badges.map((badge, index) => (
+            <NavBadge
+              key={`${item.id}-badge-${index}`}
+              badge={badge}
+              collapsed={showCollapsedBadges}
+            />
+          ))}
+        </span>
       )}
     </button>
   )

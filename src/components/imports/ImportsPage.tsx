@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FileInput, Loader2, RotateCcw } from 'lucide-react'
 import type { RestoreJobsState } from '../../hooks/useRestoreJobs'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
 import type { RestoreBackupOption } from '../../types/restoreJob.types'
 import type { RestoreJobStatus } from '../../types/restoreJob.types'
+import { ListSearchBar } from '../ui/ListSearchBar'
 import { formatBackupDate } from '../../utils/backupFormatters'
+import { filterByListSearchQuery } from '../../utils/listSearch.utils'
 import { LaunchRestoreModal } from './LaunchRestoreModal'
 
 interface ImportsPageProps {
@@ -19,6 +21,7 @@ export function ImportsPage({ restoreJobs, backupSources, availableBackups }: Im
   const { restoreJobs: jobs, notification, launchRestore } = restoreJobs
   const { sources } = backupSources
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [query, setQuery] = useState('')
 
   const targets = sources.map((source) => ({
     id: source.id,
@@ -27,6 +30,29 @@ export function ImportsPage({ restoreJobs, backupSources, availableBackups }: Im
 
   const getTargetName = (targetSourceId: string) =>
     targets.find((target) => target.id === targetSourceId)?.name ?? t('common.emptyDash')
+
+  const filteredJobs = useMemo(
+    () =>
+      filterByListSearchQuery(jobs, query, (job) => {
+        const source = sources.find((item) => item.id === job.targetSourceId)
+        const targetName = source
+          ? `${source.name} (${source.environment})`
+          : t('common.emptyDash')
+
+        return [
+          job.name,
+          job.backupName,
+          targetName,
+          t(`status.restore.${job.status}`),
+          job.errorMessage,
+        ]
+      }),
+    [jobs, query, t, sources],
+  )
+
+  const listCountLabel = query.trim()
+    ? t('pages.imports.matchingImports', { count: filteredJobs.length, total: jobs.length })
+    : t('common.countWithLabel', { label: t('pages.imports.operations'), count: jobs.length })
 
   const formatRestoreProgress = (restoredCount: number, totalCount: number) =>
     t('common.restoreProgress', {
@@ -78,14 +104,29 @@ export function ImportsPage({ restoreJobs, backupSources, availableBackups }: Im
       )}
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
-          <FileInput className="h-4 w-4" aria-hidden="true" />
-          {t('common.countWithLabel', { label: t('pages.imports.operations'), count: jobs.length })}
-        </h2>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
+              <FileInput className="h-4 w-4" aria-hidden="true" />
+              {t('pages.imports.operations')}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{listCountLabel}</p>
+          </div>
+          <ListSearchBar
+            query={query}
+            onQueryChange={setQuery}
+            placeholder={t('pages.imports.searchPlaceholder')}
+            ariaLabel={t('pages.imports.searchAria')}
+          />
+        </div>
 
         {jobs.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
             {t('pages.imports.noOperations')}
+          </p>
+        ) : filteredJobs.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            {t('pages.imports.noSearchResults')}
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
@@ -113,7 +154,7 @@ export function ImportsPage({ restoreJobs, backupSources, availableBackups }: Im
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
-                {jobs.map((job) => (
+                {filteredJobs.map((job) => (
                   <tr key={job.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                       {job.name}

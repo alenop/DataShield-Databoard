@@ -17,6 +17,7 @@ const baseRecord: BackupRecord = {
   durationMinutes: 5,
   errorReason: 'Old reason',
   errorMessage: 'OLD_ERROR',
+  scopes: ['full'],
 }
 
 describe('markBackupInProgress', () => {

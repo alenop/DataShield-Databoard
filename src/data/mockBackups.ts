@@ -1,5 +1,8 @@
 import type { BackupRecord, BackupStatus, BackupScheduleFrequency } from '../types/backup.types'
+import type { BackupSchedule } from '../types/backupSchedule.types'
 import type { BackupSource } from '../types/backupSource.types'
+import type { SourceScope } from '../types/sourceScope.types'
+import { inferScopesFromBackupName, resolveBackupScopes } from '../utils/backupRecord.utils'
 
 export interface MockBackupTemplate {
   name: string
@@ -11,6 +14,8 @@ export interface MockBackupTemplate {
   durationMinutes: number
   scheduleFrequency?: BackupScheduleFrequency | null
   description: string
+  scopes?: SourceScope[]
+  scheduleId?: string
   errorReason?: string
   errorMessage?: string
   sourceIndex?: number
@@ -200,6 +205,7 @@ export function buildBackupRecordsFromTemplates(
   templates: MockBackupTemplate[],
   sources: BackupSource[],
   referenceDate: Date = new Date(),
+  schedules: BackupSchedule[] = [],
 ): BackupRecord[] {
   if (sources.length === 0) return []
 
@@ -207,6 +213,10 @@ export function buildBackupRecordsFromTemplates(
     .map((template, index) => {
       const sourceIndex = template.sourceIndex ?? index % sources.length
       const source = sources[sourceIndex] ?? sources[0]
+      const linkedSchedule = template.scheduleId
+        ? schedules.find((schedule) => schedule.id === template.scheduleId)
+        : undefined
+      const inferredScopes = inferScopesFromBackupName(template.name)
 
       return {
         id: `BAK-${1001 + index}`,
@@ -217,7 +227,18 @@ export function buildBackupRecordsFromTemplates(
         sizeGb: template.sizeGb,
         status: template.status,
         durationMinutes: template.durationMinutes,
-        scheduleFrequency: template.scheduleFrequency ?? null,
+        scheduleFrequency: template.scheduleFrequency ?? linkedSchedule?.frequency ?? null,
+        scheduleId: template.scheduleId,
+        scopes: resolveBackupScopes(
+          {
+            name: template.name,
+            scopes:
+              template.scopes ??
+              linkedSchedule?.scopes ??
+              (inferredScopes.length > 0 ? inferredScopes : ['full']),
+          },
+          source,
+        ),
         description: template.description,
         errorReason: template.errorReason,
         errorMessage: template.errorMessage,

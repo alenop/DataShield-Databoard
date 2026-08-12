@@ -5,10 +5,9 @@ import type { BackupSource } from '../../types/backupSource.types'
 import { getBackupSourceLabel } from '../../utils/backupRecord.utils'
 import {
   formatBackupDate,
-  formatBackupDuration,
   formatBackupDisplayName,
-  formatBackupSize,
 } from '../../utils/backupFormatters'
+import { ScopeBadges } from '../sources/ScopeBadges'
 import { BackupStatusBadge } from './BackupStatusBadge'
 
 interface BackupDataTableProps {
@@ -56,11 +55,8 @@ export function BackupDataTable({
             <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
               {t('common.date')}
             </th>
-            <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">
-              {t('common.volume')}
-            </th>
-            <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">
-              {t('common.duration')}
+            <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
+              {t('common.scope')}
             </th>
             <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
               {t('common.status')}
@@ -103,11 +99,8 @@ export function BackupDataTable({
                 <td className="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-400">
                   {formatBackupDate(record.date, i18n.language)}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
-                  {formatBackupSize(record.sizeGb, t)}
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
-                  {formatBackupDuration(record.durationMinutes, t)}
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                  <ScopeBadges scopes={record.scopes} maxVisible={3} />
                 </td>
                 <td className="px-4 py-3">
                   <div className="space-y-1.5">

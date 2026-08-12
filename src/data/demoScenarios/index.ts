@@ -36,6 +36,7 @@ export function buildDemoScenarioPack(id: DemoScenarioSelection): DemoScenarioPa
       data.backupTemplates,
       data.sources,
       referenceDate,
+      data.schedules,
     ),
   }
 }

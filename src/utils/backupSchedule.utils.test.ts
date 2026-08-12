@@ -3,6 +3,18 @@ import {
   formatScheduleDescription,
   validateCreateBackupScheduleInput,
 } from './backupSchedule.utils'
+import type { BackupSource } from '../types/backupSource.types'
+
+const sources: BackupSource[] = [
+  {
+    id: 'src-1',
+    name: 'Source 1',
+    environment: 'Production',
+    apiEndpoint: 'https://example.com',
+    status: 'CONNECTED',
+    scopes: ['contacts', 'accounts'],
+  },
+]
 
 describe('backupSchedule.utils', () => {
   it('formats daily and weekly schedules', () => {
@@ -11,6 +23,7 @@ describe('backupSchedule.utils', () => {
         id: '1',
         name: 'Daily',
         sourceId: 'src-1',
+        scopes: ['contacts'],
         frequency: 'daily',
         time: '02:00',
         weekday: null,
@@ -24,6 +37,7 @@ describe('backupSchedule.utils', () => {
         id: '2',
         name: 'Weekly',
         sourceId: 'src-1',
+        scopes: ['full'],
         frequency: 'weekly',
         time: '03:00',
         weekday: 0,
@@ -33,18 +47,19 @@ describe('backupSchedule.utils', () => {
     ).toBe('Tous les dimanches à 03:00')
   })
 
-  it('validates schedule input', () => {
+  it('validates schedule input with scopes', () => {
     expect(
       validateCreateBackupScheduleInput(
         {
           name: 'Planif CRM',
           sourceId: 'src-1',
+          scopes: ['contacts', 'accounts'],
           frequency: 'daily',
           time: '02:00',
           weekday: null,
         },
         [],
-        ['src-1'],
+        sources,
       ),
     ).toBeNull()
   })
@@ -53,6 +68,7 @@ describe('backupSchedule.utils', () => {
     const schedule = createBackupSchedule({
       name: 'Weekly backup',
       sourceId: 'src-1',
+      scopes: ['contacts'],
       frequency: 'weekly',
       time: '03:00',
       weekday: 1,
@@ -60,5 +76,6 @@ describe('backupSchedule.utils', () => {
 
     expect(schedule.frequency).toBe('weekly')
     expect(schedule.weekday).toBe(1)
+    expect(schedule.scopes).toEqual(['contacts'])
   })
 })

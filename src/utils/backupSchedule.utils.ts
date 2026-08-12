@@ -1,9 +1,12 @@
 import i18n from '../i18n'
+import type { BackupSource } from '../types/backupSource.types'
 import type {
   BackupSchedule,
   BackupScheduleFrequency,
   CreateBackupScheduleInput,
 } from '../types/backupSchedule.types'
+import type { SourceScope } from '../types/sourceScope.types'
+import { isValidBackupScopesForSource, sortScopes } from './sourceScope.utils'
 
 export function formatScheduleDescription(schedule: BackupSchedule): string {
   if (schedule.frequency === 'daily') {
@@ -56,7 +59,7 @@ export function formatNextRunDate(schedule: BackupSchedule): string {
 export function validateCreateBackupScheduleInput(
   input: CreateBackupScheduleInput,
   existingNames: string[],
-  availableSourceIds: string[],
+  sources: BackupSource[],
 ): string | null {
   const name = input.name.trim()
   if (!name) return i18n.t('validation.scheduleNameRequired')
@@ -66,8 +69,13 @@ export function validateCreateBackupScheduleInput(
     return i18n.t('validation.scheduleNameDuplicate')
   }
 
-  if (!availableSourceIds.includes(input.sourceId)) {
+  const source = sources.find((item) => item.id === input.sourceId)
+  if (!source) {
     return i18n.t('validation.invalidSource')
+  }
+
+  if (!isValidBackupScopesForSource(source, input.scopes)) {
+    return i18n.t('validation.backupScopeRequired')
   }
 
   if (!/^\d{2}:\d{2}$/.test(input.time)) {
@@ -90,6 +98,7 @@ export function createBackupSchedule(input: CreateBackupScheduleInput): BackupSc
     id: crypto.randomUUID(),
     name: input.name.trim(),
     sourceId: input.sourceId,
+    scopes: sortScopes(input.scopes),
     frequency: input.frequency,
     time: input.time,
     weekday: input.frequency === 'weekly' ? input.weekday : null,
@@ -101,6 +110,7 @@ export function createBackupSchedule(input: CreateBackupScheduleInput): BackupSc
 export function parseStoredBackupSchedules(
   stored: string | null,
   fallback: BackupSchedule[],
+  sources: BackupSource[] = [],
 ): BackupSchedule[] {
   if (!stored) return fallback
 
@@ -109,7 +119,7 @@ export function parseStoredBackupSchedules(
     if (!Array.isArray(parsed)) return fallback
 
     const normalized = parsed
-      .map(normalizeBackupSchedule)
+      .map((item) => normalizeBackupSchedule(item, sources))
       .filter((schedule): schedule is BackupSchedule => schedule !== null)
 
     return normalized.length > 0 ? normalized : fallback
@@ -122,10 +132,10 @@ function isScheduleFrequency(value: string): value is BackupScheduleFrequency {
   return value === 'daily' || value === 'weekly'
 }
 
-function normalizeBackupSchedule(raw: unknown): BackupSchedule | null {
+function normalizeBackupSchedule(raw: unknown, sources: BackupSource[]): BackupSchedule | null {
   if (!raw || typeof raw !== 'object') return null
 
-  const record = raw as Partial<BackupSchedule>
+  const record = raw as Partial<BackupSchedule> & { scope?: SourceScope }
   const name = record.name?.trim()
   const sourceId = record.sourceId?.trim()
   const time = record.time?.trim()
@@ -136,10 +146,20 @@ function normalizeBackupSchedule(raw: unknown): BackupSchedule | null {
     return null
   }
 
+  const source = sources.find((item) => item.id === sourceId)
+  const legacyScopes = record.scopes?.length
+    ? record.scopes
+    : record.scope
+      ? [record.scope]
+      : source
+        ? [source.scopes[0] ?? 'full']
+        : ['full']
+
   return {
     id: record.id?.trim() || crypto.randomUUID(),
     name,
     sourceId,
+    scopes: sortScopes(legacyScopes.filter((scope): scope is SourceScope => typeof scope === 'string')),
     frequency,
     time,
     weekday: typeof record.weekday === 'number' ? record.weekday : null,
