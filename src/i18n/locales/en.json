@@ -425,9 +425,12 @@
       "subtitle": "Technical warnings that require IT team attention.",
       "critical": "Critical",
       "warnings": "Warnings",
-      "resolved": "Resolved",
+      "info": "Information",
       "feed": "Alert feed",
-      "noAlerts": "No alerts recorded."
+      "noAlerts": "No alerts recorded.",
+      "noFilteredAlerts": "No active alerts match this filter.",
+      "matchingAlerts": "{{count}} alert(s) of {{total}}",
+      "filterBySeverity": "Filter by {{severity}}"
     },
     "users": {
       "title": "Users",

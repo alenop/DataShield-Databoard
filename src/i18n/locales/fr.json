@@ -425,9 +425,12 @@
       "subtitle": "Avertissements techniques nécessitant l'attention de l'équipe informatique.",
       "critical": "Critiques",
       "warnings": "Avertissements",
-      "resolved": "Résolues",
+      "info": "Informations",
       "feed": "Flux d'alertes",
-      "noAlerts": "Aucune alerte enregistrée."
+      "noAlerts": "Aucune alerte enregistrée.",
+      "noFilteredAlerts": "Aucune alerte active ne correspond à ce filtre.",
+      "matchingAlerts": "{{count}} alerte(s) sur {{total}}",
+      "filterBySeverity": "Filtrer par {{severity}}"
     },
     "users": {
       "title": "Utilisateurs",

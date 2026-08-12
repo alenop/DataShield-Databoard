@@ -29,6 +29,24 @@ describe('useAlerts', () => {
     expect(result.current.notification?.message).toContain('résolue')
   })
 
+  it('filters alerts by severity when a summary card is toggled', () => {
+    const { result } = renderHook(() => useAlerts())
+
+    act(() => {
+      result.current.toggleSeverityFilter('critical')
+    })
+
+    expect(result.current.severityFilter).toBe('critical')
+    expect(result.current.alerts.every((alert) => alert.severity === 'critical')).toBe(true)
+    expect(result.current.alerts.every((alert) => alert.status === 'active')).toBe(true)
+
+    act(() => {
+      result.current.toggleSeverityFilter('critical')
+    })
+
+    expect(result.current.severityFilter).toBe('all')
+  })
+
   it('persists alerts to localStorage', () => {
     const { result } = renderHook(() => useAlerts())
     const activeAlert = result.current.alerts.find((alert) => alert.status === 'active')

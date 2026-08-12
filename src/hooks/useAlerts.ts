@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import i18n from '../i18n'
 import { mockAlerts } from '../data/mockAlerts'
-import type { Alert } from '../types/alert.types'
+import type { Alert, AlertSeverityFilter } from '../types/alert.types'
 import {
   countAlertSummary,
+  filterAlertsBySeverity,
   markAlertAsResolved,
   parseStoredAlerts,
   sortAlerts,
@@ -18,6 +19,7 @@ export function loadAlerts(): Alert[] {
 
 export function useAlerts() {
   const [alertRecords, setAlertRecords] = useState<Alert[]>(loadAlerts)
+  const [severityFilter, setSeverityFilter] = useState<AlertSeverityFilter>('all')
   const [notification, setNotification] = useState<{
     message: string
     type: 'success' | 'error'
@@ -33,8 +35,16 @@ export function useAlerts() {
     return () => clearTimeout(timer)
   }, [notification])
 
-  const alerts = useMemo(() => sortAlerts(alertRecords), [alertRecords])
+  const sortedAlerts = useMemo(() => sortAlerts(alertRecords), [alertRecords])
   const summary = useMemo(() => countAlertSummary(alertRecords), [alertRecords])
+  const alerts = useMemo(
+    () => filterAlertsBySeverity(sortedAlerts, severityFilter),
+    [sortedAlerts, severityFilter],
+  )
+
+  const toggleSeverityFilter = useCallback((severity: AlertSeverityFilter) => {
+    setSeverityFilter((current) => (current === severity ? 'all' : severity))
+  }, [])
 
   const markAsResolved = useCallback((alertId: string): string | null => {
     const alert = alertRecords.find((item) => item.id === alertId)
@@ -51,7 +61,11 @@ export function useAlerts() {
 
   return {
     alerts,
+    sortedAlerts,
     summary,
+    severityFilter,
+    setSeverityFilter,
+    toggleSeverityFilter,
     notification,
     markAsResolved,
   }

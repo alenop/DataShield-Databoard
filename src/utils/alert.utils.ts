@@ -1,9 +1,20 @@
-import type { Alert, AlertSeverity, AlertSummary } from '../types/alert.types'
+import type { Alert, AlertSeverity, AlertSeverityFilter, AlertSummary } from '../types/alert.types'
 
 const SEVERITY_ORDER: Record<AlertSeverity, number> = {
   critical: 0,
   warning: 1,
   info: 2,
+}
+
+export function filterAlertsBySeverity(
+  alerts: Alert[],
+  severityFilter: AlertSeverityFilter,
+): Alert[] {
+  if (severityFilter === 'all') return alerts
+
+  return alerts.filter(
+    (alert) => alert.severity === severityFilter && alert.status === 'active',
+  )
 }
 
 export function sortAlerts(alerts: Alert[]): Alert[] {

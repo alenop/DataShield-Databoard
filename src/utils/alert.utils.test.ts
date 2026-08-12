@@ -1,4 +1,4 @@
-import { countAlertSummary, markAlertAsResolved, sortAlerts } from './alert.utils'
+import { countAlertSummary, filterAlertsBySeverity, markAlertAsResolved, sortAlerts } from './alert.utils'
 import type { Alert } from '../types/alert.types'
 
 const sampleAlerts: Alert[] = [
@@ -53,5 +53,10 @@ describe('alert.utils', () => {
     const updated = markAlertAsResolved(sampleAlerts, '1')
     expect(updated.find((alert) => alert.id === '1')?.status).toBe('resolved')
     expect(updated.find((alert) => alert.id === '1')?.resolvedAt).toBeDefined()
+  })
+
+  it('filters active alerts by severity', () => {
+    expect(filterAlertsBySeverity(sampleAlerts, 'critical')).toHaveLength(1)
+    expect(filterAlertsBySeverity(sampleAlerts, 'all')).toHaveLength(4)
   })
 })

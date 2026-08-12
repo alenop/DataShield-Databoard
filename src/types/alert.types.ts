@@ -1,5 +1,7 @@
 export type AlertSeverity = 'critical' | 'warning' | 'info'
 
+export type AlertSeverityFilter = 'all' | AlertSeverity
+
 export type AlertStatus = 'active' | 'resolved'
 
 export interface Alert {

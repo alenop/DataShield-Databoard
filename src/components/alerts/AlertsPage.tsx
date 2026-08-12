@@ -10,7 +10,13 @@ interface AlertsPageProps {
 
 export function AlertsPage({ alertsState }: AlertsPageProps) {
   const { t } = useTranslation()
-  const { alerts, summary, notification, markAsResolved } = alertsState
+  const { alerts, sortedAlerts, summary, severityFilter, toggleSeverityFilter, notification, markAsResolved } =
+    alertsState
+
+  const feedCountLabel =
+    severityFilter === 'all'
+      ? t('common.countWithLabel', { label: t('pages.alerts.feed'), count: sortedAlerts.length })
+      : t('pages.alerts.matchingAlerts', { count: alerts.length, total: sortedAlerts.length })
 
   return (
     <div className="space-y-6">
@@ -43,30 +49,43 @@ export function AlertsPage({ alertsState }: AlertsPageProps) {
           count={summary.critical}
           icon={ShieldAlert}
           tone="critical"
+          isActive={severityFilter === 'critical'}
+          onClick={() => toggleSeverityFilter('critical')}
+          ariaLabel={t('pages.alerts.filterBySeverity', { severity: t('pages.alerts.critical') })}
         />
         <SummaryCard
           label={t('pages.alerts.warnings')}
           count={summary.warning}
           icon={AlertTriangle}
           tone="warning"
+          isActive={severityFilter === 'warning'}
+          onClick={() => toggleSeverityFilter('warning')}
+          ariaLabel={t('pages.alerts.filterBySeverity', { severity: t('pages.alerts.warnings') })}
         />
         <SummaryCard
-          label={t('pages.alerts.resolved')}
-          count={summary.resolved}
-          icon={CheckCheck}
-          tone="resolved"
+          label={t('pages.alerts.info')}
+          count={summary.info}
+          icon={Info}
+          tone="info"
+          isActive={severityFilter === 'info'}
+          onClick={() => toggleSeverityFilter('info')}
+          ariaLabel={t('pages.alerts.filterBySeverity', { severity: t('pages.alerts.info') })}
         />
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
           <Bell className="h-4 w-4" aria-hidden="true" />
-          {t('common.countWithLabel', { label: t('pages.alerts.feed'), count: alerts.length })}
+          {feedCountLabel}
         </h2>
 
-        {alerts.length === 0 ? (
+        {sortedAlerts.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
             {t('pages.alerts.noAlerts')}
+          </p>
+        ) : alerts.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            {t('pages.alerts.noFilteredAlerts')}
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-slate-200 dark:divide-slate-700">
@@ -84,33 +103,51 @@ interface SummaryCardProps {
   label: string
   count: number
   icon: typeof ShieldAlert
-  tone: 'critical' | 'warning' | 'resolved'
+  tone: 'critical' | 'warning' | 'info'
+  isActive: boolean
+  onClick: () => void
+  ariaLabel: string
 }
 
 const summaryCardStyles: Record<SummaryCardProps['tone'], string> = {
   critical: 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/50',
   warning: 'border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/50',
-  resolved: 'border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/50',
+  info: 'border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/50',
 }
 
 const summaryCountStyles: Record<SummaryCardProps['tone'], string> = {
   critical: 'text-red-700 dark:text-red-300',
   warning: 'text-amber-700 dark:text-amber-300',
-  resolved: 'text-emerald-700 dark:text-emerald-300',
+  info: 'text-blue-700 dark:text-blue-300',
 }
 
 const summaryIconStyles: Record<SummaryCardProps['tone'], string> = {
   critical: 'text-red-600 dark:text-red-400',
   warning: 'text-amber-600 dark:text-amber-400',
-  resolved: 'text-emerald-600 dark:text-emerald-400',
+  info: 'text-blue-600 dark:text-blue-400',
 }
 
-function SummaryCard({ label, count, icon: Icon, tone }: SummaryCardProps) {
+function SummaryCard({
+  label,
+  count,
+  icon: Icon,
+  tone,
+  isActive,
+  onClick,
+  ariaLabel,
+}: SummaryCardProps) {
   return (
-    <article
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={isActive}
+      aria-label={ariaLabel}
       className={[
-        'rounded-xl border p-5 shadow-sm',
+        'rounded-xl border p-5 text-left shadow-sm transition-all',
         summaryCardStyles[tone],
+        isActive
+          ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900'
+          : 'hover:brightness-95 dark:hover:brightness-110',
       ].join(' ')}
     >
       <div className="flex items-start justify-between gap-3">
@@ -122,7 +159,7 @@ function SummaryCard({ label, count, icon: Icon, tone }: SummaryCardProps) {
         </div>
         <Icon className={['h-6 w-6 shrink-0', summaryIconStyles[tone]].join(' ')} aria-hidden="true" />
       </div>
-    </article>
+    </button>
   )
 }
 
