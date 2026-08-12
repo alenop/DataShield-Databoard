@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next'
+import type { BackupSource } from '../types/backupSource.types'
 import {
   DEFAULT_SOURCE_SCOPES,
   SOURCE_SCOPES,
@@ -65,6 +66,10 @@ export function normalizeScope(value: unknown): SourceScope {
   return DEFAULT_SOURCE_SCOPES[0]
 }
 
+export function sortScopes(scopes: SourceScope[]): SourceScope[] {
+  return SOURCE_SCOPES.filter((scope) => scopes.includes(scope))
+}
+
 export function getScopeLabel(scope: SourceScope, t: TFunction): string {
   return t(`scopes.${scope}`)
 }
@@ -72,4 +77,67 @@ export function getScopeLabel(scope: SourceScope, t: TFunction): string {
 export function getScopeLabelFromValue(value: string, t: TFunction): string {
   const key = resolveScopeKey(value)
   return key ? getScopeLabel(key, t) : value
+}
+
+export function getBackupScopeOptions(source: BackupSource): SourceScope[] {
+  const scopes = normalizeScopes(source.scopes)
+
+  if (scopes.includes('full')) {
+    return [...SOURCE_SCOPES]
+  }
+
+  return SOURCE_SCOPES.filter((scope) => scopes.includes(scope))
+}
+
+export function isValidBackupScopesForSource(
+  source: BackupSource,
+  scopes: SourceScope[],
+): boolean {
+  if (scopes.length === 0) return false
+
+  const allowed = getBackupScopeOptions(source)
+
+  if (scopes.includes('full')) {
+    return scopes.length === 1 && allowed.includes('full')
+  }
+
+  return scopes.every((scope) => allowed.includes(scope))
+}
+
+export function getExportScopeOptions(backupScopes: SourceScope[]): SourceScope[] {
+  const scopes = normalizeScopes(backupScopes)
+
+  if (scopes.includes('full')) {
+    return [...SOURCE_SCOPES]
+  }
+
+  return SOURCE_SCOPES.filter((scope) => scopes.includes(scope))
+}
+
+export function isValidExportScopesForBackup(
+  backupScopes: SourceScope[],
+  scopes: SourceScope[],
+): boolean {
+  if (scopes.length === 0) return false
+
+  const allowed = getExportScopeOptions(backupScopes)
+
+  if (scopes.includes('full')) {
+    return scopes.length === 1 && allowed.includes('full')
+  }
+
+  return scopes.every((scope) => allowed.includes(scope))
+}
+
+/** @deprecated Use isValidBackupScopesForSource */
+export function isValidBackupScopeForSource(
+  source: BackupSource,
+  scope: SourceScope,
+): boolean {
+  return isValidBackupScopesForSource(source, [scope])
+}
+
+export function formatScopeLabels(scopes: SourceScope[], t: TFunction): string {
+  if (scopes.length === 0) return t('common.emptyDash')
+  return scopes.map((scope) => getScopeLabel(scope, t)).join(', ')
 }

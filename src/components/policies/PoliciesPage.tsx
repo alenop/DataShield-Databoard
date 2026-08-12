@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CalendarClock, Clock, Database, Pencil, Plus, Shield } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { currentUser } from '../../data/currentUser'
+import type { DemoCurrentUser } from '../../types/demoScenario.types'
 import type { BackupPoliciesState } from '../../hooks/useBackupPolicies'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
 import type { RolesState } from '../../hooks/useRoles'
@@ -14,9 +14,15 @@ interface PoliciesPageProps {
   policiesState: BackupPoliciesState
   backupSources: BackupSourcesState
   rolesState: RolesState
+  currentUser: DemoCurrentUser
 }
 
-export function PoliciesPage({ policiesState, backupSources, rolesState }: PoliciesPageProps) {
+export function PoliciesPage({
+  policiesState,
+  backupSources,
+  rolesState,
+  currentUser,
+}: PoliciesPageProps) {
   const { t } = useTranslation()
   const {
     policies,

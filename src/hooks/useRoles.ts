@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import i18n from '../i18n'
 import { defaultRoles } from '../data/defaultRoles'
 import type { Permission, RoleDefinition } from '../types/role.types'
+import { sanitizeRolePermissions } from '../types/role.types'
 import {
   createCustomRole,
   mergeRolesWithDefaults,
@@ -71,7 +72,11 @@ export function useRoles(currentUserRoleId: string) {
       if (permissionsError) return permissionsError
 
       setRoles((prev) =>
-        prev.map((role) => (role.id === roleId ? { ...role, permissions } : role)),
+        prev.map((role) =>
+          role.id === roleId
+            ? { ...role, permissions: sanitizeRolePermissions(roleId, permissions) }
+            : role,
+        ),
       )
       setNotification({
         message: i18n.t('notifications.roleUpdated', { name: targetRole.name }),

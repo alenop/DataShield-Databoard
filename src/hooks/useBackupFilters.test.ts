@@ -12,6 +12,7 @@ const records: BackupRecord[] = [
     sizeGb: 10,
     status: 'success',
     durationMinutes: 10,
+    scopes: ['full'],
   },
   {
     id: '2',
@@ -22,6 +23,7 @@ const records: BackupRecord[] = [
     sizeGb: 5,
     status: 'failure',
     durationMinutes: 5,
+    scopes: ['contacts'],
   },
 ]
 

@@ -104,3 +104,7 @@ export function canViewPolicies(actorRoleId: string, roles: RoleDefinition[]): b
 export function canManagePolicies(actorRoleId: string, roles: RoleDefinition[]): boolean {
   return actorHasPermission(actorRoleId, 'policies.manage', roles)
 }
+
+export function canManageSecrets(actorRoleId: string, roles: RoleDefinition[]): boolean {
+  return actorHasPermission(actorRoleId, 'secrets.manage', roles)
+}

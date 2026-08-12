@@ -5,6 +5,7 @@ import { isNavGroup } from '../types/navigation.types'
 export interface NavigationBadgeInput {
   criticalAlerts: number
   warningAlerts: number
+  infoAlerts: number
   failedBackups: number
   exportsPreparing: number
   importsInProgress: number
@@ -15,12 +16,16 @@ function createBadge(count: number, variant: NavBadge['variant']): NavBadge | un
   return { count, variant }
 }
 
+function buildAlertBadges(input: NavigationBadgeInput): NavBadge[] {
+  return [
+    createBadge(input.criticalAlerts, 'danger'),
+    createBadge(input.warningAlerts, 'warning'),
+    createBadge(input.infoAlerts, 'info'),
+  ].filter((badge): badge is NavBadge => badge !== undefined)
+}
+
 export function buildNavigationItems(input: NavigationBadgeInput): NavItem[] {
-  const activeAlerts = input.criticalAlerts + input.warningAlerts
-  const alertsBadge = createBadge(
-    activeAlerts,
-    input.criticalAlerts > 0 ? 'danger' : 'warning',
-  )
+  const alertBadges = buildAlertBadges(input)
 
   const backupsBadge = createBadge(input.failedBackups, 'danger')
   const importsBadge = createBadge(input.importsInProgress, 'warning')
@@ -35,7 +40,10 @@ export function buildNavigationItems(input: NavigationBadgeInput): NavItem[] {
 
   return defaultNavigationItems.map((item) => {
     if (item.id === 'alerts') {
-      return { ...item, badge: alertsBadge }
+      return {
+        ...item,
+        badges: alertBadges.length > 0 ? alertBadges : undefined,
+      }
     }
 
     if (isNavGroup(item) && item.id === 'data') {

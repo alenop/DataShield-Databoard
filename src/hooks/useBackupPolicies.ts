@@ -11,6 +11,7 @@ import {
   validateUpdatePolicyInput,
 } from '../utils/backupPolicy.utils'
 import { canManagePolicies } from '../utils/userPermissions.utils'
+import type { AuditLogger } from '../utils/auditLogger.utils'
 
 export const POLICIES_STORAGE_KEY = 'datashield-backup-policies'
 
@@ -23,12 +24,14 @@ interface UseBackupPoliciesOptions {
   actorRoleId: string
   roles: RoleDefinition[]
   availableSourceIds: string[]
+  logAudit?: AuditLogger
 }
 
 export function useBackupPolicies({
   actorRoleId,
   roles,
   availableSourceIds,
+  logAudit,
 }: UseBackupPoliciesOptions) {
   const [policies, setPolicies] = useState<BackupPolicy[]>(loadBackupPolicies)
   const [notification, setNotification] = useState<{
@@ -51,6 +54,11 @@ export function useBackupPolicies({
   const createPolicy = useCallback(
     (input: CreateBackupPolicyInput): string | null => {
       if (!canManage) {
+        logAudit?.({
+          actionCode: 'POLICY_CREATED',
+          status: 'denied',
+          metadata: { name: input.name.trim() },
+        })
         return i18n.t('notifications.policyCreateForbidden')
       }
 
@@ -63,18 +71,29 @@ export function useBackupPolicies({
 
       const policy = createBackupPolicy(input)
       setPolicies((prev) => [policy, ...prev])
+      logAudit?.({
+        actionCode: 'POLICY_CREATED',
+        status: 'success',
+        metadata: { name: policy.name },
+      })
       setNotification({
         message: i18n.t('notifications.policyCreated', { name: policy.name }),
         type: 'success',
       })
       return null
     },
-    [policies, availableSourceIds, canManage],
+    [policies, availableSourceIds, canManage, logAudit],
   )
 
   const togglePolicyActive = useCallback(
     (policyId: string): string | null => {
       if (!canManage) {
+        const policy = policies.find((item) => item.id === policyId)
+        logAudit?.({
+          actionCode: 'POLICY_UPDATED',
+          status: 'denied',
+          metadata: { name: policy?.name ?? policyId },
+        })
         return i18n.t('notifications.policyEditForbidden')
       }
 
@@ -86,6 +105,11 @@ export function useBackupPolicies({
           item.id === policyId ? { ...item, isActive: !item.isActive } : item,
         ),
       )
+      logAudit?.({
+        actionCode: 'POLICY_UPDATED',
+        status: 'success',
+        metadata: { name: policy.name },
+      })
       setNotification({
         message: policy.isActive
           ? i18n.t('notifications.policyDeactivated', { name: policy.name })
@@ -94,12 +118,18 @@ export function useBackupPolicies({
       })
       return null
     },
-    [policies, canManage],
+    [policies, canManage, logAudit],
   )
 
   const updatePolicy = useCallback(
     (policyId: string, input: CreateBackupPolicyInput): string | null => {
       if (!canManage) {
+        const policy = policies.find((item) => item.id === policyId)
+        logAudit?.({
+          actionCode: 'POLICY_UPDATED',
+          status: 'denied',
+          metadata: { name: policy?.name ?? input.name.trim() },
+        })
         return i18n.t('notifications.policyEditForbidden')
       }
 
@@ -118,13 +148,18 @@ export function useBackupPolicies({
       setPolicies((prev) =>
         prev.map((item) => (item.id === policyId ? updated : item)),
       )
+      logAudit?.({
+        actionCode: 'POLICY_UPDATED',
+        status: 'success',
+        metadata: { name: updated.name },
+      })
       setNotification({
         message: i18n.t('notifications.policyUpdated', { name: updated.name }),
         type: 'success',
       })
       return null
     },
-    [policies, availableSourceIds, canManage],
+    [policies, availableSourceIds, canManage, logAudit],
   )
 
   return {

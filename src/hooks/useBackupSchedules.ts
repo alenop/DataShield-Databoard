@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import i18n from '../i18n'
 import { mockBackupSchedules } from '../data/mockBackupSchedules'
 import type { BackupSchedule, CreateBackupScheduleInput } from '../types/backupSchedule.types'
+import type { BackupSource } from '../types/backupSource.types'
 import {
   createBackupSchedule,
   parseStoredBackupSchedules,
@@ -10,13 +11,15 @@ import {
 
 export const BACKUP_SCHEDULES_STORAGE_KEY = 'datashield-backup-schedules'
 
-export function loadBackupSchedules(): BackupSchedule[] {
+export function loadBackupSchedules(sources: BackupSource[] = []): BackupSchedule[] {
   const stored = localStorage.getItem(BACKUP_SCHEDULES_STORAGE_KEY)
-  return parseStoredBackupSchedules(stored, mockBackupSchedules)
+  return parseStoredBackupSchedules(stored, mockBackupSchedules, sources)
 }
 
-export function useBackupSchedules(availableSourceIds: string[]) {
-  const [scheduleRecords, setScheduleRecords] = useState<BackupSchedule[]>(loadBackupSchedules)
+export function useBackupSchedules(sources: BackupSource[]) {
+  const [scheduleRecords, setScheduleRecords] = useState<BackupSchedule[]>(() =>
+    loadBackupSchedules(sources),
+  )
   const [notification, setNotification] = useState<{
     message: string
     type: 'success' | 'error'
@@ -37,7 +40,7 @@ export function useBackupSchedules(availableSourceIds: string[]) {
       const error = validateCreateBackupScheduleInput(
         input,
         scheduleRecords.map((schedule) => schedule.name),
-        availableSourceIds,
+        sources,
       )
       if (error) return error
 
@@ -49,7 +52,7 @@ export function useBackupSchedules(availableSourceIds: string[]) {
       })
       return null
     },
-    [scheduleRecords, availableSourceIds],
+    [scheduleRecords, sources],
   )
 
   const toggleScheduleActive = useCallback((scheduleId: string) => {

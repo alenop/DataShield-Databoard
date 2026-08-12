@@ -37,6 +37,38 @@
     "aggregatedMetrics": "Métriques agrégées",
     "apiLogs": "Logs API"
   },
+  "demo": {
+    "label": "Mode démo",
+    "selectLabel": "Choisir un scénario de démonstration",
+    "persona": "Personnage : {{name}} — {{role}}",
+    "audit": {
+      "restoreCompleted": "Restauration « {{name}} » terminée avec succès"
+    },
+    "roles": {
+      "super_admin": "Super Admin Salesforce",
+      "admin": "Admin Sécurité",
+      "backup_operator": "Opérateur Sauvegarde",
+      "read_only": "DPO / Conformité"
+    },
+    "scenarios": {
+      "none": {
+        "option": "Aucun scénario — Admin Demo (moi)",
+        "hint": "Données par défaut de l'application, sans mise en scène de démo."
+      },
+      "admin": {
+        "option": "Scénario 1 — Restauration urgente (Admin CRM)",
+        "hint": "Alex : source Production connectée, restauration Contacts d'hier 23h, traçabilité audit."
+      },
+      "secops": {
+        "option": "Scénario 2 — Gestion d'alerte (SecOps)",
+        "hint": "Sam : alerte OAuth critique sur Staging, diagnostic connexion, contrôle des rôles."
+      },
+      "dpo": {
+        "option": "Scénario 3 — Audit de conformité (DPO)",
+        "hint": "Camille : rétention légale 7 ans, export CSV auditeur, journal d'audit filtré."
+      }
+    }
+  },
   "common": {
     "appName": "DataShield",
     "page": "Page",
@@ -59,6 +91,7 @@
     "actions": "Actions",
     "name": "Nom",
     "source": "Source",
+    "backup": "Sauvegarde",
     "date": "Date",
     "volume": "Volume",
     "duration": "Durée",
@@ -145,6 +178,7 @@
     "exportScopes": "Périmètres d'export",
     "apiEndpoint": "Endpoint API (HTTPS)",
     "exportDate": "Date de l'export",
+    "linkExpiresAt": "Expiration du lien",
     "exportName": "Nom de l'export",
     "backupName": "Nom de la sauvegarde",
     "scheduleName": "Nom de la planification",
@@ -281,15 +315,17 @@
       "searchAria": "Rechercher une sauvegarde par source",
       "launchModal": {
         "title": "Lancer une sauvegarde",
-        "description": "Renseignez le nom et choisissez la source de sauvegarde.",
+        "description": "Renseignez le nom, choisissez la source et le périmètre à sauvegarder.",
         "noSources": "Aucune source disponible. Ajoutez des sources dans Données → Sources.",
         "backupNameLabel": "Nom de la sauvegarde",
         "backupNamePlaceholder": "Ex. Sauvegarde quotidienne CRM",
+        "backupScopeLabel": "Périmètre de sauvegarde",
+        "backupScopeHint": "Sélectionnez un ou plusieurs périmètres autorisés par la source (jamais plus que la source).",
         "start": "Démarrer"
       },
       "scheduleModal": {
         "title": "Planifier une sauvegarde",
-        "description": "Configurez une exécution automatique quotidienne ou hebdomadaire.",
+        "description": "Configurez le nom, la source, les périmètres et la récurrence.",
         "defaultName": "Sauvegarde planifiée",
         "scheduleNameLabel": "Nom de la planification",
         "scheduleNamePlaceholder": "Ex. Sauvegarde quotidienne CRM"
@@ -324,7 +360,12 @@
       "editModal": {
         "title": "Modifier la source",
         "description": "Mettez à jour la configuration et les périmètres d'export de la source."
-      }
+      },
+      "searchPlaceholder": "Rechercher par nom, environnement, périmètre…",
+      "searchAria": "Rechercher une source",
+      "noSearchResults": "Aucune source ne correspond à votre recherche.",
+      "matchingSources_one": "{{count}} source correspondante sur {{total}}",
+      "matchingSources_other": "{{count}} sources correspondantes sur {{total}}"
     },
     "settings": {
       "title": "Paramètres",
@@ -339,15 +380,21 @@
       "newExport": "Nouvel export à la demande",
       "history": "Historique des exports",
       "noExports": "Aucun export généré. Lancez un nouvel export à la demande.",
+      "searchPlaceholder": "Rechercher par nom, sauvegarde, périmètre…",
+      "searchAria": "Rechercher un export",
+      "noSearchResults": "Aucun export ne correspond à votre recherche.",
+      "matchingExports_one": "{{count}} export correspondant sur {{total}}",
+      "matchingExports_other": "{{count}} exports correspondants sur {{total}}",
       "modal": {
         "title": "Nouvel export à la demande",
-        "description": "Générez un export pour analyse externe ou migration de données.",
+        "description": "Choisissez une sauvegarde réussie et les périmètres à exporter.",
         "defaultName": "Export_Contacts_Salesforce",
         "exportNameLabel": "Nom de l'export",
         "exportNamePlaceholder": "Ex. Export_Contacts_Salesforce_Q2",
         "exportDateLabel": "Date de l'export",
-        "noScope": "Aucun périmètre configuré",
-        "noScopeHint": "Ajoutez des périmètres à la source depuis la page Sources.",
+        "exportScopeLabel": "Périmètres d'export",
+        "exportScopeHint": "Sélectionnez un ou plusieurs périmètres inclus dans la sauvegarde (jamais plus que la sauvegarde).",
+        "noBackups": "Aucune sauvegarde réussie disponible pour l'export.",
         "launch": "Lancer l'export"
       }
     },
@@ -357,6 +404,11 @@
       "launchRestore": "Lancer une restauration",
       "operations": "Opérations de restauration",
       "noOperations": "Aucune restauration lancée. Démarrez une opération de restauration ci-dessus.",
+      "searchPlaceholder": "Rechercher par nom, sauvegarde, cible…",
+      "searchAria": "Rechercher une restauration",
+      "noSearchResults": "Aucune restauration ne correspond à votre recherche.",
+      "matchingImports_one": "{{count}} restauration correspondante sur {{total}}",
+      "matchingImports_other": "{{count}} restaurations correspondantes sur {{total}}",
       "modal": {
         "title": "Lancer une restauration",
         "description": "Réinjectez des données depuis une sauvegarde vers une cible Salesforce.",
@@ -410,7 +462,19 @@
         "backups.manage": "Gérer les sauvegardes",
         "sources.manage": "Gérer les sources",
         "audit.view": "Consulter le journal d'audit",
-        "settings.manage": "Gérer les paramètres"
+        "settings.manage": "Gérer les paramètres",
+        "secrets.manage": "Gérer les secrets et l'authentification"
+      },
+      "roleGuide": {
+        "title": "Que peut faire chaque rôle ?",
+        "hint": "Cliquez pour afficher le détail des permissions par rôle.",
+        "capabilitiesLabel": "Droits accordés",
+        "roles": {
+          "super_admin": "Contrôle total de la plateforme : utilisateurs, rôles, sources, sauvegardes, politiques, audit, paramètres, secrets et authentification.",
+          "admin": "Gestion des utilisateurs et des politiques de sauvegarde, sans création de rôles ni accès aux paramètres système.",
+          "backup_operator": "Exécution et supervision des sauvegardes et des sources. Consultation des politiques uniquement.",
+          "read_only": "Consultation en lecture seule des politiques et du journal d'audit, sans action d'écriture."
+        }
       }
     },
     "policies": {
@@ -446,15 +510,119 @@
     },
     "audit": {
       "title": "Journal d'audit",
-      "subtitle": "Historique chronologique des actions effectuées sur la plateforme.",
+      "subtitle": "Traçabilité des actions critiques uniquement : authentification, configuration, opérations sur les données et accès sensibles.",
       "events": "Événements",
-      "noEvents": "Aucun événement ne correspond à votre recherche.",
+      "noEvents": "Aucun événement ne correspond à votre recherche ou à vos filtres.",
       "searchPlaceholder": "Rechercher par utilisateur, action ou statut…",
-      "searchAria": "Rechercher dans le journal d'audit"
+      "searchAria": "Rechercher dans le journal d'audit",
+      "toggleDetails": "Afficher le détail de l'événement : {{action}}",
+      "filters": {
+        "title": "Filtres",
+        "reset": "Réinitialiser les filtres",
+        "date": "Période",
+        "datePresets": {
+          "all": "Toutes les dates",
+          "today": "Aujourd'hui",
+          "last_7_days": "7 derniers jours",
+          "last_30_days": "30 derniers jours",
+          "last_3_months": "3 derniers mois"
+        },
+        "actor": "Acteur / Utilisateur",
+        "actorSearchPlaceholder": "Rechercher un utilisateur…",
+        "actorSearchAria": "Filtrer la liste des acteurs",
+        "allActors": "Tous les utilisateurs",
+        "actionType": "Type d'action",
+        "allActions": "Toutes les actions",
+        "severity": "Statut du résultat",
+        "severityOptions": {
+          "all": "Tous les statuts",
+          "success": "Succès",
+          "failure": "Échec / Refusé",
+          "warning": "Avertissement"
+        },
+        "resourceType": "Type de ressource",
+        "allResources": "Toutes les ressources"
+      },
+      "details": {
+        "actionCode": "Code action",
+        "category": "Catégorie",
+        "resourceType": "Type de ressource",
+        "actorEmail": "E-mail acteur",
+        "status": "Statut brut",
+        "metadata": "Métadonnées"
+      }
+    }
+  },
+  "audit": {
+    "actionGroups": {
+      "auth": "Authentification",
+      "sources": "Sources",
+      "security": "Sécurité & Secrets",
+      "backups": "Sauvegardes & Restaurations",
+      "exports": "Exports & Données",
+      "policies": "Politiques & Utilisateurs"
+    },
+    "resourceTypes": {
+      "DATA_SOURCE": "Source de données",
+      "BACKUP_POLICY": "Politique de sauvegarde",
+      "RESTORE_JOB": "Restauration",
+      "DATA_EXPORT": "Export de données",
+      "USER_ACCOUNT": "Compte utilisateur"
+    },
+    "categories": {
+      "auth": "Authentification & accès",
+      "config": "Configuration",
+      "data_ops": "Opérations sur les données",
+      "sensitive_read": "Accès données sensibles"
+    },
+    "actions": {
+      "LOGIN_SUCCESS": "Connexion réussie",
+      "LOGIN_FAILED": "Connexion échouée — {{source}}",
+      "LOGOUT": "Déconnexion",
+      "PASSWORD_RESET": "Réinitialisation de mot de passe",
+      "SOURCE_CREATED": "Création de la source « {{name}} »",
+      "SOURCE_UPDATED": "Modification de la source « {{name}} »",
+      "SOURCE_DELETED": "Suppression de la source « {{name}} »",
+      "API_KEY_ROTATED": "Rotation de clé API — {{name}}",
+      "OAUTH_REAUTHENTICATED": "Ré-authentification OAuth — {{name}}",
+      "POLICY_CREATED": "Création de la politique « {{name}} »",
+      "POLICY_UPDATED": "Modification de la politique « {{name}} »",
+      "USER_ROLE_CHANGED": "Changement de rôle — {{name}} ({{role}})",
+      "USER_INVITED": "Invitation utilisateur — {{email}}",
+      "BACKUP_MANUAL_TRIGGERED": "Sauvegarde manuelle lancée — {{name}}",
+      "RESTORE_JOB_TRIGGERED": "Restauration lancée — {{name}}",
+      "RESTORE_JOB_COMPLETED": "Restauration terminée avec succès — {{name}}",
+      "DATA_BULK_UPDATED": "Mise à jour en masse des données — {{name}} ({{records}} enregistrements)",
+      "DATA_EXPORT_REQUESTED": "Demande d'export — {{name}}",
+      "DATA_EXPORT_DOWNLOADED": "Téléchargement d'export — {{name}}",
+      "BACKUP_RECORD_VIEWED": "Consultation du détail de sauvegarde — {{name}}"
+    },
+    "actionFilters": {
+      "LOGIN_SUCCESS": "Connexion réussie",
+      "LOGIN_FAILED": "Connexion échouée",
+      "LOGOUT": "Déconnexion",
+      "PASSWORD_RESET": "Réinitialisation de mot de passe",
+      "SOURCE_CREATED": "Création de source",
+      "SOURCE_UPDATED": "Modification de source",
+      "SOURCE_DELETED": "Suppression de source",
+      "API_KEY_ROTATED": "Rotation de clé API",
+      "OAUTH_REAUTHENTICATED": "Ré-authentification OAuth",
+      "POLICY_CREATED": "Création de politique",
+      "POLICY_UPDATED": "Modification de politique",
+      "USER_ROLE_CHANGED": "Changement de rôle",
+      "USER_INVITED": "Invitation utilisateur",
+      "BACKUP_MANUAL_TRIGGERED": "Sauvegarde manuelle lancée",
+      "RESTORE_JOB_TRIGGERED": "Restauration lancée",
+      "RESTORE_JOB_COMPLETED": "Restauration terminée",
+      "DATA_BULK_UPDATED": "Mise à jour en masse des données",
+      "DATA_EXPORT_REQUESTED": "Demande d'export",
+      "DATA_EXPORT_DOWNLOADED": "Téléchargement d'export",
+      "BACKUP_RECORD_VIEWED": "Consultation du détail de sauvegarde"
     }
   },
   "validation": {
     "backupNameRequired": "Le nom de la sauvegarde est requis.",
+    "backupScopeRequired": "Sélectionnez un périmètre de sauvegarde.",
     "sourceRequired": "Veuillez sélectionner une source.",
     "scheduleNameRequired": "Le nom de la planification est requis.",
     "scheduleNameMinLength": "Le nom doit contenir au moins 3 caractères.",
@@ -471,7 +639,8 @@
     "exportNameRequired": "Le nom de l'export est requis.",
     "exportNameDuplicate": "Un export avec ce nom existe déjà.",
     "exportScopeRequired": "Le périmètre est requis.",
-    "exportScopeInvalid": "Périmètre invalide pour cette source.",
+    "invalidBackup": "Sauvegarde invalide ou indisponible.",
+    "exportScopeInvalid": "Périmètre invalide pour cette sauvegarde.",
     "exportDateInvalid": "La date d'export est invalide.",
     "restoreNameRequired": "Le nom de la restauration est requis.",
     "restoreNameDuplicate": "Une restauration avec ce nom existe déjà.",
@@ -507,6 +676,7 @@
     "scheduleDeleted": "Planification supprimée.",
     "connectionSuccess": "Connexion établie avec succès avec l'API {{source}}",
     "connectionFailure": "Échec de connexion : Jeton OAuth expiré",
+    "connectionFailureOAuth": "Échec d'authentification OAuth — {{source}} : jeton expiré ou révoqué",
     "exportPreparing": "Export « {{name}} » en cours de préparation…",
     "exportReady": "Export « {{name}} » prêt au téléchargement.",
     "exportStillPreparing": "L'export est encore en cours de préparation.",

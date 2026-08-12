@@ -8,6 +8,7 @@ import {
   updateBackupSource,
   validateBackupSourceInput,
 } from '../utils/backupSource.utils'
+import type { AuditLogger } from '../utils/auditLogger.utils'
 
 export const BACKUP_SOURCES_STORAGE_KEY = 'datashield-backup-sources'
 
@@ -16,7 +17,12 @@ export function loadBackupSources(): BackupSource[] {
   return parseStoredBackupSources(stored, defaultBackupSources)
 }
 
-export function useBackupSources() {
+interface UseBackupSourcesOptions {
+  logAudit?: AuditLogger
+}
+
+export function useBackupSources(options: UseBackupSourcesOptions = {}) {
+  const { logAudit } = options
   const [sources, setSources] = useState<BackupSource[]>(loadBackupSources)
   const [testingSourceId, setTestingSourceId] = useState<string | null>(null)
   const [notification, setNotification] = useState<{
@@ -33,8 +39,13 @@ export function useBackupSources() {
     if (error) return error
 
     setSources((prev) => [...prev, createBackupSource(input)])
+    logAudit?.({
+      actionCode: 'SOURCE_CREATED',
+      status: 'success',
+      metadata: { name: input.name.trim() },
+    })
     return null
-  }, [])
+  }, [logAudit])
 
   const updateSource = useCallback((id: string, input: BackupSourceInput): string | null => {
     const error = validateBackupSourceInput(input)
@@ -45,12 +56,25 @@ export function useBackupSources() {
         source.id === id ? updateBackupSource(source, input) : source,
       ),
     )
+    logAudit?.({
+      actionCode: 'SOURCE_UPDATED',
+      status: 'success',
+      metadata: { name: input.name.trim() },
+    })
     return null
-  }, [])
+  }, [logAudit])
 
   const deleteSource = useCallback((id: string) => {
-    setSources((prev) => prev.filter((source) => source.id !== id))
-  }, [])
+    const source = sources.find((item) => item.id === id)
+    setSources((prev) => prev.filter((item) => item.id !== id))
+    if (source) {
+      logAudit?.({
+        actionCode: 'SOURCE_DELETED',
+        status: 'success',
+        metadata: { name: source.name },
+      })
+    }
+  }, [sources, logAudit])
 
   const getSourceById = useCallback(
     (id: string) => sources.find((source) => source.id === id),

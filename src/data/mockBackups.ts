@@ -1,7 +1,10 @@
 import type { BackupRecord, BackupStatus, BackupScheduleFrequency } from '../types/backup.types'
+import type { BackupSchedule } from '../types/backupSchedule.types'
 import type { BackupSource } from '../types/backupSource.types'
+import type { SourceScope } from '../types/sourceScope.types'
+import { inferScopesFromBackupName, resolveBackupScopes } from '../utils/backupRecord.utils'
 
-interface MockBackupTemplate {
+export interface MockBackupTemplate {
   name: string
   daysAgo: number
   hour: number
@@ -11,8 +14,11 @@ interface MockBackupTemplate {
   durationMinutes: number
   scheduleFrequency?: BackupScheduleFrequency | null
   description: string
+  scopes?: SourceScope[]
+  scheduleId?: string
   errorReason?: string
   errorMessage?: string
+  sourceIndex?: number
 }
 
 const MOCK_BACKUP_TEMPLATES: MockBackupTemplate[] = [
@@ -192,24 +198,51 @@ export function buildMockBackupRecords(
   sources: BackupSource[],
   referenceDate: Date = new Date(),
 ): BackupRecord[] {
+  return buildBackupRecordsFromTemplates(MOCK_BACKUP_TEMPLATES, sources, referenceDate)
+}
+
+export function buildBackupRecordsFromTemplates(
+  templates: MockBackupTemplate[],
+  sources: BackupSource[],
+  referenceDate: Date = new Date(),
+  schedules: BackupSchedule[] = [],
+): BackupRecord[] {
   if (sources.length === 0) return []
 
-  return MOCK_BACKUP_TEMPLATES.map((template, index) => {
-    const source = sources[index % sources.length]
+  return templates
+    .map((template, index) => {
+      const sourceIndex = template.sourceIndex ?? index % sources.length
+      const source = sources[sourceIndex] ?? sources[0]
+      const linkedSchedule = template.scheduleId
+        ? schedules.find((schedule) => schedule.id === template.scheduleId)
+        : undefined
+      const inferredScopes = inferScopesFromBackupName(template.name)
 
-    return {
-      id: `BAK-${1001 + index}`,
-      name: template.name,
-      sourceId: source.id,
-      source: source.name,
-      date: buildBackupDate(referenceDate, template.daysAgo, template.hour, template.minute),
-      sizeGb: template.sizeGb,
-      status: template.status,
-      durationMinutes: template.durationMinutes,
-      scheduleFrequency: template.scheduleFrequency ?? null,
-      description: template.description,
-      errorReason: template.errorReason,
-      errorMessage: template.errorMessage,
-    }
-  }).sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())
+      return {
+        id: `BAK-${1001 + index}`,
+        name: template.name,
+        sourceId: source.id,
+        source: source.name,
+        date: buildBackupDate(referenceDate, template.daysAgo, template.hour, template.minute),
+        sizeGb: template.sizeGb,
+        status: template.status,
+        durationMinutes: template.durationMinutes,
+        scheduleFrequency: template.scheduleFrequency ?? linkedSchedule?.frequency ?? null,
+        scheduleId: template.scheduleId,
+        scopes: resolveBackupScopes(
+          {
+            name: template.name,
+            scopes:
+              template.scopes ??
+              linkedSchedule?.scopes ??
+              (inferredScopes.length > 0 ? inferredScopes : ['full']),
+          },
+          source,
+        ),
+        description: template.description,
+        errorReason: template.errorReason,
+        errorMessage: template.errorMessage,
+      }
+    })
+    .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())
 }

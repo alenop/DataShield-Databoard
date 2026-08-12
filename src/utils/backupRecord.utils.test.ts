@@ -1,9 +1,12 @@
 import { defaultBackupSources } from '../data/defaultBackupSources'
 import type { BackupRecord } from '../types/backup.types'
+import type { SourceScope } from '../types/sourceScope.types'
 import {
   buildRestoreBackupOptions,
   filterBackupsWithKnownSources,
   getBackupSourceLabel,
+  inferScopesFromBackupName,
+  resolveBackupScopes,
   resolveBackupSourceId,
 } from './backupRecord.utils'
 
@@ -19,6 +22,7 @@ const successfulProductionBackup: BackupRecord = {
   sizeGb: 10,
   status: 'success',
   durationMinutes: 5,
+  scopes: ['full'],
 }
 
 describe('backupRecord.utils', () => {
@@ -103,5 +107,38 @@ describe('backupRecord.utils', () => {
 
     expect(filterBackupsWithKnownSources(records, defaultBackupSources)).toHaveLength(1)
     expect(filterBackupsWithKnownSources(records, defaultBackupSources)[0].id).toBe('BAK-1001')
+  })
+
+  it('normalizes missing scopes from backup name', () => {
+    const legacyBackup = {
+      ...successfulProductionBackup,
+      name: 'Sauvegarde Contacts Production',
+      scopes: undefined as unknown as SourceScope[],
+    }
+
+    const [normalized] = filterBackupsWithKnownSources([legacyBackup], defaultBackupSources)
+    expect(normalized.scopes).toEqual(['contacts'])
+  })
+
+  it('infers multiple scopes from backup name', () => {
+    expect(inferScopesFromBackupName('Sauvegarde Comptes & Contacts — Conformité')).toEqual([
+      'contacts',
+      'accounts',
+    ])
+
+    const scopes = resolveBackupScopes(
+      { name: 'Sauvegarde Comptes & Contacts — Conformité' },
+      { ...productionSource, scopes: ['accounts', 'contacts'] },
+    )
+    expect(scopes).toEqual(['contacts', 'accounts'])
+  })
+
+  it('resolves scopes for full source allowing partial backup', () => {
+    const fullSource = { ...productionSource, scopes: ['full'] as SourceScope[] }
+    const scopes = resolveBackupScopes(
+      { name: 'Daily backup', scopes: ['contacts', 'accounts'] },
+      fullSource,
+    )
+    expect(scopes).toEqual(['contacts', 'accounts'])
   })
 })

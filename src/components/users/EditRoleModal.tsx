@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { Permission, RoleDefinition } from '../../types/role.types'
-import { ALL_PERMISSIONS } from '../../types/role.types'
+import { getEditablePermissions } from '../../types/role.types'
 
 interface EditRoleModalProps {
   isOpen: boolean
@@ -95,7 +95,7 @@ export function EditRoleModal({ isOpen, role, onClose, onSave }: EditRoleModalPr
             {t('common.assignedPermissions')}
           </legend>
           <div className="mt-2 space-y-2">
-            {ALL_PERMISSIONS.map((permission) => (
+            {getEditablePermissions(role.id).map((permission) => (
               <label
                 key={permission}
                 className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/50"

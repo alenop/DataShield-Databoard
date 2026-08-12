@@ -1,24 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import i18n from '../i18n'
 import { mockDataExports } from '../data/mockDataExports'
-import type { CreateDataExportInput, DataExport, ExportSourceOption } from '../types/dataExport.types'
+import type { CreateDataExportInput, DataExport, ExportBackupOption } from '../types/dataExport.types'
 import { EXPORT_PREPARATION_MS } from '../types/dataExport.types'
 import {
   createDataExport,
+  computeExportLinkExpiresAt,
   parseStoredDataExports,
   simulateExportSizeBytes,
   validateCreateExportInput,
 } from '../utils/dataExport.utils'
+import type { AuditLogger } from '../utils/auditLogger.utils'
 
 export const EXPORTS_STORAGE_KEY = 'datashield-data-exports'
 
-export function loadDataExports(): DataExport[] {
+export function loadDataExports(backups: ExportBackupOption[] = []): DataExport[] {
   const stored = localStorage.getItem(EXPORTS_STORAGE_KEY)
-  return parseStoredDataExports(stored, mockDataExports)
+  return parseStoredDataExports(stored, mockDataExports, backups)
 }
 
-export function useDataExports(sources: ExportSourceOption[]) {
-  const [exportRecords, setExportRecords] = useState<DataExport[]>(loadDataExports)
+export function useDataExports(availableBackups: ExportBackupOption[], logAudit?: AuditLogger) {
+  const [exportRecords, setExportRecords] = useState<DataExport[]>(() =>
+    loadDataExports(availableBackups),
+  )
   const [notification, setNotification] = useState<{
     message: string
     type: 'success' | 'error'
@@ -60,6 +64,7 @@ export function useDataExports(sources: ExportSourceOption[]) {
                 ...item,
                 status: 'ready' as const,
                 sizeBytes: simulateExportSizeBytes(),
+                linkExpiresAt: computeExportLinkExpiresAt(new Date().toISOString(), 'ready'),
               }
             : item,
         )
@@ -85,12 +90,17 @@ export function useDataExports(sources: ExportSourceOption[]) {
       const error = validateCreateExportInput(
         input,
         exportRecords.map((item) => item.name),
-        sources,
+        availableBackups,
       )
       if (error) return error
 
-      const created = createDataExport(input)
+      const created = createDataExport(input, availableBackups)
       setExportRecords((prev) => [created, ...prev])
+      logAudit?.({
+        actionCode: 'DATA_EXPORT_REQUESTED',
+        status: 'success',
+        metadata: { name: created.name },
+      })
       scheduleExportFinalization(created.id)
       setNotification({
         message: i18n.t('notifications.exportPreparing', { name: created.name }),
@@ -98,7 +108,7 @@ export function useDataExports(sources: ExportSourceOption[]) {
       })
       return null
     },
-    [exportRecords, sources, scheduleExportFinalization],
+    [exportRecords, availableBackups, scheduleExportFinalization, logAudit],
   )
 
   const downloadExport = useCallback(
@@ -120,13 +130,18 @@ export function useDataExports(sources: ExportSourceOption[]) {
         return i18n.t('notifications.exportExpired')
       }
 
+      logAudit?.({
+        actionCode: 'DATA_EXPORT_DOWNLOADED',
+        status: 'success',
+        metadata: { name: item.name },
+      })
       setNotification({
         message: i18n.t('notifications.exportDownloadStarted', { name: item.name }),
         type: 'success',
       })
       return null
     },
-    [exportRecords],
+    [exportRecords, logAudit],
   )
 
   return {

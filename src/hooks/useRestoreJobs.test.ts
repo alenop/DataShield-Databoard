@@ -73,4 +73,86 @@ describe('useRestoreJobs', () => {
       true,
     )
   })
+
+  it('allows launching multiple restores with the same name', () => {
+    const { result } = renderHook(() => useRestoreJobs(hookOptions))
+    const sharedName = 'Reload Contacts'
+
+    act(() => {
+      expect(
+        result.current.launchRestore({
+          name: sharedName,
+          backupId: 'BAK-1001',
+          targetSourceId: 'src-1',
+        }),
+      ).toBeNull()
+    })
+
+    act(() => {
+      jest.advanceTimersByTime(8000)
+    })
+
+    act(() => {
+      expect(
+        result.current.launchRestore({
+          name: sharedName,
+          backupId: 'BAK-1001',
+          targetSourceId: 'src-1',
+        }),
+      ).toBeNull()
+    })
+
+    expect(result.current.restoreJobs.filter((job) => job.name === sharedName)).toHaveLength(2)
+  })
+
+  it('logs audit events when a restore is triggered and completed', () => {
+    localStorage.setItem(
+      RESTORE_JOBS_STORAGE_KEY,
+      JSON.stringify([
+        {
+          id: 'r1eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
+          name: 'Restauration Pistes & Contacts',
+          backupId: 'BAK-1001',
+          backupName: 'Sauvegarde Pistes & Contacts',
+          backupDate: '2026-08-01T08:00:00Z',
+          targetSourceId: 'src-1',
+          status: 'success',
+          restoredCount: 1450,
+          totalCount: 1450,
+          createdAt: '2026-08-07T09:30:00',
+        },
+      ]),
+    )
+
+    const logAudit = jest.fn()
+    const { result } = renderHook(() => useRestoreJobs({ ...hookOptions, logAudit }))
+
+    act(() => {
+      result.current.launchRestore({
+        name: 'Restauration Audit',
+        backupId: 'BAK-1001',
+        targetSourceId: 'src-1',
+      })
+    })
+
+    expect(logAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ actionCode: 'RESTORE_JOB_TRIGGERED' }),
+    )
+
+    act(() => {
+      jest.advanceTimersByTime(8000)
+    })
+
+    expect(result.current.restoreJobs[0].status).toBe('success')
+    expect(result.current.notification?.message).toContain('Restauration Audit')
+
+    expect(logAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ actionCode: 'RESTORE_JOB_COMPLETED' }),
+    )
+    expect(
+      logAudit.mock.calls.filter(
+        ([entry]) => entry.actionCode === 'RESTORE_JOB_COMPLETED',
+      ),
+    ).toHaveLength(1)
+  })
 })

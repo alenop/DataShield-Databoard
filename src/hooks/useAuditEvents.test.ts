@@ -13,10 +13,10 @@ describe('useAuditEvents', () => {
     const { result } = renderHook(() => useAuditEvents())
 
     act(() => {
-      result.current.setQuery('Système')
+      result.current.setQuery('Admin Demo')
     })
 
     expect(result.current.filteredCount).toBeGreaterThan(0)
-    expect(result.current.events.every((event) => event.actor.includes('Système'))).toBe(true)
+    expect(result.current.events.every((event) => event.actor.includes('Admin Demo'))).toBe(true)
   })
 })

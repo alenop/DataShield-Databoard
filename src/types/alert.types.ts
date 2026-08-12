@@ -14,6 +14,7 @@ export interface Alert {
 export interface AlertSummary {
   critical: number
   warning: number
+  info: number
   resolved: number
 }
 

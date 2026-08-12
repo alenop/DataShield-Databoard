@@ -35,17 +35,12 @@ export function filterRestoreBackupsByTarget(
 
 export function validateCreateRestoreJobInput(
   input: CreateRestoreJobInput,
-  existingNames: string[],
   backups: RestoreBackupOption[],
   targets: RestoreTargetOption[],
 ): string | null {
   const name = input.name.trim()
   if (!name) return i18n.t('validation.restoreNameRequired')
   if (name.length < 3) return i18n.t('validation.scheduleNameMinLength')
-
-  if (existingNames.some((existing) => existing.toLowerCase() === name.toLowerCase())) {
-    return i18n.t('validation.restoreNameDuplicate')
-  }
 
   if (!backups.some((backup) => backup.id === input.backupId)) {
     return i18n.t('validation.backupInvalid')
@@ -63,7 +58,9 @@ export function validateCreateRestoreJobInput(
   return null
 }
 
-export function simulateRestoreTotalCount(): number {
+export function simulateRestoreTotalCount(backupName?: string): number {
+  if (backupName?.toLowerCase().includes('contact')) return 500
+
   const min = 400
   const max = 2500
   return Math.round(min + Math.random() * (max - min))
@@ -82,7 +79,7 @@ export function createRestoreJob(
     targetSourceId: input.targetSourceId,
     status: 'in_progress',
     restoredCount: 0,
-    totalCount: simulateRestoreTotalCount(),
+    totalCount: simulateRestoreTotalCount(backup.name),
     createdAt: new Date().toISOString(),
   }
 }
@@ -97,11 +94,9 @@ export function parseStoredRestoreJobs(
     const parsed: unknown = JSON.parse(stored)
     if (!Array.isArray(parsed)) return fallback
 
-    const normalized = parsed
+    return parsed
       .map(normalizeRestoreJob)
       .filter((item): item is RestoreJob => item !== null)
-
-    return normalized.length > 0 ? normalized : fallback
   } catch {
     return fallback
   }

@@ -3,6 +3,8 @@ import i18n from '../i18n'
 import type { BackupRecord, BackupStatusFilter } from '../types/backup.types'
 import { applyBackupFilters, countBackupStatuses } from '../utils/backupFilters.utils'
 import type { BackupSource } from '../types/backupSource.types'
+import type { SourceScope } from '../types/sourceScope.types'
+import { isValidBackupScopesForSource } from '../utils/sourceScope.utils'
 import {
   BACKUP_SIMULATION_DURATION_MS,
   BACKUP_SIZE_INCREMENT_GB,
@@ -15,10 +17,13 @@ import {
 } from '../utils/backupSimulation.utils'
 import { markBackupInProgress, resolveUserStoppedOutcome } from '../utils/backupRetry.utils'
 import { filterBackupsWithKnownSources } from '../utils/backupRecord.utils'
+import { loadBackupRecordsFromStorage } from '../utils/demoScenario.utils'
+import type { AuditLogger } from '../utils/auditLogger.utils'
 
 interface LaunchBackupInput {
   name: string
   source: BackupSource
+  scopes: SourceScope[]
 }
 
 interface BackupNotification {
@@ -30,12 +35,20 @@ interface UseBackupRecordsOptions {
   initialRecords: BackupRecord[]
   username: string
   sources: BackupSource[]
+  logAudit?: AuditLogger
 }
 
-export function useBackupRecords({ initialRecords, username, sources }: UseBackupRecordsOptions) {
-  const [records, setRecords] = useState(() =>
-    filterBackupsWithKnownSources(initialRecords, sources),
-  )
+export function useBackupRecords({
+  initialRecords,
+  username,
+  sources,
+  logAudit,
+}: UseBackupRecordsOptions) {
+  const [records, setRecords] = useState(() => {
+    const storedRecords = loadBackupRecordsFromStorage([], sources)
+    const baseRecords = storedRecords.length > 0 ? storedRecords : initialRecords
+    return filterBackupsWithKnownSources(baseRecords, sources)
+  })
   const [statusFilter, setStatusFilter] = useState<BackupStatusFilter>('all')
   const [sourceQuery, setSourceQuery] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -142,7 +155,15 @@ export function useBackupRecords({ initialRecords, username, sources }: UseBacku
 
   const selectBackup = useCallback((id: string) => {
     setSelectedId(id)
-  }, [])
+    const record = records.find((item) => item.id === id)
+    if (record) {
+      logAudit?.({
+        actionCode: 'BACKUP_RECORD_VIEWED',
+        status: 'success',
+        metadata: { name: record.name },
+      })
+    }
+  }, [records, logAudit])
 
   const clearSelection = useCallback(() => {
     setSelectedId(null)
@@ -179,13 +200,16 @@ export function useBackupRecords({ initialRecords, username, sources }: UseBacku
   )
 
   const launchBackup = useCallback(
-    ({ name, source }: LaunchBackupInput) => {
+    ({ name, source, scopes }: LaunchBackupInput) => {
+      if (!isValidBackupScopesForSource(source, scopes)) return
+
       const id = `BAK-${Date.now().toString(36)}`
       const newRecord: BackupRecord = {
         id,
         name,
         sourceId: source.id,
         source: source.name,
+        scopes,
         date: new Date().toISOString(),
         sizeGb: 0,
         status: 'in_progress',
@@ -198,9 +222,14 @@ export function useBackupRecords({ initialRecords, username, sources }: UseBacku
       }
 
       setRecords((prev) => [newRecord, ...prev])
+      logAudit?.({
+        actionCode: 'BACKUP_MANUAL_TRIGGERED',
+        status: 'success',
+        metadata: { name },
+      })
       startBackupSimulation(id, source.name)
     },
-    [startBackupSimulation],
+    [startBackupSimulation, logAudit],
   )
 
   useEffect(() => {

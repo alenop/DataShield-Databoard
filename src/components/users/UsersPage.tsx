@@ -1,22 +1,24 @@
 import { useState } from 'react'
 import { Shield, ShieldOff, UserPlus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { currentUser } from '../../data/currentUser'
+import type { DemoCurrentUser } from '../../types/demoScenario.types'
 import type { RolesState } from '../../hooks/useRoles'
 import type { UsersState } from '../../hooks/useUsers'
 import type { RoleDefinition } from '../../types/role.types'
 import type { UserStatus } from '../../types/user.types'
 import { formatBackupDate } from '../../utils/backupFormatters'
 import { InviteUserModal } from './InviteUserModal'
+import { RoleCapabilitiesPanel } from './RoleCapabilitiesPanel'
 import { RolesSection } from './RolesSection'
 import { UserActionsCell } from './UserActionsCell'
 
 interface UsersPageProps {
   usersState: UsersState
   rolesState: RolesState
+  currentUser: DemoCurrentUser
 }
 
-export function UsersPage({ usersState, rolesState }: UsersPageProps) {
+export function UsersPage({ usersState, rolesState, currentUser }: UsersPageProps) {
   const { t } = useTranslation()
   const {
     users,
@@ -79,6 +81,8 @@ export function UsersPage({ usersState, rolesState }: UsersPageProps) {
       )}
 
       <RolesSection rolesState={rolesState} currentUserRoleId={currentUser.roleId} />
+
+      <RoleCapabilitiesPanel rolesState={rolesState} />
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">

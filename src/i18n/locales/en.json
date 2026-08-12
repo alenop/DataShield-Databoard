@@ -37,6 +37,38 @@
     "aggregatedMetrics": "Aggregated metrics",
     "apiLogs": "API logs"
   },
+  "demo": {
+    "label": "Demo mode",
+    "selectLabel": "Choose a demonstration scenario",
+    "persona": "Persona: {{name}} — {{role}}",
+    "audit": {
+      "restoreCompleted": "Restore « {{name}} » completed successfully"
+    },
+    "roles": {
+      "super_admin": "Salesforce Super Admin",
+      "admin": "Security Admin",
+      "backup_operator": "Backup Operator",
+      "read_only": "DPO / Compliance"
+    },
+    "scenarios": {
+      "none": {
+        "option": "No scenario — Admin Demo (me)",
+        "hint": "Default application data, without a demo storyline."
+      },
+      "admin": {
+        "option": "Scenario 1 — Emergency restore (CRM Admin)",
+        "hint": "Alex: Production source connected, Contacts restore from yesterday 11 PM, audit trail."
+      },
+      "secops": {
+        "option": "Scenario 2 — Alert response (SecOps)",
+        "hint": "Sam: critical OAuth alert on Staging, connection test, role verification."
+      },
+      "dpo": {
+        "option": "Scenario 3 — Compliance audit (DPO)",
+        "hint": "Camille: 7-year legal retention, CSV export for auditor, filtered audit log."
+      }
+    }
+  },
   "common": {
     "appName": "DataShield",
     "page": "Page",
@@ -59,6 +91,7 @@
     "actions": "Actions",
     "name": "Name",
     "source": "Source",
+    "backup": "Backup",
     "date": "Date",
     "volume": "Volume",
     "duration": "Duration",
@@ -145,6 +178,7 @@
     "exportScopes": "Export scopes",
     "apiEndpoint": "API endpoint (HTTPS)",
     "exportDate": "Export date",
+    "linkExpiresAt": "Link expiration",
     "exportName": "Export name",
     "backupName": "Backup name",
     "scheduleName": "Schedule name",
@@ -281,15 +315,17 @@
       "searchAria": "Search backups by source",
       "launchModal": {
         "title": "Start backup",
-        "description": "Enter a name and choose the backup source.",
+        "description": "Enter a name, choose the source, and select the backup scope.",
         "noSources": "No sources available. Add sources under Data → Sources.",
         "backupNameLabel": "Backup name",
         "backupNamePlaceholder": "e.g. Daily CRM backup",
+        "backupScopeLabel": "Backup scope",
+        "backupScopeHint": "Select one or more scopes allowed by the source (never more than the source permits).",
         "start": "Start"
       },
       "scheduleModal": {
         "title": "Schedule backup",
-        "description": "Configure automatic daily or weekly runs.",
+        "description": "Configure the name, source, scopes, and recurrence.",
         "defaultName": "Scheduled backup",
         "scheduleNameLabel": "Schedule name",
         "scheduleNamePlaceholder": "e.g. Daily CRM backup"
@@ -324,7 +360,12 @@
       "editModal": {
         "title": "Edit source",
         "description": "Update the source configuration and export scopes."
-      }
+      },
+      "searchPlaceholder": "Search by name, environment, scope…",
+      "searchAria": "Search sources",
+      "noSearchResults": "No sources match your search.",
+      "matchingSources_one": "{{count}} matching source of {{total}}",
+      "matchingSources_other": "{{count}} matching sources of {{total}}"
     },
     "settings": {
       "title": "Settings",
@@ -339,15 +380,21 @@
       "newExport": "New on-demand export",
       "history": "Export history",
       "noExports": "No exports yet. Start a new on-demand export.",
+      "searchPlaceholder": "Search by name, backup, scope…",
+      "searchAria": "Search exports",
+      "noSearchResults": "No exports match your search.",
+      "matchingExports_one": "{{count}} matching export of {{total}}",
+      "matchingExports_other": "{{count}} matching exports of {{total}}",
       "modal": {
         "title": "New on-demand export",
-        "description": "Generate an export for external analysis or data migration.",
+        "description": "Choose a successful backup and the scopes to export.",
         "defaultName": "Export_Contacts_Salesforce",
         "exportNameLabel": "Export name",
         "exportNamePlaceholder": "e.g. Export_Contacts_Salesforce_Q2",
         "exportDateLabel": "Export date",
-        "noScope": "No scope configured",
-        "noScopeHint": "Add scopes to the source from the Sources page.",
+        "exportScopeLabel": "Export scopes",
+        "exportScopeHint": "Select one or more scopes included in the backup (never more than the backup).",
+        "noBackups": "No successful backups available for export.",
         "launch": "Start export"
       }
     },
@@ -357,6 +404,11 @@
       "launchRestore": "Start restore",
       "operations": "Restore operations",
       "noOperations": "No restore operations yet. Start one above.",
+      "searchPlaceholder": "Search by name, backup, target…",
+      "searchAria": "Search restore operations",
+      "noSearchResults": "No restore operations match your search.",
+      "matchingImports_one": "{{count}} matching restore of {{total}}",
+      "matchingImports_other": "{{count}} matching restores of {{total}}",
       "modal": {
         "title": "Start restore",
         "description": "Restore data from a backup to a Salesforce target.",
@@ -410,7 +462,19 @@
         "backups.manage": "Manage backups",
         "sources.manage": "Manage sources",
         "audit.view": "View audit log",
-        "settings.manage": "Manage settings"
+        "settings.manage": "Manage settings",
+        "secrets.manage": "Manage secrets and authentication"
+      },
+      "roleGuide": {
+        "title": "What can each role do?",
+        "hint": "Click to expand a breakdown of permissions by role.",
+        "capabilitiesLabel": "Granted permissions",
+        "roles": {
+          "super_admin": "Full platform control: users, roles, sources, backups, policies, audit log, settings, secrets, and authentication.",
+          "admin": "Manage users and backup policies, without role creation or system settings access.",
+          "backup_operator": "Run and monitor backups and sources. View backup policies only.",
+          "read_only": "Read-only access to policies and the audit log, with no write actions."
+        }
       }
     },
     "policies": {
@@ -446,15 +510,119 @@
     },
     "audit": {
       "title": "Audit log",
-      "subtitle": "Chronological history of actions performed on the platform.",
+      "subtitle": "Critical actions only: authentication, configuration, data operations, and sensitive data access.",
       "events": "Events",
-      "noEvents": "No events match your search.",
+      "noEvents": "No events match your search or filters.",
       "searchPlaceholder": "Search by user, action, or status…",
-      "searchAria": "Search audit log"
+      "searchAria": "Search audit log",
+      "toggleDetails": "Show event details: {{action}}",
+      "filters": {
+        "title": "Filters",
+        "reset": "Reset filters",
+        "date": "Date range",
+        "datePresets": {
+          "all": "All dates",
+          "today": "Today",
+          "last_7_days": "Last 7 days",
+          "last_30_days": "Last 30 days",
+          "last_3_months": "Last 3 months"
+        },
+        "actor": "Actor / User",
+        "actorSearchPlaceholder": "Search users…",
+        "actorSearchAria": "Filter actor list",
+        "allActors": "All users",
+        "actionType": "Action type",
+        "allActions": "All actions",
+        "severity": "Result status",
+        "severityOptions": {
+          "all": "All statuses",
+          "success": "Success",
+          "failure": "Failure / Denied",
+          "warning": "Warning"
+        },
+        "resourceType": "Resource type",
+        "allResources": "All resources"
+      },
+      "details": {
+        "actionCode": "Action code",
+        "category": "Category",
+        "resourceType": "Resource type",
+        "actorEmail": "Actor email",
+        "status": "Raw status",
+        "metadata": "Metadata"
+      }
+    }
+  },
+  "audit": {
+    "actionGroups": {
+      "auth": "Authentication",
+      "sources": "Sources",
+      "security": "Security & Secrets",
+      "backups": "Backups & Restores",
+      "exports": "Exports & Data",
+      "policies": "Policies & Users"
+    },
+    "resourceTypes": {
+      "DATA_SOURCE": "Data source",
+      "BACKUP_POLICY": "Backup policy",
+      "RESTORE_JOB": "Restore job",
+      "DATA_EXPORT": "Data export",
+      "USER_ACCOUNT": "User account"
+    },
+    "categories": {
+      "auth": "Authentication & access",
+      "config": "Configuration",
+      "data_ops": "Data operations",
+      "sensitive_read": "Sensitive data access"
+    },
+    "actions": {
+      "LOGIN_SUCCESS": "Successful login",
+      "LOGIN_FAILED": "Failed login — {{source}}",
+      "LOGOUT": "Logout",
+      "PASSWORD_RESET": "Password reset",
+      "SOURCE_CREATED": "Source created — « {{name}} »",
+      "SOURCE_UPDATED": "Source updated — « {{name}} »",
+      "SOURCE_DELETED": "Source deleted — « {{name}} »",
+      "API_KEY_ROTATED": "API key rotated — {{name}}",
+      "OAUTH_REAUTHENTICATED": "OAuth re-authenticated — {{name}}",
+      "POLICY_CREATED": "Policy created — « {{name}} »",
+      "POLICY_UPDATED": "Policy updated — « {{name}} »",
+      "USER_ROLE_CHANGED": "Role changed — {{name}} ({{role}})",
+      "USER_INVITED": "User invited — {{email}}",
+      "BACKUP_MANUAL_TRIGGERED": "Manual backup triggered — {{name}}",
+      "RESTORE_JOB_TRIGGERED": "Restore triggered — {{name}}",
+      "RESTORE_JOB_COMPLETED": "Restore completed successfully — {{name}}",
+      "DATA_BULK_UPDATED": "Bulk data update — {{name}} ({{records}} records)",
+      "DATA_EXPORT_REQUESTED": "Export requested — {{name}}",
+      "DATA_EXPORT_DOWNLOADED": "Export downloaded — {{name}}",
+      "BACKUP_RECORD_VIEWED": "Backup record viewed — {{name}}"
+    },
+    "actionFilters": {
+      "LOGIN_SUCCESS": "Successful login",
+      "LOGIN_FAILED": "Failed login",
+      "LOGOUT": "Logout",
+      "PASSWORD_RESET": "Password reset",
+      "SOURCE_CREATED": "Source created",
+      "SOURCE_UPDATED": "Source updated",
+      "SOURCE_DELETED": "Source deleted",
+      "API_KEY_ROTATED": "API key rotated",
+      "OAUTH_REAUTHENTICATED": "OAuth re-authenticated",
+      "POLICY_CREATED": "Policy created",
+      "POLICY_UPDATED": "Policy updated",
+      "USER_ROLE_CHANGED": "Role changed",
+      "USER_INVITED": "User invited",
+      "BACKUP_MANUAL_TRIGGERED": "Manual backup triggered",
+      "RESTORE_JOB_TRIGGERED": "Restore triggered",
+      "RESTORE_JOB_COMPLETED": "Restore completed",
+      "DATA_BULK_UPDATED": "Bulk data update",
+      "DATA_EXPORT_REQUESTED": "Export requested",
+      "DATA_EXPORT_DOWNLOADED": "Export downloaded",
+      "BACKUP_RECORD_VIEWED": "Backup record viewed"
     }
   },
   "validation": {
     "backupNameRequired": "Backup name is required.",
+    "backupScopeRequired": "Select a backup scope.",
     "sourceRequired": "Please select a source.",
     "scheduleNameRequired": "Schedule name is required.",
     "scheduleNameMinLength": "Name must be at least 3 characters.",
@@ -471,7 +639,8 @@
     "exportNameRequired": "Export name is required.",
     "exportNameDuplicate": "An export with this name already exists.",
     "exportScopeRequired": "Scope is required.",
-    "exportScopeInvalid": "Invalid scope for this source.",
+    "invalidBackup": "Invalid or unavailable backup.",
+    "exportScopeInvalid": "Invalid scope for this backup.",
     "exportDateInvalid": "Invalid export date.",
     "restoreNameRequired": "Restore name is required.",
     "restoreNameDuplicate": "A restore with this name already exists.",
@@ -507,6 +676,7 @@
     "scheduleDeleted": "Schedule deleted.",
     "connectionSuccess": "Successfully connected to API {{source}}",
     "connectionFailure": "Connection failed: OAuth token expired",
+    "connectionFailureOAuth": "OAuth authentication failed — {{source}}: token expired or revoked",
     "exportPreparing": "Export \"{{name}}\" is being prepared…",
     "exportReady": "Export \"{{name}}\" is ready to download.",
     "exportStillPreparing": "The export is still being prepared.",

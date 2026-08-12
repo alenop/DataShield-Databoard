@@ -1,9 +1,12 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { Loader2, Pencil, Plug, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
 import type { BackupSource, BackupSourceStatus } from '../../types/backupSource.types'
 import type { SourceScope } from '../../types/sourceScope.types'
+import { ListSearchBar } from '../ui/ListSearchBar'
+import { filterByListSearchQuery } from '../../utils/listSearch.utils'
+import { getScopeLabel } from '../../utils/sourceScope.utils'
 import { EditSourceModal } from './EditSourceModal'
 import { ScopeBadges } from './ScopeBadges'
 import { ScopeListEditor } from './ScopeListEditor'
@@ -33,6 +36,23 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
   const [form, setForm] = useState<SourceFormState>(emptyForm)
   const [error, setError] = useState<string | null>(null)
   const [editingSource, setEditingSource] = useState<BackupSource | null>(null)
+  const [query, setQuery] = useState('')
+
+  const filteredSources = useMemo(
+    () =>
+      filterByListSearchQuery(sources, query, (source) => [
+        source.name,
+        source.environment,
+        source.apiEndpoint,
+        t(`status.source.${source.status}`),
+        ...source.scopes.map((scope) => getScopeLabel(scope, t)),
+      ]),
+    [sources, query, t],
+  )
+
+  const listCountLabel = query.trim()
+    ? t('pages.sources.matchingSources', { count: filteredSources.length, total: sources.length })
+    : t('common.countWithLabel', { label: t('pages.sources.configuredSources'), count: sources.length })
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -162,13 +182,28 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-          {t('common.countWithLabel', { label: t('pages.sources.configuredSources'), count: sources.length })}
-        </h2>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+              {t('pages.sources.configuredSources')}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{listCountLabel}</p>
+          </div>
+          <ListSearchBar
+            query={query}
+            onQueryChange={setQuery}
+            placeholder={t('pages.sources.searchPlaceholder')}
+            ariaLabel={t('pages.sources.searchAria')}
+          />
+        </div>
 
         {sources.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
             {t('pages.sources.noSources')}
+          </p>
+        ) : filteredSources.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            {t('pages.sources.noSearchResults')}
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
@@ -196,7 +231,7 @@ export function SourcesPage({ backupSources }: SourcesPageProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
-                {sources.map((source) => {
+                {filteredSources.map((source) => {
                   const isTesting = testingSourceId === source.id
 
                   return (

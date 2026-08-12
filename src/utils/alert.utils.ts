@@ -31,9 +31,10 @@ export function countAlertSummary(alerts: Alert[]): AlertSummary {
 
       if (alert.severity === 'critical') summary.critical += 1
       if (alert.severity === 'warning') summary.warning += 1
+      if (alert.severity === 'info') summary.info += 1
       return summary
     },
-    { critical: 0, warning: 0, resolved: 0 },
+    { critical: 0, warning: 0, info: 0, resolved: 0 },
   )
 }
 

@@ -5,6 +5,7 @@ import type { BackupRecordsState } from '../../hooks/useBackupRecords'
 import type { BackupSchedulesState } from '../../hooks/useBackupSchedules'
 import type { BackupSourcesState } from '../../hooks/useBackupSources'
 import type { AppSettingsState } from '../../hooks/useAppSettings'
+import type { SourceScope } from '../../types/sourceScope.types'
 import { useStopBackupConfirm } from '../../hooks/useStopBackupConfirm'
 import { paginateItems } from '../../utils/pagination.utils'
 import {
@@ -19,6 +20,7 @@ import { LaunchBackupModal } from '../dashboard/LaunchBackupModal'
 import { StopBackupConfirmModal } from '../ui/StopBackupConfirmModal'
 import { BackupPagination } from './BackupPagination'
 import { ScheduleBackupModal } from './ScheduleBackupModal'
+import { ScopeBadges } from '../sources/ScopeBadges'
 
 const BACKUPS_PAGE_SIZE = 5
 
@@ -69,10 +71,10 @@ export function BackupsPage({
     stopConfirm.requestStop(id, backup.name)
   }
 
-  const handleLaunchBackup = (name: string, sourceId: string) => {
+  const handleLaunchBackup = (name: string, sourceId: string, scopes: SourceScope[]) => {
     const source = backupSources.getSourceById(sourceId)
     if (!source) return
-    backupRecords.launchBackup({ name, source })
+    backupRecords.launchBackup({ name, source, scopes })
     setPage(1)
   }
 
@@ -147,6 +149,9 @@ export function BackupsPage({
                     {t('common.source')}
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
+                    {t('common.scope')}
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
                     {t('common.frequency')}
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
@@ -168,6 +173,9 @@ export function BackupsPage({
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                       {getSourceName(schedule.sourceId)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                      <ScopeBadges scopes={schedule.scopes} />
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                       {formatScheduleDescription(schedule)}
