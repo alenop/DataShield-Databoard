@@ -104,6 +104,31 @@ export function isValidBackupScopesForSource(
   return scopes.every((scope) => allowed.includes(scope))
 }
 
+export function getExportScopeOptions(backupScopes: SourceScope[]): SourceScope[] {
+  const scopes = normalizeScopes(backupScopes)
+
+  if (scopes.includes('full')) {
+    return [...SOURCE_SCOPES]
+  }
+
+  return SOURCE_SCOPES.filter((scope) => scopes.includes(scope))
+}
+
+export function isValidExportScopesForBackup(
+  backupScopes: SourceScope[],
+  scopes: SourceScope[],
+): boolean {
+  if (scopes.length === 0) return false
+
+  const allowed = getExportScopeOptions(backupScopes)
+
+  if (scopes.includes('full')) {
+    return scopes.length === 1 && allowed.includes('full')
+  }
+
+  return scopes.every((scope) => allowed.includes(scope))
+}
+
 /** @deprecated Use isValidBackupScopesForSource */
 export function isValidBackupScopeForSource(
   source: BackupSource,

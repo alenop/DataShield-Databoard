@@ -2,29 +2,29 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FileOutput, Loader2, Plus, ShieldCheck } from 'lucide-react'
 import type { DataExportsState } from '../../hooks/useDataExports'
-import type { BackupSourcesState } from '../../hooks/useBackupSources'
+import type { ExportBackupOption } from '../../types/dataExport.types'
 import type { ExportFormat, ExportStatus } from '../../types/dataExport.types'
 import { ListSearchBar } from '../ui/ListSearchBar'
 import { formatBackupDate } from '../../utils/backupFormatters'
-import { formatExportSize, formatExportDate } from '../../utils/dataExport.utils'
+import { formatExportSize, formatExportDate, formatLinkExpiration } from '../../utils/dataExport.utils'
 import { filterByListSearchQuery } from '../../utils/listSearch.utils'
-import { getScopeLabel } from '../../utils/sourceScope.utils'
+import { formatScopeLabels } from '../../utils/sourceScope.utils'
+import { ScopeBadges } from '../sources/ScopeBadges'
 import { NewExportModal } from './NewExportModal'
 
 interface ExportsPageProps {
   dataExports: DataExportsState
-  backupSources: BackupSourcesState
+  availableExportBackups: ExportBackupOption[]
 }
 
-export function ExportsPage({ dataExports, backupSources }: ExportsPageProps) {
+export function ExportsPage({ dataExports, availableExportBackups }: ExportsPageProps) {
   const { t } = useTranslation()
   const { exports, notification, createExport, downloadExport } = dataExports
-  const { sources } = backupSources
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [query, setQuery] = useState('')
 
-  const getSourceName = (sourceId: string) =>
-    sources.find((source) => source.id === sourceId)?.name ?? t('common.emptyDash')
+  const getBackupName = (id: string) =>
+    availableExportBackups.find((backup) => backup.id === id)?.name ?? t('common.emptyDash')
 
   const filteredExports = useMemo(
     () =>
@@ -32,11 +32,12 @@ export function ExportsPage({ dataExports, backupSources }: ExportsPageProps) {
         item.name,
         item.format,
         t(`formats.${item.format}`),
-        getScopeLabel(item.scope, t),
-        getSourceName(item.sourceId),
+        formatScopeLabels(item.scopes, t),
+        getBackupName(item.backupId),
+        formatLinkExpiration(item.linkExpiresAt, item.status),
         t(`status.export.${item.status}`),
       ]),
-    [exports, query, t, sources],
+    [exports, query, t, availableExportBackups],
   )
 
   const listCountLabel = query.trim()
@@ -125,7 +126,10 @@ export function ExportsPage({ dataExports, backupSources }: ExportsPageProps) {
                     {t('common.exportDate')}
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
-                    {t('common.source')}
+                    {t('common.backup')}
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
+                    {t('common.linkExpiresAt')}
                   </th>
                   <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700 dark:text-slate-300">
                     {t('common.status')}
@@ -158,13 +162,16 @@ export function ExportsPage({ dataExports, backupSources }: ExportsPageProps) {
                       )}
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                      {getScopeLabel(item.scope, t)}
+                      <ScopeBadges scopes={item.scopes} maxVisible={3} />
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                       {formatExportDate(item.exportDate)}
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                      {getSourceName(item.sourceId)}
+                      {getBackupName(item.backupId)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                      {formatLinkExpiration(item.linkExpiresAt, item.status)}
                     </td>
                     <td className="px-4 py-3">
                       <ExportStatusBadge status={item.status} />
@@ -189,7 +196,7 @@ export function ExportsPage({ dataExports, backupSources }: ExportsPageProps) {
 
       <NewExportModal
         isOpen={isModalOpen}
-        sources={sources}
+        backups={availableExportBackups}
         onClose={() => setIsModalOpen(false)}
         onCreate={createExport}
       />

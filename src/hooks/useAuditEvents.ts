@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { AuditEvent } from '../types/audit.types'
+import type { AuditEvent, AuditEventFilters } from '../types/audit.types'
+import { DEFAULT_AUDIT_FILTERS } from '../types/audit.types'
 import { AUDIT_EVENTS_STORAGE_KEY } from '../types/demoScenario.types'
 import { buildDemoScenarioPack } from '../data/demoScenarios'
-import { filterAuditEventsByQuery } from '../utils/auditFilters.utils'
+import {
+  buildAuditActorOptions,
+  filterAuditEventsByFilters,
+  filterAuditEventsByQuery,
+  hasActiveAuditFilters,
+} from '../utils/auditFilters.utils'
 import { sortAuditEventsByDateDesc } from '../utils/auditFormatters'
 import { getAuditActionLabel, normalizeAuditEvents } from '../utils/auditLogger.utils'
-import {
-  getStoredDemoScenarioSelection,
-} from '../utils/demoScenario.utils'
+import { getStoredDemoScenarioSelection } from '../utils/demoScenario.utils'
 
 function getAuditFallback(): AuditEvent[] {
   return buildDemoScenarioPack(getStoredDemoScenarioSelection()).auditEvents
@@ -30,6 +34,7 @@ function loadNormalizedAuditEvents(): AuditEvent[] {
 export function useAuditEvents() {
   const { t, i18n } = useTranslation()
   const [query, setQuery] = useState('')
+  const [filters, setFilters] = useState<AuditEventFilters>(DEFAULT_AUDIT_FILTERS)
   const [events, setEvents] = useState<AuditEvent[]>(loadNormalizedAuditEvents)
 
   useEffect(() => {
@@ -48,16 +53,34 @@ export function useAuditEvents() {
 
   const sortedEvents = useMemo(() => sortAuditEventsByDateDesc(events), [events])
 
-  const filteredEvents = useMemo(
-    () =>
-      filterAuditEventsByQuery(sortedEvents, query, (event) => getAuditActionLabel(event, t)),
-    [sortedEvents, query, t, i18n.language],
+  const actorOptions = useMemo(() => buildAuditActorOptions(sortedEvents), [sortedEvents])
+
+  const filteredEvents = useMemo(() => {
+    const byFilters = filterAuditEventsByFilters(sortedEvents, filters)
+    return filterAuditEventsByQuery(byFilters, query, (event) => getAuditActionLabel(event, t))
+  }, [sortedEvents, filters, query, t, i18n.language])
+
+  const resetFilters = useCallback(() => {
+    setFilters(DEFAULT_AUDIT_FILTERS)
+  }, [])
+
+  const updateFilter = useCallback(
+    <Key extends keyof AuditEventFilters>(key: Key, value: AuditEventFilters[Key]) => {
+      setFilters((previous) => ({ ...previous, [key]: value }))
+    },
+    [],
   )
 
   return {
     events: filteredEvents,
     query,
     setQuery,
+    filters,
+    setFilters,
+    updateFilter,
+    resetFilters,
+    hasActiveFilters: hasActiveAuditFilters(filters),
+    actorOptions,
     totalCount: sortedEvents.length,
     filteredCount: filteredEvents.length,
     appendEvent,

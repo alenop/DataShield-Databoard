@@ -1,41 +1,46 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
-import type { BackupSource } from '../../types/backupSource.types'
-import type { CreateDataExportInput, ExportFormat } from '../../types/dataExport.types'
+import type { CreateDataExportInput, ExportBackupOption, ExportFormat } from '../../types/dataExport.types'
 import { EXPORT_FORMATS } from '../../types/dataExport.types'
 import type { SourceScope } from '../../types/sourceScope.types'
+import { formatBackupDate } from '../../utils/backupFormatters'
 import { generateExportFileName, getTodayExportDate } from '../../utils/dataExport.utils'
-import { getScopeLabel } from '../../utils/sourceScope.utils'
+import { getExportScopeOptions } from '../../utils/sourceScope.utils'
+import { ScopeListEditor } from '../sources/ScopeListEditor'
 
 interface NewExportModalProps {
   isOpen: boolean
-  sources: BackupSource[]
+  backups: ExportBackupOption[]
   onClose: () => void
   onCreate: (input: CreateDataExportInput) => string | null
 }
 
-export function NewExportModal({ isOpen, sources, onClose, onCreate }: NewExportModalProps) {
-  const { t } = useTranslation()
+export function NewExportModal({ isOpen, backups, onClose, onCreate }: NewExportModalProps) {
+  const { t, i18n } = useTranslation()
   const [name, setName] = useState('')
   const [format, setFormat] = useState<ExportFormat>('csv')
-  const [sourceId, setSourceId] = useState('')
-  const [scope, setScope] = useState<SourceScope | ''>('')
+  const [backupId, setBackupId] = useState('')
+  const [scopes, setScopes] = useState<SourceScope[]>([])
   const [exportDate, setExportDate] = useState(getTodayExportDate())
   const [error, setError] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
-  const selectedSource = sources.find((source) => source.id === sourceId)
-  const availableScopes = selectedSource?.scopes ?? []
+  const selectedBackup = backups.find((backup) => backup.id === backupId)
+  const availableScopes = selectedBackup ? getExportScopeOptions(selectedBackup.scopes) : []
 
   useEffect(() => {
     if (!isOpen) return
 
-    const initialSource = sources[0]
+    const initialBackup = backups[0]
     setName(t('pages.exports.modal.defaultName'))
     setFormat('csv')
-    setSourceId(initialSource?.id ?? '')
-    setScope(initialSource?.scopes[0] ?? '')
+    setBackupId(initialBackup?.id ?? '')
+    setScopes(() => {
+      if (!initialBackup) return []
+      const options = getExportScopeOptions(initialBackup.scopes)
+      return options[0] ? [options[0]] : []
+    })
     setExportDate(getTodayExportDate())
     setError(null)
     nameInputRef.current?.focus()
@@ -46,34 +51,39 @@ export function NewExportModal({ isOpen, sources, onClose, onCreate }: NewExport
 
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen, sources, onClose, t])
+  }, [isOpen, backups, onClose, t])
 
   useEffect(() => {
-    if (!selectedSource) {
-      setScope('')
+    if (!selectedBackup) {
+      setScopes([])
       return
     }
 
-    setScope((current) => {
-      if (selectedSource.scopes.some((item) => item === current)) return current
-      return selectedSource.scopes[0] ?? ''
+    setScopes((current) => {
+      const options = getExportScopeOptions(selectedBackup.scopes)
+      const valid = current.filter((scope) => options.includes(scope))
+      if (valid.length > 0) return valid
+      return options[0] ? [options[0]] : []
     })
-  }, [selectedSource])
+  }, [selectedBackup])
 
   if (!isOpen) return null
 
-  const previewName = name.trim()
-    ? generateExportFileName(name, format)
-    : ''
+  const previewName = name.trim() ? generateExportFileName(name, format) : ''
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
 
+    if (scopes.length === 0) {
+      setError(t('validation.exportScopeRequired'))
+      return
+    }
+
     const validationError = onCreate({
       name: previewName || name,
       format,
-      sourceId,
-      scope: scope as SourceScope,
+      backupId,
+      scopes,
       exportDate,
     })
     if (validationError) {
@@ -122,120 +132,110 @@ export function NewExportModal({ isOpen, sources, onClose, onCreate }: NewExport
           {t('pages.exports.modal.description')}
         </p>
 
-        <div className="mt-4 space-y-4">
-          <div>
-            <label
-              htmlFor="export-name"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-            >
-              {t('pages.exports.modal.exportNameLabel')}
-            </label>
-            <input
-              ref={nameInputRef}
-              id="export-name"
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={t('pages.exports.modal.exportNamePlaceholder')}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-            />
-            {previewName && (
-              <p className="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400">
-                {t('common.file', { name: previewName })}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="export-date"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-            >
-              {t('pages.exports.modal.exportDateLabel')}
-            </label>
-            <input
-              id="export-date"
-              type="date"
-              value={exportDate}
-              onChange={(event) => setExportDate(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="export-format"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-            >
-              {t('common.format')}
-            </label>
-            <select
-              id="export-format"
-              value={format}
-              onChange={(event) => setFormat(event.target.value as ExportFormat)}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-            >
-              {EXPORT_FORMATS.map((item) => (
-                <option key={item} value={item}>
-                  {t(`formats.${item}`)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="export-source"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-            >
-              {t('common.source')}
-            </label>
-            <select
-              id="export-source"
-              value={sourceId}
-              onChange={(event) => setSourceId(event.target.value)}
-              disabled={sources.length === 0}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-            >
-              {sources.map((source) => (
-                <option key={source.id} value={source.id}>
-                  {source.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="export-scope"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-            >
-              {t('common.scope')}
-            </label>
-            <select
-              id="export-scope"
-              value={scope}
-              onChange={(event) => setScope(event.target.value as SourceScope)}
-              disabled={availableScopes.length === 0}
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-            >
-              {availableScopes.length === 0 ? (
-                <option value="">{t('pages.exports.modal.noScope')}</option>
-              ) : (
-                availableScopes.map((item) => (
-                  <option key={item} value={item}>
-                    {getScopeLabel(item, t)}
-                  </option>
-                ))
+        {backups.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+            {t('pages.exports.modal.noBackups')}
+          </p>
+        ) : (
+          <div className="mt-4 space-y-4">
+            <div>
+              <label
+                htmlFor="export-name"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                {t('pages.exports.modal.exportNameLabel')}
+              </label>
+              <input
+                ref={nameInputRef}
+                id="export-name"
+                type="text"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder={t('pages.exports.modal.exportNamePlaceholder')}
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+              {previewName && (
+                <p className="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400">
+                  {t('common.file', { name: previewName })}
+                </p>
               )}
-            </select>
-            {availableScopes.length === 0 && (
-              <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                {t('pages.exports.modal.noScopeHint')}
-              </p>
-            )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="export-date"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                {t('pages.exports.modal.exportDateLabel')}
+              </label>
+              <input
+                id="export-date"
+                type="date"
+                value={exportDate}
+                onChange={(event) => setExportDate(event.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="export-format"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                {t('common.format')}
+              </label>
+              <select
+                id="export-format"
+                value={format}
+                onChange={(event) => setFormat(event.target.value as ExportFormat)}
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              >
+                {EXPORT_FORMATS.map((item) => (
+                  <option key={item} value={item}>
+                    {t(`formats.${item}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="export-backup"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                {t('common.backup')}
+              </label>
+              <select
+                id="export-backup"
+                value={backupId}
+                onChange={(event) => setBackupId(event.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              >
+                {backups.map((backup) => (
+                  <option key={backup.id} value={backup.id}>
+                    {backup.name} — {formatBackupDate(backup.date, i18n.language)}
+                  </option>
+                ))}
+              </select>
+              {selectedBackup && (
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {t('common.source')}: {selectedBackup.sourceName}
+                </p>
+              )}
+            </div>
+
+            <ScopeListEditor
+              id="export-scopes"
+              scopes={scopes}
+              onChange={setScopes}
+              availableScopes={availableScopes}
+              disabled={availableScopes.length === 0}
+              label={t('pages.exports.modal.exportScopeLabel')}
+              hint={t('pages.exports.modal.exportScopeHint')}
+              requiredMessage={t('validation.exportScopeRequired')}
+            />
           </div>
-        </div>
+        )}
 
         {error && (
           <p className="mt-3 text-sm text-red-600 dark:text-red-400" role="alert">
@@ -253,7 +253,7 @@ export function NewExportModal({ isOpen, sources, onClose, onCreate }: NewExport
           </button>
           <button
             type="submit"
-            disabled={sources.length === 0 || availableScopes.length === 0}
+            disabled={backups.length === 0 || availableScopes.length === 0}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('pages.exports.modal.launch')}

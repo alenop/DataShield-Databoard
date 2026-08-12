@@ -10,22 +10,28 @@ export interface DataExport {
   format: ExportFormat
   sizeBytes: number
   status: ExportStatus
+  backupId: string
   sourceId: string
-  scope: SourceScope
+  scopes: SourceScope[]
   exportDate: string
   createdAt: string
+  linkExpiresAt: string | null
 }
 
 export interface CreateDataExportInput {
   name: string
   format: ExportFormat
-  sourceId: string
-  scope: SourceScope
+  backupId: string
+  scopes: SourceScope[]
   exportDate: string
 }
 
-export interface ExportSourceOption {
+export interface ExportBackupOption {
   id: string
+  name: string
+  sourceId: string
+  sourceName: string
+  date: string
   scopes: SourceScope[]
 }
 
@@ -53,3 +59,5 @@ export const EXPORT_FORMAT_EXTENSIONS: Record<ExportFormat, string> = {
 
 export const EXPORT_PREPARATION_MS = 6000
 
+/** Download link validity after export is ready (7 days). */
+export const EXPORT_LINK_TTL_MS = 7 * 24 * 60 * 60 * 1000

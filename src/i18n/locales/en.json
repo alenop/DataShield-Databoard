@@ -91,6 +91,7 @@
     "actions": "Actions",
     "name": "Name",
     "source": "Source",
+    "backup": "Backup",
     "date": "Date",
     "volume": "Volume",
     "duration": "Duration",
@@ -177,6 +178,7 @@
     "exportScopes": "Export scopes",
     "apiEndpoint": "API endpoint (HTTPS)",
     "exportDate": "Export date",
+    "linkExpiresAt": "Link expiration",
     "exportName": "Export name",
     "backupName": "Backup name",
     "scheduleName": "Schedule name",
@@ -378,20 +380,21 @@
       "newExport": "New on-demand export",
       "history": "Export history",
       "noExports": "No exports yet. Start a new on-demand export.",
-      "searchPlaceholder": "Search by name, source, scope…",
+      "searchPlaceholder": "Search by name, backup, scope…",
       "searchAria": "Search exports",
       "noSearchResults": "No exports match your search.",
       "matchingExports_one": "{{count}} matching export of {{total}}",
       "matchingExports_other": "{{count}} matching exports of {{total}}",
       "modal": {
         "title": "New on-demand export",
-        "description": "Generate an export for external analysis or data migration.",
+        "description": "Choose a successful backup and the scopes to export.",
         "defaultName": "Export_Contacts_Salesforce",
         "exportNameLabel": "Export name",
         "exportNamePlaceholder": "e.g. Export_Contacts_Salesforce_Q2",
         "exportDateLabel": "Export date",
-        "noScope": "No scope configured",
-        "noScopeHint": "Add scopes to the source from the Sources page.",
+        "exportScopeLabel": "Export scopes",
+        "exportScopeHint": "Select one or more scopes included in the backup (never more than the backup).",
+        "noBackups": "No successful backups available for export.",
         "launch": "Start export"
       }
     },
@@ -509,12 +512,63 @@
       "title": "Audit log",
       "subtitle": "Critical actions only: authentication, configuration, data operations, and sensitive data access.",
       "events": "Events",
-      "noEvents": "No events match your search.",
+      "noEvents": "No events match your search or filters.",
       "searchPlaceholder": "Search by user, action, or status…",
-      "searchAria": "Search audit log"
+      "searchAria": "Search audit log",
+      "toggleDetails": "Show event details: {{action}}",
+      "filters": {
+        "title": "Filters",
+        "reset": "Reset filters",
+        "date": "Date range",
+        "datePresets": {
+          "all": "All dates",
+          "today": "Today",
+          "last_7_days": "Last 7 days",
+          "last_30_days": "Last 30 days",
+          "last_3_months": "Last 3 months"
+        },
+        "actor": "Actor / User",
+        "actorSearchPlaceholder": "Search users…",
+        "actorSearchAria": "Filter actor list",
+        "allActors": "All users",
+        "actionType": "Action type",
+        "allActions": "All actions",
+        "severity": "Result status",
+        "severityOptions": {
+          "all": "All statuses",
+          "success": "Success",
+          "failure": "Failure / Denied",
+          "warning": "Warning"
+        },
+        "resourceType": "Resource type",
+        "allResources": "All resources"
+      },
+      "details": {
+        "actionCode": "Action code",
+        "category": "Category",
+        "resourceType": "Resource type",
+        "actorEmail": "Actor email",
+        "status": "Raw status",
+        "metadata": "Metadata"
+      }
     }
   },
   "audit": {
+    "actionGroups": {
+      "auth": "Authentication",
+      "sources": "Sources",
+      "security": "Security & Secrets",
+      "backups": "Backups & Restores",
+      "exports": "Exports & Data",
+      "policies": "Policies & Users"
+    },
+    "resourceTypes": {
+      "DATA_SOURCE": "Data source",
+      "BACKUP_POLICY": "Backup policy",
+      "RESTORE_JOB": "Restore job",
+      "DATA_EXPORT": "Data export",
+      "USER_ACCOUNT": "User account"
+    },
     "categories": {
       "auth": "Authentication & access",
       "config": "Configuration",
@@ -529,6 +583,8 @@
       "SOURCE_CREATED": "Source created — « {{name}} »",
       "SOURCE_UPDATED": "Source updated — « {{name}} »",
       "SOURCE_DELETED": "Source deleted — « {{name}} »",
+      "API_KEY_ROTATED": "API key rotated — {{name}}",
+      "OAUTH_REAUTHENTICATED": "OAuth re-authenticated — {{name}}",
       "POLICY_CREATED": "Policy created — « {{name}} »",
       "POLICY_UPDATED": "Policy updated — « {{name}} »",
       "USER_ROLE_CHANGED": "Role changed — {{name}} ({{role}})",
@@ -540,6 +596,28 @@
       "DATA_EXPORT_REQUESTED": "Export requested — {{name}}",
       "DATA_EXPORT_DOWNLOADED": "Export downloaded — {{name}}",
       "BACKUP_RECORD_VIEWED": "Backup record viewed — {{name}}"
+    },
+    "actionFilters": {
+      "LOGIN_SUCCESS": "Successful login",
+      "LOGIN_FAILED": "Failed login",
+      "LOGOUT": "Logout",
+      "PASSWORD_RESET": "Password reset",
+      "SOURCE_CREATED": "Source created",
+      "SOURCE_UPDATED": "Source updated",
+      "SOURCE_DELETED": "Source deleted",
+      "API_KEY_ROTATED": "API key rotated",
+      "OAUTH_REAUTHENTICATED": "OAuth re-authenticated",
+      "POLICY_CREATED": "Policy created",
+      "POLICY_UPDATED": "Policy updated",
+      "USER_ROLE_CHANGED": "Role changed",
+      "USER_INVITED": "User invited",
+      "BACKUP_MANUAL_TRIGGERED": "Manual backup triggered",
+      "RESTORE_JOB_TRIGGERED": "Restore triggered",
+      "RESTORE_JOB_COMPLETED": "Restore completed",
+      "DATA_BULK_UPDATED": "Bulk data update",
+      "DATA_EXPORT_REQUESTED": "Export requested",
+      "DATA_EXPORT_DOWNLOADED": "Export downloaded",
+      "BACKUP_RECORD_VIEWED": "Backup record viewed"
     }
   },
   "validation": {
@@ -561,7 +639,8 @@
     "exportNameRequired": "Export name is required.",
     "exportNameDuplicate": "An export with this name already exists.",
     "exportScopeRequired": "Scope is required.",
-    "exportScopeInvalid": "Invalid scope for this source.",
+    "invalidBackup": "Invalid or unavailable backup.",
+    "exportScopeInvalid": "Invalid scope for this backup.",
     "exportDateInvalid": "Invalid export date.",
     "restoreNameRequired": "Restore name is required.",
     "restoreNameDuplicate": "A restore with this name already exists.",

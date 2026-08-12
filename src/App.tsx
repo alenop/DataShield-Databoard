@@ -66,6 +66,7 @@ import { buildNavigationItems } from './utils/navigationBadges.utils'
 import { localizeNavigationItems } from './utils/navigationI18n.utils'
 
 import { buildRestoreBackupOptions } from './utils/backupRecord.utils'
+import { buildExportBackupOptions } from './utils/dataExport.utils'
 import { createAuditLogger } from './utils/auditLogger.utils'
 
 
@@ -94,8 +95,9 @@ function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
     () =>
       createAuditLogger(auditEvents.appendEvent, {
         actor: currentUser.name,
+        actorEmail: currentUser.email,
       }),
-    [auditEvents.appendEvent, currentUser.name],
+    [auditEvents.appendEvent, currentUser.name, currentUser.email],
   )
 
   const backupSources = useBackupSources({ logAudit })
@@ -127,13 +129,12 @@ function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
 
   const alertsState = useAlerts()
 
-  const dataExports = useDataExports(
-    backupSources.sources.map((source) => ({
-      id: source.id,
-      scopes: source.scopes,
-    })),
-    logAudit,
+  const availableExportBackups = useMemo(
+    () => buildExportBackupOptions(backupRecords.records, backupSources.sources),
+    [backupRecords.records, backupSources.sources],
   )
+
+  const dataExports = useDataExports(availableExportBackups, logAudit)
 
   const availableRestoreBackups = useMemo(
     () => buildRestoreBackupOptions(backupRecords.records, backupSources.sources),
@@ -333,7 +334,10 @@ function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
 
           ) : showExports ? (
 
-            <ExportsPage dataExports={dataExports} backupSources={backupSources} />
+            <ExportsPage
+              dataExports={dataExports}
+              availableExportBackups={availableExportBackups}
+            />
 
           ) : showImports ? (
 

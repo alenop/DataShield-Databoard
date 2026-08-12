@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react'
-import type { ExportSourceOption } from '../types/dataExport.types'
+import type { ExportBackupOption } from '../types/dataExport.types'
 import { EXPORTS_STORAGE_KEY, useDataExports } from './useDataExports'
 
 describe('useDataExports', () => {
@@ -12,28 +12,32 @@ describe('useDataExports', () => {
     jest.useRealTimers()
   })
 
-  const sources: ExportSourceOption[] = [
+  const backups: ExportBackupOption[] = [
     {
-      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      id: 'BAK-1001',
+      name: 'Backup Contacts',
+      sourceId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      sourceName: 'Salesforce Production Core',
+      date: '2026-08-07T06:00:00',
       scopes: ['contacts', 'opportunities'],
     },
   ]
 
   it('loads default exports', () => {
-    const { result } = renderHook(() => useDataExports(sources))
+    const { result } = renderHook(() => useDataExports(backups))
     expect(result.current.exports.length).toBeGreaterThan(0)
   })
 
   it('creates a preparing export that becomes ready', () => {
-    const { result } = renderHook(() => useDataExports(sources))
+    const { result } = renderHook(() => useDataExports(backups))
     const initialCount = result.current.exports.length
 
     act(() => {
       const error = result.current.createExport({
         name: 'Export_Test_Q3.csv',
         format: 'csv',
-        sourceId: sources[0].id,
-        scope: 'contacts',
+        backupId: backups[0].id,
+        scopes: ['contacts'],
         exportDate: '2026-08-07',
       })
       expect(error).toBeNull()
@@ -41,7 +45,8 @@ describe('useDataExports', () => {
 
     expect(result.current.exports).toHaveLength(initialCount + 1)
     expect(result.current.exports[0].status).toBe('preparing')
-    expect(result.current.exports[0].scope).toBe('contacts')
+    expect(result.current.exports[0].scopes).toEqual(['contacts'])
+    expect(result.current.exports[0].backupId).toBe('BAK-1001')
 
     act(() => {
       jest.advanceTimersByTime(6000)
@@ -52,7 +57,7 @@ describe('useDataExports', () => {
   })
 
   it('allows download only for ready exports', () => {
-    const { result } = renderHook(() => useDataExports(sources))
+    const { result } = renderHook(() => useDataExports(backups))
     const readyExport = result.current.exports.find((item) => item.status === 'ready')
     expect(readyExport).toBeDefined()
 
@@ -65,14 +70,14 @@ describe('useDataExports', () => {
   })
 
   it('persists exports to localStorage', () => {
-    const { result } = renderHook(() => useDataExports(sources))
+    const { result } = renderHook(() => useDataExports(backups))
 
     act(() => {
       result.current.createExport({
         name: 'Export_Persist',
         format: 'json',
-        sourceId: sources[0].id,
-        scope: 'contacts',
+        backupId: backups[0].id,
+        scopes: ['contacts'],
         exportDate: '2026-08-07',
       })
     })

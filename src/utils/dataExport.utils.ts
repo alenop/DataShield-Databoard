@@ -1,12 +1,46 @@
 import i18n from '../i18n'
+import type { BackupRecord } from '../types/backup.types'
+import type { BackupSource } from '../types/backupSource.types'
 import type {
   CreateDataExportInput,
   DataExport,
+  ExportBackupOption,
   ExportFormat,
-  ExportSourceOption,
 } from '../types/dataExport.types'
-import { EXPORT_FORMAT_EXTENSIONS } from '../types/dataExport.types'
-import { normalizeScope } from './sourceScope.utils'
+import { EXPORT_FORMAT_EXTENSIONS, EXPORT_LINK_TTL_MS } from '../types/dataExport.types'
+import type { SourceScope } from '../types/sourceScope.types'
+import { resolveBackupSourceId } from './backupRecord.utils'
+import {
+  getExportScopeOptions,
+  isValidExportScopesForBackup,
+  normalizeScopes,
+  sortScopes,
+} from './sourceScope.utils'
+
+export function buildExportBackupOptions(
+  records: BackupRecord[],
+  sources: BackupSource[],
+): ExportBackupOption[] {
+  return records
+    .filter((backup) => backup.status === 'success')
+    .flatMap((backup) => {
+      const sourceId = resolveBackupSourceId(backup, sources)
+      if (!sourceId) return []
+
+      const source = sources.find((item) => item.id === sourceId)
+
+      return [
+        {
+          id: backup.id,
+          name: backup.name,
+          sourceId,
+          sourceName: source?.name ?? backup.source,
+          date: backup.date,
+          scopes: backup.scopes,
+        },
+      ]
+    })
+}
 
 export function formatExportSize(sizeBytes: number): string {
   if (sizeBytes <= 0) return '—'
@@ -39,6 +73,36 @@ export function formatExportDate(exportDate: string): string {
   return `${day}/${month}/${year}`
 }
 
+export function computeExportLinkExpiresAt(
+  createdAt: string,
+  status: DataExport['status'],
+  explicit?: string | null,
+): string | null {
+  if (explicit !== undefined) return explicit
+  if (status === 'preparing') return null
+
+  const base = new Date(createdAt)
+  if (Number.isNaN(base.getTime())) return null
+
+  return new Date(base.getTime() + EXPORT_LINK_TTL_MS).toISOString()
+}
+
+export function formatLinkExpiration(iso: string | null, status: DataExport['status']): string {
+  if (status === 'preparing') return '—'
+  if (!iso) return '—'
+
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return '—'
+
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  return `${day}/${month}/${year} ${hours}:${minutes}`
+}
+
 export function getTodayExportDate(): string {
   const now = new Date()
   const year = now.getFullYear()
@@ -50,7 +114,7 @@ export function getTodayExportDate(): string {
 export function validateCreateExportInput(
   input: CreateDataExportInput,
   existingNames: string[],
-  sources: ExportSourceOption[],
+  backups: ExportBackupOption[],
 ): string | null {
   const name = input.name.trim()
   if (!name) return i18n.t('validation.exportNameRequired')
@@ -60,12 +124,10 @@ export function validateCreateExportInput(
     return i18n.t('validation.exportNameDuplicate')
   }
 
-  const source = sources.find((item) => item.id === input.sourceId)
-  if (!source) return i18n.t('validation.invalidSource')
+  const backup = backups.find((item) => item.id === input.backupId)
+  if (!backup) return i18n.t('validation.invalidBackup')
 
-  const scope = input.scope
-  if (!scope) return i18n.t('validation.exportScopeRequired')
-  if (!source.scopes.includes(scope)) {
+  if (!isValidExportScopesForBackup(backup.scopes, input.scopes)) {
     return i18n.t('validation.exportScopeInvalid')
   }
 
@@ -76,17 +138,24 @@ export function validateCreateExportInput(
   return null
 }
 
-export function createDataExport(input: CreateDataExportInput): DataExport {
+export function createDataExport(
+  input: CreateDataExportInput,
+  backups: ExportBackupOption[],
+): DataExport {
+  const backup = backups.find((item) => item.id === input.backupId)
+
   return {
     id: crypto.randomUUID(),
     name: generateExportFileName(input.name, input.format),
     format: input.format,
     sizeBytes: 0,
     status: 'preparing',
-    sourceId: input.sourceId,
-    scope: input.scope,
+    backupId: input.backupId,
+    sourceId: backup?.sourceId ?? '',
+    scopes: sortScopes(input.scopes),
     exportDate: input.exportDate.trim(),
     createdAt: new Date().toISOString(),
+    linkExpiresAt: null,
   }
 }
 
@@ -100,6 +169,7 @@ export function simulateExportSizeBytes(): number {
 export function parseStoredDataExports(
   stored: string | null,
   fallback: DataExport[],
+  backups: ExportBackupOption[] = [],
 ): DataExport[] {
   if (!stored) return fallback
 
@@ -108,7 +178,7 @@ export function parseStoredDataExports(
     if (!Array.isArray(parsed)) return fallback
 
     const normalized = parsed
-      .map(normalizeDataExport)
+      .map((item) => normalizeDataExport(item, backups))
       .filter((item): item is DataExport => item !== null)
 
     return normalized.length > 0 ? normalized : fallback
@@ -125,22 +195,57 @@ function isExportStatus(value: string): value is DataExport['status'] {
   return value === 'ready' || value === 'preparing' || value === 'expired'
 }
 
-function normalizeDataExport(raw: unknown): DataExport | null {
+function readExportScopes(record: Partial<DataExport> & { scope?: SourceScope }): SourceScope[] {
+  if (Array.isArray(record.scopes) && record.scopes.length > 0) {
+    return normalizeScopes(record.scopes)
+  }
+
+  if (record.scope) {
+    return [record.scope]
+  }
+
+  return []
+}
+
+function normalizeDataExport(
+  raw: unknown,
+  backups: ExportBackupOption[],
+): DataExport | null {
   if (!raw || typeof raw !== 'object') return null
 
-  const record = raw as Partial<DataExport>
+  const record = raw as Partial<DataExport> & { scope?: SourceScope }
   const name = record.name?.trim()
   const format = record.format
-  const sourceId = record.sourceId?.trim()
   const createdAt = record.createdAt?.trim()
-  const scope = normalizeScope(record.scope)
   const exportDate =
     record.exportDate?.trim() ||
     (createdAt ? createdAt.slice(0, 10) : getTodayExportDate())
 
-  if (!name || !format || !isExportFormat(format) || !sourceId || !createdAt) return null
+  if (!name || !format || !isExportFormat(format) || !createdAt) return null
+
+  const backupId = record.backupId?.trim()
+  const backup = backupId ? backups.find((item) => item.id === backupId) : undefined
+  const sourceId = record.sourceId?.trim() || backup?.sourceId || ''
+  const rawScopes = readExportScopes(record)
+  const scopes: SourceScope[] =
+    rawScopes.length > 0
+      ? sortScopes(
+          rawScopes.filter((scope) =>
+            backup ? getExportScopeOptions(backup.scopes).includes(scope) : true,
+          ),
+        )
+      : backup
+        ? [getExportScopeOptions(backup.scopes)[0] ?? 'full']
+        : ['full']
+
+  if (!backupId && !sourceId) return null
 
   const status = record.status && isExportStatus(record.status) ? record.status : 'ready'
+  const linkExpiresAt = computeExportLinkExpiresAt(
+    createdAt,
+    status,
+    record.linkExpiresAt ?? undefined,
+  )
 
   return {
     id: record.id?.trim() || crypto.randomUUID(),
@@ -148,10 +253,11 @@ function normalizeDataExport(raw: unknown): DataExport | null {
     format,
     sizeBytes: typeof record.sizeBytes === 'number' ? record.sizeBytes : 0,
     status,
+    backupId: backupId ?? '',
     sourceId,
-    scope,
+    scopes,
     exportDate,
     createdAt,
+    linkExpiresAt,
   }
 }
-

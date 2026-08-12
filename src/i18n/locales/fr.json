@@ -91,6 +91,7 @@
     "actions": "Actions",
     "name": "Nom",
     "source": "Source",
+    "backup": "Sauvegarde",
     "date": "Date",
     "volume": "Volume",
     "duration": "Durée",
@@ -177,6 +178,7 @@
     "exportScopes": "Périmètres d'export",
     "apiEndpoint": "Endpoint API (HTTPS)",
     "exportDate": "Date de l'export",
+    "linkExpiresAt": "Expiration du lien",
     "exportName": "Nom de l'export",
     "backupName": "Nom de la sauvegarde",
     "scheduleName": "Nom de la planification",
@@ -378,20 +380,21 @@
       "newExport": "Nouvel export à la demande",
       "history": "Historique des exports",
       "noExports": "Aucun export généré. Lancez un nouvel export à la demande.",
-      "searchPlaceholder": "Rechercher par nom, source, périmètre…",
+      "searchPlaceholder": "Rechercher par nom, sauvegarde, périmètre…",
       "searchAria": "Rechercher un export",
       "noSearchResults": "Aucun export ne correspond à votre recherche.",
       "matchingExports_one": "{{count}} export correspondant sur {{total}}",
       "matchingExports_other": "{{count}} exports correspondants sur {{total}}",
       "modal": {
         "title": "Nouvel export à la demande",
-        "description": "Générez un export pour analyse externe ou migration de données.",
+        "description": "Choisissez une sauvegarde réussie et les périmètres à exporter.",
         "defaultName": "Export_Contacts_Salesforce",
         "exportNameLabel": "Nom de l'export",
         "exportNamePlaceholder": "Ex. Export_Contacts_Salesforce_Q2",
         "exportDateLabel": "Date de l'export",
-        "noScope": "Aucun périmètre configuré",
-        "noScopeHint": "Ajoutez des périmètres à la source depuis la page Sources.",
+        "exportScopeLabel": "Périmètres d'export",
+        "exportScopeHint": "Sélectionnez un ou plusieurs périmètres inclus dans la sauvegarde (jamais plus que la sauvegarde).",
+        "noBackups": "Aucune sauvegarde réussie disponible pour l'export.",
         "launch": "Lancer l'export"
       }
     },
@@ -509,12 +512,63 @@
       "title": "Journal d'audit",
       "subtitle": "Traçabilité des actions critiques uniquement : authentification, configuration, opérations sur les données et accès sensibles.",
       "events": "Événements",
-      "noEvents": "Aucun événement ne correspond à votre recherche.",
+      "noEvents": "Aucun événement ne correspond à votre recherche ou à vos filtres.",
       "searchPlaceholder": "Rechercher par utilisateur, action ou statut…",
-      "searchAria": "Rechercher dans le journal d'audit"
+      "searchAria": "Rechercher dans le journal d'audit",
+      "toggleDetails": "Afficher le détail de l'événement : {{action}}",
+      "filters": {
+        "title": "Filtres",
+        "reset": "Réinitialiser les filtres",
+        "date": "Période",
+        "datePresets": {
+          "all": "Toutes les dates",
+          "today": "Aujourd'hui",
+          "last_7_days": "7 derniers jours",
+          "last_30_days": "30 derniers jours",
+          "last_3_months": "3 derniers mois"
+        },
+        "actor": "Acteur / Utilisateur",
+        "actorSearchPlaceholder": "Rechercher un utilisateur…",
+        "actorSearchAria": "Filtrer la liste des acteurs",
+        "allActors": "Tous les utilisateurs",
+        "actionType": "Type d'action",
+        "allActions": "Toutes les actions",
+        "severity": "Statut du résultat",
+        "severityOptions": {
+          "all": "Tous les statuts",
+          "success": "Succès",
+          "failure": "Échec / Refusé",
+          "warning": "Avertissement"
+        },
+        "resourceType": "Type de ressource",
+        "allResources": "Toutes les ressources"
+      },
+      "details": {
+        "actionCode": "Code action",
+        "category": "Catégorie",
+        "resourceType": "Type de ressource",
+        "actorEmail": "E-mail acteur",
+        "status": "Statut brut",
+        "metadata": "Métadonnées"
+      }
     }
   },
   "audit": {
+    "actionGroups": {
+      "auth": "Authentification",
+      "sources": "Sources",
+      "security": "Sécurité & Secrets",
+      "backups": "Sauvegardes & Restaurations",
+      "exports": "Exports & Données",
+      "policies": "Politiques & Utilisateurs"
+    },
+    "resourceTypes": {
+      "DATA_SOURCE": "Source de données",
+      "BACKUP_POLICY": "Politique de sauvegarde",
+      "RESTORE_JOB": "Restauration",
+      "DATA_EXPORT": "Export de données",
+      "USER_ACCOUNT": "Compte utilisateur"
+    },
     "categories": {
       "auth": "Authentification & accès",
       "config": "Configuration",
@@ -529,6 +583,8 @@
       "SOURCE_CREATED": "Création de la source « {{name}} »",
       "SOURCE_UPDATED": "Modification de la source « {{name}} »",
       "SOURCE_DELETED": "Suppression de la source « {{name}} »",
+      "API_KEY_ROTATED": "Rotation de clé API — {{name}}",
+      "OAUTH_REAUTHENTICATED": "Ré-authentification OAuth — {{name}}",
       "POLICY_CREATED": "Création de la politique « {{name}} »",
       "POLICY_UPDATED": "Modification de la politique « {{name}} »",
       "USER_ROLE_CHANGED": "Changement de rôle — {{name}} ({{role}})",
@@ -540,6 +596,28 @@
       "DATA_EXPORT_REQUESTED": "Demande d'export — {{name}}",
       "DATA_EXPORT_DOWNLOADED": "Téléchargement d'export — {{name}}",
       "BACKUP_RECORD_VIEWED": "Consultation du détail de sauvegarde — {{name}}"
+    },
+    "actionFilters": {
+      "LOGIN_SUCCESS": "Connexion réussie",
+      "LOGIN_FAILED": "Connexion échouée",
+      "LOGOUT": "Déconnexion",
+      "PASSWORD_RESET": "Réinitialisation de mot de passe",
+      "SOURCE_CREATED": "Création de source",
+      "SOURCE_UPDATED": "Modification de source",
+      "SOURCE_DELETED": "Suppression de source",
+      "API_KEY_ROTATED": "Rotation de clé API",
+      "OAUTH_REAUTHENTICATED": "Ré-authentification OAuth",
+      "POLICY_CREATED": "Création de politique",
+      "POLICY_UPDATED": "Modification de politique",
+      "USER_ROLE_CHANGED": "Changement de rôle",
+      "USER_INVITED": "Invitation utilisateur",
+      "BACKUP_MANUAL_TRIGGERED": "Sauvegarde manuelle lancée",
+      "RESTORE_JOB_TRIGGERED": "Restauration lancée",
+      "RESTORE_JOB_COMPLETED": "Restauration terminée",
+      "DATA_BULK_UPDATED": "Mise à jour en masse des données",
+      "DATA_EXPORT_REQUESTED": "Demande d'export",
+      "DATA_EXPORT_DOWNLOADED": "Téléchargement d'export",
+      "BACKUP_RECORD_VIEWED": "Consultation du détail de sauvegarde"
     }
   },
   "validation": {
@@ -561,7 +639,8 @@
     "exportNameRequired": "Le nom de l'export est requis.",
     "exportNameDuplicate": "Un export avec ce nom existe déjà.",
     "exportScopeRequired": "Le périmètre est requis.",
-    "exportScopeInvalid": "Périmètre invalide pour cette source.",
+    "invalidBackup": "Sauvegarde invalide ou indisponible.",
+    "exportScopeInvalid": "Périmètre invalide pour cette sauvegarde.",
     "exportDateInvalid": "La date d'export est invalide.",
     "restoreNameRequired": "Le nom de la restauration est requis.",
     "restoreNameDuplicate": "Une restauration avec ce nom existe déjà.",

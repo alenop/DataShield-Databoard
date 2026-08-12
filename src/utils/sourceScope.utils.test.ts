@@ -1,6 +1,8 @@
 import {
   getBackupScopeOptions,
+  getExportScopeOptions,
   isValidBackupScopesForSource,
+  isValidExportScopesForBackup,
   normalizeScope,
   normalizeScopes,
   resolveScopeKey,
@@ -69,5 +71,20 @@ describe('isValidBackupScopesForSource', () => {
   it('rejects empty scope selection', () => {
     const source = defaultBackupSources[0]
     expect(isValidBackupScopesForSource(source, [])).toBe(false)
+  })
+})
+
+describe('getExportScopeOptions', () => {
+  it('returns backup scopes for partial backups', () => {
+    expect(getExportScopeOptions(['accounts', 'contacts'])).toEqual(['contacts', 'accounts'])
+  })
+})
+
+describe('isValidExportScopesForBackup', () => {
+  it('accepts multiple scopes within backup limits', () => {
+    expect(isValidExportScopesForBackup(['accounts', 'contacts'], ['accounts', 'contacts'])).toBe(
+      true,
+    )
+    expect(isValidExportScopesForBackup(['contacts'], ['accounts'])).toBe(false)
   })
 })
