@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { AuditPage } from './components/audit/AuditPage'
@@ -6,6 +6,8 @@ import { AuditPage } from './components/audit/AuditPage'
 import { AlertsPage } from './components/alerts/AlertsPage'
 
 import { BackupsPage } from './components/backups/BackupsPage'
+
+import { DemoGuidePage } from './components/demo/DemoGuidePage'
 
 import { DashboardPage } from './components/dashboard/DashboardPage'
 
@@ -57,7 +59,8 @@ import { useTheme } from './hooks/useTheme'
 
 import { useUsers } from './hooks/useUsers'
 
-import type { DemoCurrentUser } from './types/demoScenario.types'
+import type { DemoCurrentUser, DemoScenarioId } from './types/demoScenario.types'
+import { DEMO_LAUNCH_PAGE_KEY } from './types/demoGuide.types'
 
 import { isNavGroup } from './types/navigation.types'
 
@@ -81,11 +84,28 @@ interface AppContentProps {
 
 }
 
+function readPendingLaunchPage(): string | undefined {
+  const pending = sessionStorage.getItem(DEMO_LAUNCH_PAGE_KEY)
+  if (!pending) return undefined
+  sessionStorage.removeItem(DEMO_LAUNCH_PAGE_KEY)
+  return pending
+}
+
 
 
 function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
 
   const { t, i18n } = useTranslation()
+
+  const [initialNavPage] = useState(() => readPendingLaunchPage() ?? 'dashboard')
+
+  const handleLaunchDemoScenario = useCallback(
+    (scenarioId: DemoScenarioId, startPageId: string) => {
+      sessionStorage.setItem(DEMO_LAUNCH_PAGE_KEY, startPageId)
+      demoScenario.switchScenario(scenarioId)
+    },
+    [demoScenario],
+  )
 
   const appSettings = useAppSettings()
 
@@ -196,7 +216,7 @@ function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
 
     items: navigationItems,
 
-    defaultActiveId: 'dashboard',
+    defaultActiveId: initialNavPage,
 
   })
 
@@ -213,6 +233,8 @@ function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
 
 
   const showDashboard = activeId === 'dashboard'
+
+  const showDemoGuide = activeId === 'demo'
 
   const showBackups = activeId === 'backups'
 
@@ -282,6 +304,15 @@ function AppContent({ demoScenario, currentUser, theme }: AppContentProps) {
 
               demoScenario={demoScenario}
 
+              onOpenDemoGuide={() => navigation.selectItem('demo')}
+
+            />
+
+          ) : showDemoGuide ? (
+
+            <DemoGuidePage
+              demoScenario={demoScenario}
+              onLaunchScenario={handleLaunchDemoScenario}
             />
 
           ) : showBackups ? (

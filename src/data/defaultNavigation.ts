@@ -8,6 +8,12 @@ export const defaultNavigationItems: NavItem[] = [
     href: '/dashboard',
   },
   {
+    id: 'demo',
+    label: 'Guide de démo',
+    icon: 'circle-play',
+    href: '/demo',
+  },
+  {
     id: 'alerts',
     label: 'Alertes',
     icon: 'bell',

@@ -25,6 +25,7 @@ interface DashboardPageProps {
   restoreJobs: RestoreJobsState
   availableRestoreBackups: RestoreBackupOption[]
   demoScenario: DemoScenarioState
+  onOpenDemoGuide?: () => void
 }
 
 export function DashboardPage({
@@ -34,6 +35,7 @@ export function DashboardPage({
   restoreJobs,
   availableRestoreBackups,
   demoScenario,
+  onOpenDemoGuide,
 }: DashboardPageProps) {
   const { t } = useTranslation()
 
@@ -66,7 +68,7 @@ export function DashboardPage({
 
   return (
     <div className="space-y-6">
-      <DemoScenarioSwitcher demoScenario={demoScenario} />
+      <DemoScenarioSwitcher demoScenario={demoScenario} onOpenDemoGuide={onOpenDemoGuide} />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>

@@ -1,6 +1,7 @@
 {
   "nav": {
     "dashboard": "Dashboard",
+    "demo": "Demo guide",
     "alerts": "Alerts",
     "data": "Data",
     "backups": "Backups",
@@ -40,6 +41,7 @@
   "demo": {
     "label": "Demo mode",
     "selectLabel": "Choose a demonstration scenario",
+    "openGuide": "Open demo guide",
     "persona": "Persona: {{name}} — {{role}}",
     "audit": {
       "restoreCompleted": "Restore « {{name}} » completed successfully"
@@ -301,6 +303,72 @@
       "launchBackup": "Start backup",
       "restore": "Restore",
       "emptyBackups": "No backups match the selected filters."
+    },
+    "demoGuide": {
+      "title": "Demo guide",
+      "subtitle": "Three business walkthroughs to showcase DataShield for CRM administration, security operations, and compliance audiences.",
+      "intro": "Pick a scenario, read the context and suggested path, then click \"Launch this scenario\" to switch persona and open the most relevant page automatically.",
+      "suggestedPath": "Suggested path",
+      "keyPoints": "Key points to highlight",
+      "estimatedDuration": "~{{minutes}} min",
+      "activeScenario": "Active",
+      "launchScenario": "Launch this scenario",
+      "scenarios": {
+        "admin": {
+          "title": "Scenario 1 — Urgent restore (CRM Admin)",
+          "persona": "Alex Martin — Salesforce Super Admin",
+          "context": "Production just received a Data Loader update. You must quickly restore Contacts from yesterday's 11 PM restore point, with full audit traceability.",
+          "steps": {
+            "1": "Review the dashboard and recent backups",
+            "2": "Open Backups and locate \"Sauvegarde Contacts Production\"",
+            "3": "Verify the Contacts scope and launch a targeted restore",
+            "4": "Track restore progress under Imports",
+            "5": "Review the audit log (restore action, actor, status)"
+          },
+          "highlights": {
+            "1": "Partial scope: backup covers Contacts only",
+            "2": "Backup tied to Production Core source",
+            "3": "Audit trail for every sensitive operation"
+          },
+          "auditNote": "Every restore is logged with actor, resource type, and outcome."
+        },
+        "secops": {
+          "title": "Scenario 2 — Alert handling (SecOps)",
+          "persona": "Sam Bernard — Security Admin",
+          "context": "A critical alert reports an OAuth failure on Staging. Diagnose the connection, review active alerts, and verify permissions before escalation.",
+          "steps": {
+            "1": "Open Alerts and filter critical items",
+            "2": "Analyze the OAuth alert on Salesforce Staging",
+            "3": "Run a connection test from Data Sources",
+            "4": "Review roles and permissions under Users",
+            "5": "Check the audit log (LOGIN_FAILED, denied role changes)"
+          },
+          "highlights": {
+            "1": "Severity filters on active alerts",
+            "2": "Connection test and API key rotation",
+            "3": "Role control and denied privilege escalation"
+          },
+          "auditNote": "Failed login attempts and denied role changes are logged automatically."
+        },
+        "dpo": {
+          "title": "Scenario 3 — Compliance audit (DPO)",
+          "persona": "Camille Renard — DPO / Compliance",
+          "context": "Prepare a CSV sample for an external auditor and demonstrate 7-year legal retention on Accounts and Contacts scopes, without access beyond backup limits.",
+          "steps": {
+            "1": "Open Exports and pick a compliance backup",
+            "2": "Select Accounts + Contacts scopes (limited by the backup)",
+            "3": "Start the export and note the download link expiration",
+            "4": "Filter the audit log (exports, DPO actor, date range)",
+            "5": "Review the \"Legal Retention 7 years\" policy under Policies"
+          },
+          "highlights": {
+            "1": "Export limited to the source backup scope",
+            "2": "Temporary download link and export traceability",
+            "3": "7-year legal retention policy (2,555 days)"
+          },
+          "auditNote": "Export requests and downloads appear in the log with DATA_EXPORT resource filtering."
+        }
+      }
     },
     "backups": {
       "title": "Backups",

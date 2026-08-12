@@ -1,6 +1,7 @@
 {
   "nav": {
     "dashboard": "Tableau de bord",
+    "demo": "Guide de démo",
     "alerts": "Alertes",
     "data": "Données",
     "backups": "Sauvegardes",
@@ -40,6 +41,7 @@
   "demo": {
     "label": "Mode démo",
     "selectLabel": "Choisir un scénario de démonstration",
+    "openGuide": "Voir le guide de démo",
     "persona": "Personnage : {{name}} — {{role}}",
     "audit": {
       "restoreCompleted": "Restauration « {{name}} » terminée avec succès"
@@ -301,6 +303,72 @@
       "launchBackup": "Lancer une sauvegarde",
       "restore": "Restaurer",
       "emptyBackups": "Aucune sauvegarde ne correspond aux critères sélectionnés."
+    },
+    "demoGuide": {
+      "title": "Guide de démo",
+      "subtitle": "Trois parcours métier pour présenter DataShield selon votre audience : administration CRM, sécurité opérationnelle et conformité.",
+      "intro": "Choisissez un scénario, lisez le contexte et le parcours suggéré, puis cliquez sur « Lancer ce scénario » pour basculer automatiquement sur le bon persona et la première page utile.",
+      "suggestedPath": "Parcours suggéré",
+      "keyPoints": "Points clés à montrer",
+      "estimatedDuration": "~{{minutes}} min",
+      "activeScenario": "Actif",
+      "launchScenario": "Lancer ce scénario",
+      "scenarios": {
+        "admin": {
+          "title": "Scénario 1 — Restauration urgente (Admin CRM)",
+          "persona": "Alex Martin — Super Admin Salesforce",
+          "context": "La production vient de recevoir une mise à jour Data Loader. Vous devez restaurer rapidement les Contacts depuis le point de restauration d'hier 23h, avec traçabilité complète dans le journal d'audit.",
+          "steps": {
+            "1": "Consulter le tableau de bord et repérer les sauvegardes récentes",
+            "2": "Ouvrir Sauvegardes et identifier « Sauvegarde Contacts Production »",
+            "3": "Vérifier le périmètre (Contacts) et lancer une restauration ciblée",
+            "4": "Suivre l'avancement de la restauration dans Imports",
+            "5": "Contrôler le journal d'audit (action de restauration, acteur, statut)"
+          },
+          "highlights": {
+            "1": "Périmètre partiel : la sauvegarde ne couvre que les Contacts",
+            "2": "Sauvegarde liée à la source Production Core",
+            "3": "Traçabilité audit de chaque opération sensible"
+          },
+          "auditNote": "Chaque restauration est journalisée avec acteur, type de ressource et résultat."
+        },
+        "secops": {
+          "title": "Scénario 2 — Gestion d'alerte (SecOps)",
+          "persona": "Sam Bernard — Admin Sécurité",
+          "context": "Une alerte critique signale un échec OAuth sur l'environnement Staging. Diagnostiquez la connexion, analysez les alertes actives et vérifiez les droits avant escalade.",
+          "steps": {
+            "1": "Ouvrir Alertes et filtrer les alertes critiques",
+            "2": "Analyser l'alerte OAuth sur Salesforce Staging",
+            "3": "Tester la connexion depuis Sources de données",
+            "4": "Contrôler les rôles et permissions dans Utilisateurs",
+            "5": "Consulter le journal d'audit (LOGIN_FAILED, changements de rôle refusés)"
+          },
+          "highlights": {
+            "1": "Filtres par sévérité sur les alertes actives",
+            "2": "Test de connexion et rotation des clés API",
+            "3": "Contrôle des rôles et refus d'élévation de privilèges"
+          },
+          "auditNote": "Les tentatives de connexion échouées et les refus de changement de rôle sont tracés automatiquement."
+        },
+        "dpo": {
+          "title": "Scénario 3 — Audit de conformité (DPO)",
+          "persona": "Camille Renard — DPO / Conformité",
+          "context": "Préparez un échantillon CSV pour un auditeur externe et démontrez la rétention légale 7 ans sur les périmètres Accounts et Contacts, sans accès aux données hors périmètre.",
+          "steps": {
+            "1": "Ouvrir Exports et choisir une sauvegarde conformité",
+            "2": "Sélectionner les périmètres Accounts + Contacts (limités à la sauvegarde)",
+            "3": "Lancer l'export et noter la date d'expiration du lien de téléchargement",
+            "4": "Filtrer le journal d'audit (exports, acteur DPO, période)",
+            "5": "Vérifier la politique « Rétention Légale 7 ans » dans Politiques"
+          },
+          "highlights": {
+            "1": "Export limité au périmètre de la sauvegarde source",
+            "2": "Lien de téléchargement temporaire et traçabilité des exports",
+            "3": "Politique de rétention légale 7 ans (2 555 jours)"
+          },
+          "auditNote": "Les demandes et téléchargements d'export apparaissent dans le journal avec filtre par ressource DATA_EXPORT."
+        }
+      }
     },
     "backups": {
       "title": "Sauvegardes",

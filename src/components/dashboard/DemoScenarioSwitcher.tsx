@@ -1,12 +1,14 @@
 import { useTranslation } from 'react-i18next'
+import { BookOpen } from 'lucide-react'
 import { DEMO_SCENARIO_OPTIONS, type DemoScenarioSelection } from '../../types/demoScenario.types'
 import type { DemoScenarioState } from '../../hooks/useDemoScenario'
 
 interface DemoScenarioSwitcherProps {
   demoScenario: DemoScenarioState
+  onOpenDemoGuide?: () => void
 }
 
-export function DemoScenarioSwitcher({ demoScenario }: DemoScenarioSwitcherProps) {
+export function DemoScenarioSwitcher({ demoScenario, onOpenDemoGuide }: DemoScenarioSwitcherProps) {
   const { t } = useTranslation()
   const { scenarioId, switchScenario, currentUser } = demoScenario
 
@@ -47,6 +49,17 @@ export function DemoScenarioSwitcher({ demoScenario }: DemoScenarioSwitcherProps
             {t(`demo.scenarios.${scenarioId}.hint`)}
           </p>
         </div>
+
+        {onOpenDemoGuide && (
+          <button
+            type="button"
+            onClick={onOpenDemoGuide}
+            className="inline-flex shrink-0 items-center gap-2 self-start rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-indigo-700 transition-colors hover:bg-indigo-100 dark:border-indigo-800 dark:bg-slate-900 dark:text-indigo-300 dark:hover:bg-indigo-950"
+          >
+            <BookOpen className="h-4 w-4" aria-hidden="true" />
+            {t('demo.openGuide')}
+          </button>
+        )}
       </div>
     </section>
   )

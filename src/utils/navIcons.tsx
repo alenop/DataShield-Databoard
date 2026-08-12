@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   Bell,
+  CirclePlay,
   Database,
   FileInput,
   FileOutput,
@@ -28,6 +29,7 @@ export const navIconMap: Record<NavIconName, LucideIcon> = {
   users: Users,
   'scroll-text': ScrollText,
   globe: Globe,
+  'circle-play': CirclePlay,
 }
 
 interface NavIconProps {

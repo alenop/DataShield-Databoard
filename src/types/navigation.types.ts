@@ -11,6 +11,7 @@ export type NavIconName =
   | 'users'
   | 'scroll-text'
   | 'globe'
+  | 'circle-play'
 
 export type NavBadgeVariant = 'default' | 'danger' | 'warning' | 'info'
 
